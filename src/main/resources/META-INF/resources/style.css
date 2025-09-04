@@ -1,0 +1,115 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 600px;
+    margin: 2rem;
+}
+
+.logo {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+h1 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+}
+
+.description {
+    color: #4a5568;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.greeting {
+    background: linear-gradient(135deg, #4299e1, #805ad5);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    display: inline-block;
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    padding: 1.5rem;
+    background: #f7fafc;
+    border-radius: 10px;
+    border-left: 4px solid #4299e1;
+}
+
+.feature h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2d3748;
+}
+
+.feature p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.tech-stack {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #edf2f7;
+    border-radius: 10px;
+}
+
+.tech-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.badge {
+    background: #4a5568;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.quarkus {
+    background: #4695eb;
+}
+
+.htmx {
+    background: #3d72d9;
+}
+
+.qute {
+    background: #805ad5;
+}
