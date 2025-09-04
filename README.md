@@ -1,60 +1,75 @@
-# hx-qute
+# hx-qute: Quarkus+HTMX
 
-> Quarkus+HTMX prototype
+This project uses Quarkus with the Qute template engine to demonstrate how to use HTMX with Quarkus.
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Technology stack
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+- Quarkus Java framework
+- HTMX for SPA-like client-side interactions 
+- Qute template engine
+- JUnit 5 for testing
+- Hibernate ORM for database access
+- PostgreSQL for database
+- Flyway for database migrations
+- Docker for containerization
+- Jaeger for tracing
+- Prometheus for monitoring
 
-## Running the application in dev mode
+## Packaging and running the application
+### Running in DEV mode
 
-You can run your application in dev mode that enables live coding using:
+Run the application in dev mode to enable live coding:
 
-```shell script
+```bash
 ./mvnw compile quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Or use the `quarkus` CLI:
 
-## Packaging and running the application
+```bash
+quarkus dev
+```
 
-The application can be packaged using:
+- Application is at <http://localhost:8080>
+- Browse to the Dev UI: <http://localhost:8080/q/dev/>
 
-```shell script
+### Packaging  the application
+#### Layered package
+
+```bash
 ./mvnw package
 ```
+ 
+- Produces `quarkus-run.jar` file in `target/quarkus-app/`
+- Dependencies are in `target/quarkus-app/lib/`
+- Run with `java -jar target/quarkus-app/quarkus-run.jar`
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+#### Uber-jar
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
+```bash
 ./mvnw package -Dquarkus.package.jar.type=uber-jar
 ```
+ 
+- Run with `java -jar target/*-runner.jar`
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+#### Native executable
 
-## Creating a native executable
+Build with GraalVM installed:
 
-You can create a native executable using:
-
-```shell script
+```bash
 ./mvnw package -Dnative
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+Or run the build in a GraalVM container using:
 
 ```shell script
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/hx-qute-1.0.0-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+- Run native executable: `./target/hx-qute-1.0.0-runner`
 
 ## Related Guides
 
-- REST Qute ([guide](https://quarkus.io/guides/qute-reference#rest_integration)): Qute integration for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
+- Quarkus website: <https://quarkus.io/>.
+- REST Qute ([guide](https://quarkus.io/guides/qute-reference#rest_integration)): Qute integration for Quarkus REST. This extension is not compatible with the older classic quarkus-resteasy extension.
+- Building native executables: <https://quarkus.io/guides/maven-tooling>.
