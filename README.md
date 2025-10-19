@@ -7,6 +7,7 @@ This project uses Quarkus with the Qute template engine to demonstrate how to us
 - Quarkus Java framework
 - HTMX for SPA-like client-side interactions 
 - Qute template engine
+- TailwindCSS and DaisyUI for styling
 - JUnit 5 for testing
 - Hibernate ORM for database access
 - PostgreSQL for database
@@ -19,12 +20,6 @@ This project uses Quarkus with the Qute template engine to demonstrate how to us
 ### Running in DEV mode
 
 Run the application in dev mode to enable live coding:
-
-```bash
-./mvnw compile quarkus:dev
-```
-
-Or use the `quarkus` CLI:
 
 ```bash
 quarkus dev
