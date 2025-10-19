@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- daisyUI via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+
+    <!-- Icons (keeping Bootstrap Icons for now) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="drawer lg:drawer-open">
+        <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
+
+        <!-- Main Content -->
+        <div class="drawer-content flex flex-col">
+            <!-- Mobile navbar -->
+            <div class="navbar bg-base-200 lg:hidden">
+                <label for="drawer-toggle" class="btn btn-square btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </label>
+                <div class="flex-1">
+                    <span class="font-bold text-lg">HX-Qute</span>
+                </div>
+            </div>
+
+            <!-- Page content -->
+            <div class="p-4">
+                <div class="container mx-auto">
+                    {#insert}Default content{/}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="drawer-side">
+            <label for="drawer-toggle" class="drawer-overlay"></label>
+            <aside class="w-64 min-h-full bg-base-200">
+                <!-- Logo -->
+                <div class="p-4 flex items-center">
+                    <img src="/img/logo-scaffold.png" class="w-10 h-10" alt="HX-Qute Logo">
+                    <span class="ml-2 font-bold text-lg">HX-Qute</span>
+                </div>
+
+                <!-- Navigation -->
+                <ul class="menu p-4 w-full">
+                    <li>
+                        <a href="/" class="active">
+                            <i class="bi bi-house"></i>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/persons">
+                            <i class="bi bi-person"></i>
+                            People
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/login">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            {userName??}
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Modal Container (daisyUI dialog) -->
+    <dialog id="modal-container" class="modal">
+        <div class="modal-box">
+            <!-- Content will be injected here by HTMX -->
+        </div>
+    </dialog>
+
+    <script>
+        // Handle HTMX modal integration
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id === 'modal-container' ||
+                evt.detail.target.classList.contains('modal-box')) {
+                document.getElementById('modal-container').showModal();
+            }
+        });
+    </script>
+</body>
+</html>

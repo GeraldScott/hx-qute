@@ -1,0 +1,35 @@
+{#include base}
+    <div class="persons">
+        <h2 class="text-2xl font-bold mb-4">People</h2>
+        {#if persons.isEmpty()}
+            <p class="text-gray-500">No people found.</p>
+        {#else}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Record no.</th>
+                            <th>First name</th>
+                            <th>Last name</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#for person in persons}
+                        <tr hx-get="/persons/{person.id}/modal"
+                            hx-target=".modal-box"
+                            hx-trigger="click"
+                            class="hover:bg-base-200 cursor-pointer"
+                            title="Click to view details">
+                            <td>{person.id}</td>
+                            <td>{person.nameFirst ?: '-'}</td>
+                            <td>{person.nameLast}</td>
+                            <td>{person.email}</td>
+                        </tr>
+                        {/for}
+                    </tbody>
+                </table>
+            </div>
+        {/if}
+    </div>
+{/include}
