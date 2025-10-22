@@ -9,15 +9,28 @@ This is a Quarkus+HTMX prototype application that demonstrates building modern w
 - Qute template engine for server-side rendering
 - HTMX for SPA-like client interactions without complex JavaScript
 
+## Development Environment
+
+### Available Tools
+- **Java**: OpenJDK 21.0.8 (compatible with project's Java 17 target)
+- **Maven**: 3.9.11 (system-wide installation at `/opt/maven/bin/mvn`)
+- **Git**: 2.43.0
+
+### Known Issues
+- Maven wrapper (./mvnw) is not functional due to missing JAR file and network restrictions
+- Use system Maven (`mvn`) instead for all commands
+- Quarkus CLI is not installed
+- Docker is not available for native container builds
+
 ## Key Commands
 
 ### Development
 ```bash
 # Start development mode with live reload
-./mvnw compile quarkus:dev
+mvn compile quarkus:dev
 
-# Alternative with Quarkus CLI
-quarkus dev
+# Alternative with Quarkus CLI (not currently available)
+# quarkus dev
 ```
 - Application runs at http://localhost:8080
 - Dev UI available at http://localhost:8080/q/dev/
@@ -25,13 +38,13 @@ quarkus dev
 ### Building
 ```bash
 # Standard build (produces layered JAR)
-./mvnw package
+mvn package
 
 # Run the layered JAR
 java -jar target/quarkus-app/quarkus-run.jar
 
 # Build uber-jar
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+mvn package -Dquarkus.package.jar.type=uber-jar
 
 # Run uber-jar
 java -jar target/*-runner.jar
@@ -40,19 +53,19 @@ java -jar target/*-runner.jar
 ### Testing
 ```bash
 # Run unit tests
-./mvnw test
+mvn test
 
 # Run integration tests
-./mvnw verify
+mvn verify
 ```
 
 ### Native Builds
 ```bash
-# Build native executable (requires GraalVM)
-./mvnw package -Dnative
+# Build native executable (requires GraalVM - not currently available)
+mvn package -Dnative
 
-# Build native with Docker container
-./mvnw package -Dnative -Dquarkus.native.container-build=true
+# Build native with Docker container (requires Docker - not currently available)
+mvn package -Dnative -Dquarkus.native.container-build=true
 
 # Run native executable
 ./target/hx-qute-1.0.0-runner
