@@ -1,46 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-    <div class="container">
-        <div class="logo">HX-Qute</div>
-        <h1>{title}</h1>
-        <p class="description">{description}</p>
-        
-        <div class="greeting">
-            Hello, {name}! 👋
-        </div>
-
-        <div class="features">
-            <div class="feature">
-                <h3>⚡ Supersonic</h3>
-                <p>Quarkus provides lightning-fast startup times and low memory usage</p>
-            </div>
-            <div class="feature">
-                <h3>🎯 Type-Safe</h3>
-                <p>@CheckedTemplate ensures compile-time validation of your templates</p>
-            </div>
-            <div class="feature">
-                <h3>🔄 Reactive</h3>
-                <p>HTMX enables modern web interactions without complex JavaScript</p>
-            </div>
-        </div>
-
-        <div class="tech-stack">
-            <h3>Built with Modern Technologies</h3>
-            <div class="tech-badges">
-                <span class="badge quarkus">Quarkus 3.26.2</span>
-                <span class="badge qute">Qute Templates</span>
-                <span class="badge htmx">HTMX</span>
-                <span class="badge">Java 17</span>
-                <span class="badge">Maven</span>
-            </div>
-        </div>
+{#include base}
+<div class="features grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+    <div class="feature card bg-base-200 p-6 border-l-4 border-primary">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+            <img src="/img/Quarkus.svg" width="24" height="24" alt="Quarkus" />
+            Supersonic Quarkus
+        </h3>
+        <p class="mt-2 text-sm">
+            Kubernetes-native Java framework for lightning-fast startup times
+            and low memory usage
+        </p>
     </div>
-</body>
-</html>
+    <div class="feature card bg-base-200 p-6 border-l-4 border-primary">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+            <img
+                src="/img/Quarkus_black.svg"
+                width="24"
+                height="24"
+                alt="Qute"
+            />
+            Type-Safe Qute
+        </h3>
+        <p class="mt-2 text-sm">
+            Compile-time validation of type-safe templates
+        </p>
+    </div>
+    <div class="feature card bg-base-200 p-6 border-l-4 border-primary">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+            <img src="/img/HTMX.svg" width="35" height="24" alt="HTMX" />
+            High-powered HTMX
+        </h3>
+        <p class="mt-2 text-sm">
+            HTML extension to provide client-side interactions without NodeJS
+        </p>
+    </div>
+    <div class="feature card bg-base-200 p-6 border-l-4 border-primary">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+            <img
+                src="/img/PostgresSQL.svg"
+                width="24"
+                height="24"
+                alt="PostgreSQL"
+            />
+            Robust PostgreSQL
+        </h3>
+        <p class="mt-2 text-sm">
+            The world's most advanced open source relational database
+        </p>
+    </div>
+</div>
+{/include}

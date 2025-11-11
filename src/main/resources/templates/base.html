@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title}</title>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+        <!-- daisyUI -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/daisyui@5.4.7/daisyui.css"
+            rel="stylesheet"
+            type="text/css"
+            integrity="sha384-vxtDMw4Rk8ZZaQCPm9fjN/RB8Nkjs0naRRhvPuCW+VNb91FyV9x4+55cd9CBMc3J"
+            crossorigin="anonymous"
+        />
+
+        <!-- Tailwind CSS v4 Browser CDN -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.17/dist/index.global.js"
+            integrity="sha384-rTeakyDSnM/oJarj5FPq/xPLt7Iu6UBZd++da42+cyY8b1mP+U472v6kLpgJkLHc"
+            crossorigin="anonymous"
+        ></script>
+
+        <!-- HTMX 2.0.8 -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
+            integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
+            crossorigin="anonymous"
+        ></script>
+
+        <!-- Iconify -->
+        <script
+            src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"
+            integrity="sha384-GPb5RlngihS9H0z1D137JsvzmeZ7tCpWEF4t5YDoTZyMsPP8S7h7vFDh4XhheU83"
+            crossorigin="anonymous"
+        ></script>
+
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <div class="drawer lg:drawer-open">
+            <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
+
+            <!-- Main Content -->
+            <div class="drawer-content flex flex-col">
+                <!-- Mobile navbar -->
+                <div class="navbar bg-base-200 lg:hidden">
+                    <label for="drawer-toggle" class="btn btn-square btn-ghost">
+                        <img
+                            src="/img/icons/menu.svg"
+                            class="inline-block w-6 h-6"
+                            alt="Menu"
+                        />
+                    </label>
+                    <div class="flex-1">
+                        <span class="font-bold text-lg">HX-Qute</span>
+                    </div>
+                </div>
+
+                <!-- Page content -->
+                <div class="p-4">
+                    <div id="main-content" class="container mx-auto">
+                        {#insert}Default content{/}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="drawer-side">
+                <label for="drawer-toggle" class="drawer-overlay"></label>
+                    <!-- Logo -->
+                    <div class="p-4 flex items-center">
+                        <img
+                            src="/img/logo-scaffold.png"
+                            class="w-10 h-10"
+                            alt="HX-Qute Logo"
+                        />
+                        <span class="ml-2 font-bold text-lg">HX-Qute</span>
+                    </div>
+
+                    <!-- Navigation -->
+                    <ul class="menu p-4 w-full">
+                        <li>
+                            <a
+                                href="/"
+                                class="{#if currentPage == 'home'}menu-active{/if}"
+                            >
+                                <img
+                                    src="/img/icons/home.svg"
+                                    class="inline-block w-5 h-5"
+                                    alt="Home"
+                                />
+                                Home
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/login">
+                                <img
+                                    src="/img/icons/login.svg"
+                                    class="inline-block w-5 h-5"
+                                    alt="Login"
+                                />
+                                {userName??}
+                            </a>
+                        </li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+    </body>
+</html>
