@@ -16,13 +16,14 @@ public class IndexResource {
 
         public static native TemplateInstance index(
             String title,
-            String currentPage
+            String currentPage,
+            String userName
         );
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance get(@QueryParam("name") String name) {
-        return Templates.index("HX-Qute Home", "home");
+        return Templates.index("HX-Qute Home", "home", null);
     }
 }

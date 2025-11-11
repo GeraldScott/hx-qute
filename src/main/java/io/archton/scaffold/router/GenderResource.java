@@ -25,6 +25,7 @@ public class GenderResource {
         public static native TemplateInstance gender(
             String title,
             String currentPage,
+            String userName,
             List<Gender> genders
         );
     }
@@ -33,7 +34,7 @@ public class GenderResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance get(@QueryParam("name") String name) {
         List<Gender> genders = genderRepository.listAll();
-        return Templates.gender("HX-Qute Gender", "gender", genders);
+        return Templates.gender("HX-Qute Gender", "gender", null, genders);
     }
 
 }

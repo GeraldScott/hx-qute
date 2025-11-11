@@ -84,7 +84,7 @@
                         <li>
                             <a
                                 href="/"
-                                class="{#if currentPage == 'home'}menu-active{/if}"
+                                class="{#if currentPage?? == 'home'}menu-active{/if}"
                             >
                                 <iconify-icon
                                     icon="mdi:home"
@@ -104,7 +104,7 @@
                                 </summary>
                                 <ul>
                                     <li>
-                                        <a href="/genders">
+                                        <a href="/genders" class="{#if currentPage?? == 'gender'}menu-active{/if}">
                                             <iconify-icon
                                                 icon="mdi:gender-male-female"
                                                 class="inline-block w-5 h-5"
@@ -121,7 +121,7 @@
                                     icon="mdi:login"
                                     class="inline-block w-5 h-5"
                                 ></iconify-icon>
-                                {userName ?: 'Login'}
+                                {userName?? ?: 'Login'}
                             </a>
                         </li>
                     </ul>
