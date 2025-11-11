@@ -1,0 +1,5 @@
+CREATE TABLE gender (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(1) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL UNIQUE
+);
