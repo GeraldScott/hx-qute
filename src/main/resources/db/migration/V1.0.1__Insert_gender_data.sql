@@ -1,4 +1,4 @@
-INSERT INTO person (code, description) VALUES
+INSERT INTO gender (code, description) VALUES
     ('F', 'Female'),
     ('M', 'Male'),
     ('U', 'Unspecified')
