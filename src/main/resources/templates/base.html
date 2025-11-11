@@ -47,11 +47,10 @@
                 <!-- Mobile navbar -->
                 <div class="navbar bg-base-200 lg:hidden">
                     <label for="drawer-toggle" class="btn btn-square btn-ghost">
-                        <img
-                            src="/img/icons/menu.svg"
+                        <iconify-icon
+                            icon="mdi:menu"
                             class="inline-block w-6 h-6"
-                            alt="Menu"
-                        />
+                        ></iconify-icon>
                     </label>
                     <div class="flex-1">
                         <span class="font-bold text-lg">HX-Qute</span>
@@ -69,6 +68,7 @@
             <!-- Sidebar -->
             <div class="drawer-side">
                 <label for="drawer-toggle" class="drawer-overlay"></label>
+                <aside class="bg-base-200 min-h-full w-80">
                     <!-- Logo -->
                     <div class="p-4 flex items-center">
                         <img
@@ -86,21 +86,35 @@
                                 href="/"
                                 class="{#if currentPage == 'home'}menu-active{/if}"
                             >
-                                <img
-                                    src="/img/icons/home.svg"
+                                <iconify-icon
+                                    icon="mdi:home"
                                     class="inline-block w-5 h-5"
-                                    alt="Home"
-                                />
+                                ></iconify-icon>
                                 Home
                             </a>
                         </li>
                         <li>
+                            <details>
+                                <summary>
+                                    <iconify-icon
+                                        icon="mdi:tools"
+                                        class="inline-block w-5 h-5"
+                                    ></iconify-icon>
+                                    Maintenance
+                                </summary>
+                                <ul>
+                                    <li>
+                                        <a href="/genders">Gender</a>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
+                        <li>
                             <a href="/login">
-                                <img
-                                    src="/img/icons/login.svg"
+                                <iconify-icon
+                                    icon="mdi:login"
                                     class="inline-block w-5 h-5"
-                                    alt="Login"
-                                />
+                                ></iconify-icon>
                                 {userName ?: 'Login'}
                             </a>
                         </li>
