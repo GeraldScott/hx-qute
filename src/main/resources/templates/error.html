@@ -1,154 +1,54 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Error {status}</title>
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-
-        <!-- daisyUI -->
-        <link
-            href="https://cdn.jsdelivr.net/npm/daisyui@5.4.7/daisyui.css"
-            rel="stylesheet"
-            type="text/css"
-            integrity="sha384-vxtDMw4Rk8ZZaQCPm9fjN/RB8Nkjs0naRRhvPuCW+VNb91FyV9x4+55cd9CBMc3J"
-            crossorigin="anonymous"
-        />
-
-        <!-- Tailwind CSS v4 Browser CDN -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.17/dist/index.global.js"
-            integrity="sha384-rTeakyDSnM/oJarj5FPq/xPLt7Iu6UBZd++da42+cyY8b1mP+U472v6kLpgJkLHc"
-            crossorigin="anonymous"
-        ></script>
-
-        <!-- Iconify -->
-        <script
-            src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"
-            integrity="sha384-GPb5RlngihS9H0z1D137JsvzmeZ7tCpWEF4t5YDoTZyMsPP8S7h7vFDh4XhheU83"
-            crossorigin="anonymous"
-        ></script>
-
-        <link rel="stylesheet" href="/style.css" />
-    </head>
-    <body>
-        <div class="drawer lg:drawer-open">
-            <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
-
-            <!-- Main Content -->
-            <div class="drawer-content flex flex-col">
-                <!-- Mobile navbar -->
-                <div class="navbar bg-base-200 lg:hidden">
-                    <label for="drawer-toggle" class="btn btn-square btn-ghost">
-                        <img
-                            src="/img/icons/menu.svg"
-                            class="inline-block w-6 h-6"
-                            alt="Menu"
-                        />
-                    </label>
-                    <div class="flex-1">
-                        <span class="font-bold text-lg">HX-Qute</span>
-                    </div>
-                </div>
-
-                <!-- Page content -->
-                <div class="p-4">
-                    <div id="main-content" class="container mx-auto">
-                        <!-- Error Card -->
-                        <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto mt-8">
-                            <div class="card-body">
-                                <div class="flex items-center gap-4 mb-4">
-                                    <iconify-icon
-                                        icon="mdi:alert-circle"
-                                        class="text-error text-6xl"
-                                    ></iconify-icon>
-                                    <div>
-                                        <h1 class="card-title text-3xl">Error {status}</h1>
-                                        <p class="text-lg">{statusText}</p>
-                                    </div>
-                                </div>
-
-                                <div class="divider"></div>
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <h3 class="font-semibold text-sm text-base-content/70">Message</h3>
-                                        <p class="text-base">{message}</p>
-                                    </div>
-
-                                    {#if path}
-                                    <div>
-                                        <h3 class="font-semibold text-sm text-base-content/70">Path</h3>
-                                        <code class="text-sm bg-base-200 px-2 py-1 rounded">{path}</code>
-                                    </div>
-                                    {/if}
-
-                                    {#if referenceId}
-                                    <div>
-                                        <h3 class="font-semibold text-sm text-base-content/70">Reference ID</h3>
-                                        <code class="text-sm bg-base-200 px-2 py-1 rounded">{referenceId}</code>
-                                    </div>
-                                    {/if}
-
-                                    {#if devMode && stackTrace}
-                                    <div>
-                                        <h3 class="font-semibold text-sm text-base-content/70">Stack Trace (Dev Mode)</h3>
-                                        <pre class="text-xs bg-base-200 p-4 rounded overflow-x-auto max-h-96">{stackTrace}</pre>
-                                    </div>
-                                    {/if}
-                                </div>
-
-                                <div class="card-actions justify-end mt-6">
-                                    <a href="/" class="btn btn-primary">
-                                        <iconify-icon icon="mdi:home"></iconify-icon>
-                                        Back to Home
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+{#include base title="Error {status}"}
+    <!-- Error Card -->
+    <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto mt-8">
+        <div class="card-body">
+            <div class="flex items-center gap-4 mb-4">
+                <iconify-icon
+                    icon="mdi:alert-circle"
+                    class="text-error text-6xl"
+                ></iconify-icon>
+                <div>
+                    <h1 class="card-title text-3xl">Error {status}</h1>
+                    <p class="text-lg">{statusText}</p>
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div class="drawer-side">
-                <label for="drawer-toggle" class="drawer-overlay"></label>
-                <aside class="bg-base-200 w-80 min-h-screen">
-                    <!-- Logo -->
-                    <div class="p-4 flex items-center">
-                        <img
-                            src="/img/logo-scaffold.png"
-                            class="w-10 h-10"
-                            alt="HX-Qute Logo"
-                        />
-                        <span class="ml-2 font-bold text-lg">HX-Qute</span>
-                    </div>
+            <div class="divider"></div>
 
-                    <!-- Navigation -->
-                    <ul class="menu p-4 w-full">
-                        <li>
-                            <a href="/">
-                                <img
-                                    src="/img/icons/home.svg"
-                                    class="inline-block w-5 h-5"
-                                    alt="Home"
-                                />
-                                Home
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/login">
-                                <img
-                                    src="/img/icons/login.svg"
-                                    class="inline-block w-5 h-5"
-                                    alt="Login"
-                                />
-                                Login
-                            </a>
-                        </li>
-                    </ul>
-                </aside>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold text-sm text-base-content/70">Message</h3>
+                    <p class="text-base">{message}</p>
+                </div>
+
+                {#if path}
+                <div>
+                    <h3 class="font-semibold text-sm text-base-content/70">Path</h3>
+                    <code class="text-sm bg-base-200 px-2 py-1 rounded">{path}</code>
+                </div>
+                {/if}
+
+                {#if referenceId}
+                <div>
+                    <h3 class="font-semibold text-sm text-base-content/70">Reference ID</h3>
+                    <code class="text-sm bg-base-200 px-2 py-1 rounded">{referenceId}</code>
+                </div>
+                {/if}
+
+                {#if devMode && stackTrace}
+                <div>
+                    <h3 class="font-semibold text-sm text-base-content/70">Stack Trace (Dev Mode)</h3>
+                    <pre class="text-xs bg-base-200 p-4 rounded overflow-x-auto max-h-96">{stackTrace}</pre>
+                </div>
+                {/if}
+            </div>
+
+            <div class="card-actions justify-end mt-6">
+                <a href="/" class="btn btn-primary">
+                    <iconify-icon icon="mdi:home"></iconify-icon>
+                    Back to Home
+                </a>
             </div>
         </div>
-    </body>
-</html>
+    </div>
+{/include}

@@ -89,6 +89,8 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
                 .data("referenceId", referenceId)
                 .data("devMode", devMode)
                 .data("stackTrace", stackTrace)
+                .data("currentPage", null)
+                .data("userName", null)
                 .render();
 
             return Response.status(status).entity(html).type(MediaType.TEXT_HTML).build();
