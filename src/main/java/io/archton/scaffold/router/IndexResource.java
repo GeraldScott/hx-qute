@@ -17,7 +17,6 @@ public class IndexResource {
         public static native TemplateInstance index(
             String title,
             String description,
-            String name,
             String currentPage
         );
     }
@@ -28,7 +27,6 @@ public class IndexResource {
         return Templates.index(
             "Welcome to HX-Qute",
             "A Quarkus + HTMX prototype for building modern web applications",
-            name != null ? name : "Developer",
             "home"
         );
     }

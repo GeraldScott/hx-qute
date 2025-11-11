@@ -16,7 +16,5 @@
 
 /* Active menu item */
 .menu a.menu-active {
-    background-color: oklch(var(--p));
-    color: oklch(var(--pc));
     font-weight: 600;
 }
