@@ -16,7 +16,6 @@ public class IndexResource {
 
         public static native TemplateInstance index(
             String title,
-            String description,
             String currentPage
         );
     }
@@ -24,10 +23,6 @@ public class IndexResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance get(@QueryParam("name") String name) {
-        return Templates.index(
-            "Welcome to HX-Qute",
-            "A Quarkus + HTMX prototype for building modern web applications",
-            "home"
-        );
+        return Templates.index("HX-Qute Home", "home");
     }
 }

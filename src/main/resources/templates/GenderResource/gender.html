@@ -1,0 +1,26 @@
+{#include base}
+{#if genders.isEmpty()}
+<p class="text-gray-500">No genders found.</p>
+{#else}
+<div class="overflow-x-auto">
+    <table class="table table-zebra">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Record no.</th>
+            </tr>
+        </thead>
+        <tbody id="gender-table-body">
+            {#for gender in genders}
+            <tr id="gender-row-{gender.id}">
+                <td>{gender.code}</td>
+                <td>{gender.description}</td>
+                <td>{gender.id}</td>
+            </tr>
+            {/for}
+        </tbody>
+    </table>
+</div>
+{/if}
+{/include}
