@@ -1,8 +1,8 @@
 /* Custom styles for HX-Qute with daisyUI and Tailwind */
 
-/* Main content background */
+/* Main content background - custom sage/mint brand color */
 .drawer-content {
-    background-color: #bacecc;
+    background-color: oklch(82% 0.03 180);
 }
 
 /* Feature card hover effect */
@@ -16,5 +16,7 @@
 
 /* Active menu item */
 .menu a.menu-active {
+    background-color: oklch(88% 0.02 180);
+    color: oklch(30% 0.05 180);
     font-weight: 600;
 }
