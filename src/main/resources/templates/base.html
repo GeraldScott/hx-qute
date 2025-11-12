@@ -1,132 +1,142 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title??}</title>
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{title??}</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
 
-        <!-- daisyUI -->
-        <link
-            href="https://cdn.jsdelivr.net/npm/daisyui@5.4.7/daisyui.css"
-            rel="stylesheet"
-            type="text/css"
-            integrity="sha384-vxtDMw4Rk8ZZaQCPm9fjN/RB8Nkjs0naRRhvPuCW+VNb91FyV9x4+55cd9CBMc3J"
-            crossorigin="anonymous"
-        />
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.24.2/dist/css/uikit.min.css"/>
 
-        <!-- Tailwind CSS v4 Browser CDN -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.17/dist/index.global.js"
-            integrity="sha384-rTeakyDSnM/oJarj5FPq/xPLt7Iu6UBZd++da42+cyY8b1mP+U472v6kLpgJkLHc"
-            crossorigin="anonymous"
-        ></script>
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.24.2/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.24.2/dist/js/uikit-icons.min.js"></script>
 
-        <!-- HTMX 2.0.8 -->
-        <script
+    <!-- HTMX 2.0.8 -->
+    <script
             src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
             integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
             crossorigin="anonymous"
-        ></script>
+    ></script>
 
-        <!-- Iconify -->
-        <script
-            src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"
-            integrity="sha384-GPb5RlngihS9H0z1D137JsvzmeZ7tCpWEF4t5YDoTZyMsPP8S7h7vFDh4XhheU83"
-            crossorigin="anonymous"
-        ></script>
+    <link rel="stylesheet" href="/style.css"/>
+</head>
+<body>
+<div class="uk-offcanvas-content">
+    <!-- Mobile Header -->
+    <div class="uk-navbar-container uk-hidden@l" uk-navbar>
+        <div class="uk-navbar-left">
+            <a class="uk-navbar-toggle" uk-navbar-toggle-icon href="#mobile-sidebar" uk-toggle></a>
+            <span class="uk-navbar-item uk-logo">HX-Qute</span>
+        </div>
+    </div>
 
-        <link rel="stylesheet" href="/style.css" />
-    </head>
-    <body>
-        <div class="drawer lg:drawer-open">
-            <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
-
-            <!-- Main Content -->
-            <div class="drawer-content flex flex-col">
-                <!-- Mobile navbar -->
-                <div class="navbar bg-base-200 lg:hidden">
-                    <label for="drawer-toggle" class="btn btn-square btn-ghost">
-                        <iconify-icon
-                            icon="mdi:menu"
-                            class="inline-block w-6 h-6"
-                        ></iconify-icon>
-                    </label>
-                    <div class="flex-1">
-                        <span class="font-bold text-lg">HX-Qute</span>
-                    </div>
+    <!-- Main Layout Container -->
+    <div class="uk-grid-collapse" uk-grid>
+        <!-- Sidebar (visible on large screens) -->
+        <div class="uk-width-auto@l uk-visible@l sidebar-container">
+            <aside class="sidebar uk-height-viewport">
+                <!-- Logo -->
+                <div class="uk-padding-small uk-flex uk-flex-middle">
+                    <img
+                            src="/img/logo-scaffold.png"
+                            width="40"
+                            height="40"
+                            alt="HX-Qute Logo"
+                    />
+                    <span class="uk-margin-small-left uk-text-bold uk-text-large">HX-Qute</span>
                 </div>
 
-                <!-- Page content -->
-                <div class="p-4">
-                    <div id="main-content" class="container mx-auto">
-                        {#insert}Default content{/}
-                    </div>
+                <!-- Navigation -->
+                <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
+                    <li class="{#if currentPage?? == 'home'}uk-active{/if}">
+                        <a href="/">
+                            <span uk-icon="icon: home; ratio: 1.2"></span>
+                            <span class="uk-margin-small-left">Home</span>
+                        </a>
+                    </li>
+                    <li class="uk-parent {#if currentPage?? == 'gender'}uk-open{/if}">
+                        <a href="#">
+                            <span uk-icon="icon: settings; ratio: 1.2"></span>
+                            <span class="uk-margin-small-left">Maintenance</span>
+                        </a>
+                        <ul class="uk-nav-sub">
+                            <li class="{#if currentPage?? == 'gender'}uk-active{/if}">
+                                <a href="/genders">
+                                    <span uk-icon="icon: users; ratio: 1"></span>
+                                    <span class="uk-margin-small-left">Gender</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="/login">
+                            <span uk-icon="icon: sign-in; ratio: 1.2"></span>
+                            <span class="uk-margin-small-left">{userName?? ?: 'Login'}</span>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+
+        <!-- Main Content -->
+        <div class="uk-width-expand@l main-content-area">
+            <div class="uk-padding">
+                <div id="main-content" class="uk-container">
+                    {#insert}Default content{/}
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Sidebar -->
-            <div class="drawer-side">
-                <label for="drawer-toggle" class="drawer-overlay"></label>
-                <aside class="bg-base-200 min-h-full w-80">
-                    <!-- Logo -->
-                    <div class="p-4 flex items-center">
-                        <img
-                            src="/img/logo-scaffold.png"
-                            class="w-10 h-10"
-                            alt="HX-Qute Logo"
-                        />
-                        <span class="ml-2 font-bold text-lg">HX-Qute</span>
-                    </div>
+    <!-- Mobile Sidebar (Offcanvas) -->
+    <div id="mobile-sidebar" uk-offcanvas="overlay: true">
+        <div class="uk-offcanvas-bar sidebar">
+            <button class="uk-offcanvas-close" type="button" uk-close></button>
 
-                    <!-- Navigation -->
-                    <ul class="menu p-4 w-full">
-                        <li>
-                            <a
-                                href="/"
-                                class="{#if currentPage?? == 'home'}menu-active{/if}"
-                            >
-                                <iconify-icon
-                                    icon="mdi:home"
-                                    class="inline-block w-5 h-5"
-                                ></iconify-icon>
-                                Home
-                            </a>
-                        </li>
-                        <li>
-                            <details>
-                                <summary>
-                                    <iconify-icon
-                                        icon="mdi:tools"
-                                        class="inline-block w-5 h-5"
-                                    ></iconify-icon>
-                                    Maintenance
-                                </summary>
-                                <ul>
-                                    <li>
-                                        <a href="/genders" class="{#if currentPage?? == 'gender'}menu-active{/if}">
-                                            <iconify-icon
-                                                icon="mdi:gender-male-female"
-                                                class="inline-block w-5 h-5"
-                                            ></iconify-icon>
-                                            Gender
-                                        </a>
-                                    </li>
-                                </ul>
-                            </details>
-                        </li>
-                        <li>
-                            <a href="/login">
-                                <iconify-icon
-                                    icon="mdi:login"
-                                    class="inline-block w-5 h-5"
-                                ></iconify-icon>
-                                {userName?? ?: 'Login'}
+            <!-- Logo -->
+            <div class="uk-padding-small uk-flex uk-flex-middle">
+                <img
+                        src="/img/logo-scaffold.png"
+                        width="40"
+                        height="40"
+                        alt="HX-Qute Logo"
+                />
+                <span class="uk-margin-small-left uk-text-bold uk-text-large">HX-Qute</span>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
+                <li class="{#if currentPage?? == 'home'}uk-active{/if}">
+                    <a href="/">
+                        <span uk-icon="icon: home; ratio: 1.2"></span>
+                        <span class="uk-margin-small-left">Home</span>
+                    </a>
+                </li>
+                <li class="uk-parent {#if currentPage?? == 'gender'}uk-open{/if}">
+                    <a href="#">
+                        <span uk-icon="icon: settings; ratio: 1.2"></span>
+                        <span class="uk-margin-small-left">Maintenance</span>
+                    </a>
+                    <ul class="uk-nav-sub">
+                        <li class="{#if currentPage?? == 'gender'}uk-active{/if}">
+                            <a href="/genders">
+                                <span uk-icon="icon: users; ratio: 1"></span>
+                                <span class="uk-margin-small-left">Gender</span>
                             </a>
                         </li>
                     </ul>
-                </aside>
-            </div>
+                </li>
+                <li>
+                    <a href="/login">
+                        <span uk-icon="icon: sign-in; ratio: 1.2"></span>
+                        <span class="uk-margin-small-left">{userName?? ?: 'Login'}</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-    </body>
+    </div>
+</div>
+</body>
 </html>
