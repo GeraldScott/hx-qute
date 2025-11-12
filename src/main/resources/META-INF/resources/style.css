@@ -5,7 +5,7 @@
     background-color: oklch(82% 0.03 180);
 }
 
-/* Feature card hover effect */
+/* Feature cards */
 .feature {
     transition: transform 0.2s ease-in-out;
 }
@@ -19,4 +19,22 @@
     background-color: oklch(88% 0.02 180);
     color: oklch(30% 0.05 180);
     font-weight: 600;
+}
+
+/* Table styling */
+.table tbody tr {
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.table tbody tr:hover {
+    border-left: 4px solid #f33098;
+}
+
+.table-zebra tbody tr:nth-child(odd) {
+    background-color: #e0e0e0;
+}
+
+.table-zebra tbody tr:nth-child(even) {
+    background-color: #f8f8f8;
 }
