@@ -110,6 +110,17 @@ html, body {
     color: #2c5530;
 }
 
+.logo-link {
+    text-decoration: none;
+    color: #333;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.logo-link:hover {
+    opacity: 0.8;
+    text-decoration: none;
+}
+
 /* Offcanvas bar background (mobile sidebar) */
 .uk-offcanvas-bar {
     background-color: #f0f0f0;
