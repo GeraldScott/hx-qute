@@ -1,8 +1,29 @@
 /* Custom styles for HX-Qute with UIkit */
 
-/* Main content background - custom sage/mint brand color */
+/* Color Variables */
+:root {
+    --brand-green: #2c5530;
+    --brand-dirty-sage: #bfc9c6;
+    --brand-pink: #f33098;
+    --sidebar-bg: #f0f0f0;
+    --table-stripe-odd: #cfd3d2;
+    --table-stripe-even: #ffffff;
+}
+
+/* Ensure full height for layout */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+h2 {
+    color: var(--brand-green);
+}
+
+/* Main content background */
 .main-content-area {
-    background-color: #B8D4CE;
+    background-color: var(--brand-dirty-sage);
     min-height: 100vh;
 }
 
@@ -10,29 +31,26 @@
 .sidebar-container {
     width: 320px;
 }
-
 .sidebar {
-    background-color: #f0f0f0;
+    background-color: var(--sidebar-bg);
     width: 320px;
 }
 
 /* Mobile navbar */
 .uk-navbar-container {
-    background-color: #f0f0f0;
+    background-color: var(--sidebar-bg);
 }
 
-/* Active navigation item */
+/* Navigation styling */
 .uk-nav-default > li.uk-active > a,
 .uk-nav-sub > li.uk-active > a {
-    background-color: rgba(184, 212, 206, 0.3);
-    color: #2c5530;
+    background-color: var(--table-stripe-odd);
+    color: var(--brand-green);
     font-weight: 600;
 }
 
-/* Navigation hover effect */
 .uk-nav-default > li > a:hover,
 .uk-nav-sub > li > a:hover {
-    background-color: rgba(184, 212, 206, 0.2);
     text-decoration: none;
 }
 
@@ -44,26 +62,21 @@
 }
 
 .uk-table tbody tr:hover {
-    border-left: 4px solid #f33098;
-    background-color: rgba(243, 48, 152, 0.05);
+    border-left: 4px solid var(--brand-pink);
+    /*background-color: rgba(243, 48, 152, 0.05);*/
 }
 
 /* Table zebra striping */
 .table-zebra tbody tr:nth-child(odd) {
-    background-color: #e2f5eb;
+    background-color: var(--table-stripe-odd);
 }
 
 .table-zebra tbody tr:nth-child(even) {
-    background-color: #ffffff;
-}
-
-/* Table header styling to match the screenshot */
-.uk-table thead {
-    background-color: #B8D4CE;
+    background-color: var(--table-stripe-even);
 }
 
 .uk-table thead th {
-    color: #2c5530;
+    color: var(--brand-green);
     font-weight: 600;
     padding: 12px 16px;
 }
@@ -98,24 +111,15 @@
     line-height: 1.5;
 }
 
-/* Ensure full height for layout */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
 /* Logo and title styling */
 .uk-logo {
-    color: #2c5530;
+    color: var(--brand-green);
 }
-
 .logo-link {
     text-decoration: none;
     color: #333;
     transition: opacity 0.2s ease-in-out;
 }
-
 .logo-link:hover {
     opacity: 0.8;
     text-decoration: none;
@@ -123,7 +127,7 @@ html, body {
 
 /* Offcanvas bar background (mobile sidebar) */
 .uk-offcanvas-bar {
-    background-color: #f0f0f0;
+    background-color: var(--sidebar-bg);
     color: #333;
 }
 
