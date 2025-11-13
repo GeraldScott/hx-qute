@@ -50,7 +50,7 @@
 
 /* Table zebra striping */
 .table-zebra tbody tr:nth-child(odd) {
-    background-color: #f8f8f8;
+    background-color: #e2f5eb;
 }
 
 .table-zebra tbody tr:nth-child(even) {
