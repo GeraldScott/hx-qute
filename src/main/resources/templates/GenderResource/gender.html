@@ -4,20 +4,18 @@
 <p class="uk-text-muted">No genders found.</p>
 {#else}
 <div class="uk-overflow-auto">
-    <table class="uk-table uk-table-divider uk-table-hover table-zebra">
+    <table id="gender-table" class="uk-table uk-table-divider uk-table-hover table-zebra">
         <thead>
         <tr>
             <th>Code</th>
             <th>Description</th>
-            <th>Record no.</th>
         </tr>
         </thead>
-        <tbody id="gender-table-body">
+        <tbody>
         {#for gender in genders}
         <tr id="gender-row-{gender.id}">
             <td>{gender.code}</td>
             <td>{gender.description}</td>
-            <td>{gender.id}</td>
         </tr>
         {/for}
         </tbody>
