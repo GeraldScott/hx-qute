@@ -4,10 +4,8 @@
 :root {
     --brand-green: #2c5530;
     --brand-dirty-sage: #bfc9c6;
-    --brand-pink: #f33098;
+    --brand-rose: #af5f89;
     --sidebar-bg: #f0f0f0;
-    --table-stripe-odd: #cfd3d2;
-    --table-stripe-even: #ffffff;
 }
 
 /* Ensure full height for layout */
@@ -44,7 +42,7 @@ h2 {
 /* Navigation styling */
 .uk-nav-default > li.uk-active > a,
 .uk-nav-sub > li.uk-active > a {
-    background-color: var(--table-stripe-odd);
+    background-color: var(--brand-dirty-sage);
     color: var(--brand-green);
     font-weight: 600;
 }
@@ -62,18 +60,10 @@ h2 {
 }
 
 .uk-table tbody tr:hover {
-    border-left: 4px solid var(--brand-pink);
-    /*background-color: rgba(243, 48, 152, 0.05);*/
+    border-left: 4px solid var(--brand-rose);
 }
 
-/* Table zebra striping */
-.table-zebra tbody tr:nth-child(odd) {
-    background-color: var(--table-stripe-odd);
-}
 
-.table-zebra tbody tr:nth-child(even) {
-    background-color: var(--table-stripe-even);
-}
 
 .uk-table thead th {
     color: var(--brand-green);
