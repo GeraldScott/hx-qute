@@ -9,7 +9,8 @@
 }
 
 /* Ensure full height for layout */
-html, body {
+html,
+body {
     height: 100%;
     margin: 0;
     padding: 0;
@@ -48,7 +49,6 @@ h2 {
 .uk-nav-default > li.uk-active > a,
 .uk-nav-sub > li.uk-active > a {
     background-color: var(--brand-dirty-sage);
-    color: var(--brand-green);
     font-weight: 600;
 }
 
@@ -57,19 +57,27 @@ h2 {
     text-decoration: none;
 }
 
-
+/* Override default UiKit table styling */
+.uk-table th {
+    text-transform: none;
+    color: var(--brand-rose);
+    font-size: 16px;
+    font-weight: bold;
+}
 
 /* Feature cards styling */
 .feature-card {
     border-left: 4px solid #1e87f0;
     background-color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition:
+        transform 0.2s ease-in-out,
+        box-shadow 0.2s ease-in-out;
 }
 
 .feature-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .feature-card .uk-card-title {

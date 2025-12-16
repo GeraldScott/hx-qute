@@ -1,26 +1,29 @@
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
-{#include base}
-<h2 class="uk-heading-small">Gender code maintenance</h2>
-{#if genders.isEmpty()}
-<p class="uk-text-muted">No genders found.</p>
-{#else}
-<div class="uk-overflow-auto">
-    <table id="gender-table" class="uk-table">
-        <thead>
-        <tr>
-            <th>Code</th>
-            <th>Description</th>
-        </tr>
-        </thead>
-        <tbody>
-        {#for gender in genders}
-        <tr id="gender-row-{gender.id}">
-            <td>{gender.code}</td>
-            <td>{gender.description}</td>
-        </tr>
-        {/for}
-        </tbody>
-    </table>
-</div>
-{/if}
-{/include}
+{@java.util.List<io.archton.scaffold.entity.Gender>
+    genders} {#include base}
+    <h2 class="uk-heading-small">Gender code maintenance</h2>
+    {#if genders.isEmpty()}
+    <p class="uk-text-muted">No genders found.</p>
+    {#else}
+    <div class="uk-overflow-auto">
+        <table
+            id="gender-table"
+            class="uk-table uk-table-hover uk-table-divider"
+        >
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {#for gender in genders}
+                <tr id="gender-row-{gender.id}">
+                    <td>{gender.code}</td>
+                    <td>{gender.description}</td>
+                </tr>
+                {/for}
+            </tbody>
+        </table>
+    </div>
+    {/if} {/include}
+</io.archton.scaffold.entity.Gender>
