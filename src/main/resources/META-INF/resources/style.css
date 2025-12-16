@@ -57,29 +57,7 @@ h2 {
     text-decoration: none;
 }
 
-/* Table styling */
-.uk-table tbody tr {
-    transition: all 0.2s ease-in-out;
-    cursor: pointer;
-    border-left: 4px solid transparent;
-}
 
-.uk-table tbody tr:hover {
-    border-left: 4px solid var(--brand-rose);
-}
-
-
-
-.uk-table thead th {
-    color: var(--brand-green);
-    font-weight: 600;
-    padding: 12px 16px;
-}
-
-/* Table cell padding */
-.uk-table td {
-    padding: 12px 16px;
-}
 
 /* Feature cards styling */
 .feature-card {
