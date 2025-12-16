@@ -40,6 +40,11 @@ h2 {
 }
 
 /* Navigation styling */
+.sidebar .uk-nav-default > li > a,
+.sidebar .uk-nav-sub > li > a {
+    color: #333;
+}
+
 .uk-nav-default > li.uk-active > a,
 .uk-nav-sub > li.uk-active > a {
     background-color: var(--brand-dirty-sage);
