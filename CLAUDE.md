@@ -8,73 +8,83 @@ This is a Quarkus+HTMX prototype application that demonstrates building modern w
 - Quarkus Java framework with REST endpoints
 - Qute template engine for server-side rendering
 - HTMX for SPA-like client interactions without complex JavaScript
+- UIkit CSS framework for styling
+- Hibernate ORM Panache for database access
+- PostgreSQL database with Flyway migrations
 
 ## Key Commands
 
 ### Development
 ```bash
-# Start development mode with live reload
 ./mvnw compile quarkus:dev
-
-# Alternative with Quarkus CLI
-quarkus dev
 ```
 - Application runs at http://localhost:8080
 - Dev UI available at http://localhost:8080/q/dev/
 
-### Building
-```bash
-# Standard build (produces layered JAR)
-./mvnw package
-
-# Run the layered JAR
-java -jar target/quarkus-app/quarkus-run.jar
-
-# Build uber-jar
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-
-# Run uber-jar
-java -jar target/*-runner.jar
-```
-
 ### Testing
 ```bash
-# Run unit tests
+# Run all tests
 ./mvnw test
+
+# Run a single test class
+./mvnw test -Dtest=ClassName
+
+# Run a specific test method
+./mvnw test -Dtest=ClassName#methodName
 
 # Run integration tests
 ./mvnw verify
 ```
 
-### Native Builds
+### Building
 ```bash
-# Build native executable (requires GraalVM)
-./mvnw package -Dnative
-
-# Build native with Docker container
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-
-# Run native executable
-./target/hx-qute-1.0.0-runner
+./mvnw package                                          # Layered JAR
+./mvnw package -Dquarkus.package.jar.type=uber-jar     # Uber JAR
+./mvnw package -Dnative                                 # Native (requires GraalVM)
 ```
 
 ## Architecture
 
 ### Package Structure
-- `io.archton.scaffold.router` - REST endpoint resources
-- Templates located in `src/main/resources/templates/{ResourceClass}/`
+```
+io.archton.scaffold
+├── entity/          # JPA entities with public fields (Panache style)
+├── repository/      # PanacheRepository implementations
+├── router/          # REST resources (endpoints)
+└── error/           # Global exception handling
+```
 
-### Template Integration
-- Uses Quarkus Qute with `@CheckedTemplate` for compile-time validation
-- Template structure: `Templates.{methodName}()` static methods
-- Templates automatically mapped to `src/main/resources/templates/{ResourceClass}/{methodName}.html`
+### Template System
+- **Base template**: `templates/base.html` - Layout with sidebar navigation, requires `title`, `currentPage`, `userName` parameters
+- **Resource templates**: `templates/{ResourceClass}/{methodName}.html` - Extend base via `{#include base}...{/include}`
+- **Type-safe parameters**: Templates declare parameters at top with `{@Type varName}` syntax
+- Uses `@CheckedTemplate` inner class with `native` methods for compile-time validation
 
-### Key Technologies
-- Java 17 target
-- Quarkus 3.26.2
-- Maven-based build system
-- Qute template engine with type-safe templates
+Example resource pattern:
+```java
+@CheckedTemplate
+public static class Templates {
+    public static native TemplateInstance myTemplate(String title, String currentPage, String userName, List<Entity> data);
+}
+```
+
+### Database Migrations
+- Flyway migrations in `src/main/resources/db/migration/`
+- Naming: `V{major}.{minor}.{patch}__{Description}.sql`
+- Migrations run automatically at startup (`quarkus.flyway.migrate-at-start=true`)
+- Schema management disabled for Hibernate (`quarkus.hibernate-orm.schema-management.strategy=none`)
+
+### Entity Pattern
+Entities use Panache's public field style (no getters/setters needed):
+```java
+@Entity
+public class MyEntity {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    public String field;
+}
+```
 
 ## Configuration
 - Main config: `src/main/resources/application.properties`
-- Currently minimal configuration (console log darkening enabled)
+- Database: PostgreSQL with Flyway-managed schema
