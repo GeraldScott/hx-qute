@@ -502,9 +502,11 @@ public class MyResource {
 }
 ```
 
-### 4.2 GenderResource (Admin Master Data Example)
+### 4.2 GenderResource (Complete CRUD Example - Admin)
 
 **File**: `router/GenderResource.java`
+
+This resource demonstrates the full CRUD pattern with HTMX integration for admin-only master data.
 
 ```java
 @Path("/genders")
@@ -517,82 +519,102 @@ public class GenderResource {
     @Inject
     SecurityIdentity securityIdentity;
 
+    // Full page templates (located at templates/GenderResource/*.html)
     @CheckedTemplate
     public static class Templates {
         public static native TemplateInstance gender(
             String title,
             String currentPage,
             String userName,
-            List<Gender> genders
+            List<Gender> genders,
+            String filterText
+        );
+    }
+
+    // Partial templates for HTMX updates (located at templates/partials/*.html)
+    @CheckedTemplate(basePath = "partials")
+    public static class Partials {
+        public static native TemplateInstance gender_table(
+            List<Gender> genders,
+            String filterText
         );
 
-        public static native TemplateInstance genderForm(
-            String title,
-            String currentPage,
-            String userName,
+        public static native TemplateInstance gender_form(
             Gender gender,
             String error
         );
+
+        public static native TemplateInstance gender_success(String message);
+
+        public static native TemplateInstance gender_error(String message);
     }
 
-    // LIST
+    // LIST with optional filtering
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list() {
+    public TemplateInstance list(
+            @Context HttpHeaders headers,
+            @QueryParam("filter") String filterText) {
+
         String username = securityIdentity.getPrincipal().getName();
-        List<Gender> genders = Gender.listAllOrdered();
-        return Templates.gender("Gender Management", "gender", username, genders);
+
+        List<Gender> genders;
+        if (filterText != null && !filterText.trim().isEmpty()) {
+            genders = Gender.findByCodeOrDescriptionContaining(filterText.trim());
+        } else {
+            genders = Gender.listAllOrdered();
+        }
+
+        // Return partial for HTMX requests, full page otherwise
+        if (isHtmxRequest(headers)) {
+            return Partials.gender_table(genders, filterText);
+        }
+        return Templates.gender("Gender Management", "gender", username, genders, filterText);
     }
 
-    // CREATE FORM
+    // CREATE form (GET) - returns partial for modal/inline form
     @GET
     @Path("/create")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        String username = securityIdentity.getPrincipal().getName();
-        return Templates.genderForm("Create Gender", "gender", username, null, null);
+        return Partials.gender_form(null, null);
     }
 
-    // CREATE SUBMIT
+    // CREATE submit (POST)
     @POST
     @Path("/create")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Response create(
+    public TemplateInstance create(
             @FormParam("code") String code,
             @FormParam("description") String description) {
 
         String username = securityIdentity.getPrincipal().getName();
 
-        // Validation
+        // Validation: code required
         if (code == null || code.trim().isEmpty()) {
-            return Response.ok(Templates.genderForm(
-                "Create Gender", "gender", username, null,
-                "Code is required."
-            )).build();
+            return Partials.gender_form(null, "Code is required.");
         }
 
+        // Validation: description required
         if (description == null || description.trim().isEmpty()) {
-            return Response.ok(Templates.genderForm(
-                "Create Gender", "gender", username, null,
-                "Description is required."
-            )).build();
+            return Partials.gender_form(null, "Description is required.");
         }
 
-        // Check for duplicates
+        // Validation: code max length
+        if (code.trim().length() > 7) {
+            return Partials.gender_form(null, "Code must be 7 characters or less.");
+        }
+
+        // Check for duplicate code
         if (Gender.findByCode(code.trim()) != null) {
-            return Response.ok(Templates.genderForm(
-                "Create Gender", "gender", username, null,
-                "Code already exists."
-            )).build();
+            return Partials.gender_form(null, "Code already exists.");
         }
 
+        // Check for duplicate description
         if (Gender.findByDescription(description.trim()) != null) {
-            return Response.ok(Templates.genderForm(
-                "Create Gender", "gender", username, null,
-                "Description already exists."
-            )).build();
+            return Partials.gender_form(null, "Description already exists.");
         }
 
         // Create entity
@@ -603,31 +625,30 @@ public class GenderResource {
         gender.updatedBy = username;
         gender.persist();
 
-        return Response.seeOther(URI.create("/genders")).build();
+        return Partials.gender_success("Gender '" + gender.code + "' was created successfully!");
     }
 
-    // EDIT FORM
+    // EDIT form (GET) - returns partial for modal/inline form
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        String username = securityIdentity.getPrincipal().getName();
         Gender gender = Gender.findById(id);
 
         if (gender == null) {
             throw new NotFoundException("Gender not found");
         }
 
-        return Templates.genderForm("Edit Gender", "gender", username, gender, null);
+        return Partials.gender_form(gender, null);
     }
 
-    // UPDATE SUBMIT
+    // UPDATE submit (POST)
     @POST
     @Path("/{id}/update")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Response update(
+    public TemplateInstance update(
             @PathParam("id") Long id,
             @FormParam("code") String code,
             @FormParam("description") String description) {
@@ -639,30 +660,26 @@ public class GenderResource {
             throw new NotFoundException("Gender not found");
         }
 
-        // Validation
+        // Validation: code required
         if (code == null || code.trim().isEmpty()) {
-            return Response.ok(Templates.genderForm(
-                "Edit Gender", "gender", username, gender,
-                "Code is required."
-            )).build();
+            return Partials.gender_form(gender, "Code is required.");
+        }
+
+        // Validation: description required
+        if (description == null || description.trim().isEmpty()) {
+            return Partials.gender_form(gender, "Description is required.");
         }
 
         // Check for duplicate code (excluding current record)
         Gender existingCode = Gender.findByCode(code.trim());
         if (existingCode != null && !existingCode.id.equals(id)) {
-            return Response.ok(Templates.genderForm(
-                "Edit Gender", "gender", username, gender,
-                "Code already exists."
-            )).build();
+            return Partials.gender_form(gender, "Code already exists.");
         }
 
         // Check for duplicate description (excluding current record)
         Gender existingDesc = Gender.findByDescription(description.trim());
         if (existingDesc != null && !existingDesc.id.equals(id)) {
-            return Response.ok(Templates.genderForm(
-                "Edit Gender", "gender", username, gender,
-                "Description already exists."
-            )).build();
+            return Partials.gender_form(gender, "Description already exists.");
         }
 
         // Update entity
@@ -671,7 +688,7 @@ public class GenderResource {
         gender.updatedBy = username;
         // Managed entity - no explicit persist needed
 
-        return Response.seeOther(URI.create("/genders")).build();
+        return Partials.gender_success("Gender '" + gender.code + "' was updated successfully!");
     }
 
     // DELETE
@@ -679,7 +696,7 @@ public class GenderResource {
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Response delete(@PathParam("id") Long id) {
+    public TemplateInstance delete(@PathParam("id") Long id) {
         Gender gender = Gender.findById(id);
 
         if (gender == null) {
@@ -689,21 +706,32 @@ public class GenderResource {
         // Check if gender is in use by Person records
         long personCount = Person.count("gender.id", id);
         if (personCount > 0) {
-            // Return error - cannot delete gender in use
-            String username = securityIdentity.getPrincipal().getName();
-            List<Gender> genders = Gender.listAllOrdered();
-            // Could return an error template or use HX-Trigger for notification
-            throw new WebApplicationException(
-                "Cannot delete: Gender is in use by " + personCount + " person(s).",
-                Response.Status.CONFLICT
+            return Partials.gender_error(
+                "Cannot delete: Gender is in use by " + personCount + " person(s)."
             );
         }
 
+        String deletedCode = gender.code;
         gender.delete();
-        return Response.seeOther(URI.create("/genders")).build();
+
+        return Partials.gender_success("Gender '" + deletedCode + "' was deleted successfully!");
+    }
+
+    // Helper: detect HTMX requests
+    private boolean isHtmxRequest(HttpHeaders headers) {
+        return headers.getHeaderString("HX-Request") != null;
     }
 }
 ```
+
+**Key Patterns**:
+- `Templates` class for full page renders (direct navigation)
+- `Partials` class with `basePath = "partials"` for HTMX fragment updates
+- `isHtmxRequest()` helper checks for `HX-Request` header
+- Returns `TemplateInstance` directly (no `Response.seeOther()`)
+- Success/error partials for in-place feedback after mutations
+
+---
 
 ### 4.3 PersonResource (Complete CRUD Example)
 
@@ -719,6 +747,7 @@ public class PersonResource {
     @Inject
     SecurityIdentity securityIdentity;
 
+    // Full page templates (located at templates/PersonResource/*.html)
     @CheckedTemplate
     public static class Templates {
         public static native TemplateInstance persons(
@@ -729,21 +758,34 @@ public class PersonResource {
             String filterText,
             List<Gender> genderChoices
         );
+    }
 
-        public static native TemplateInstance personForm(
-            String title,
-            String currentPage,
-            String userName,
+    // Partial templates for HTMX updates (located at templates/partials/*.html)
+    @CheckedTemplate(basePath = "partials")
+    public static class Partials {
+        public static native TemplateInstance persons_table(
+            List<Person> persons,
+            String filterText
+        );
+
+        public static native TemplateInstance person_form(
             Person person,
             List<Gender> genderChoices,
             String error
         );
+
+        public static native TemplateInstance person_success(String message);
+
+        public static native TemplateInstance person_error(String message);
     }
 
     // LIST with filtering
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list(@QueryParam("filter") String filterText) {
+    public TemplateInstance list(
+            @Context HttpHeaders headers,
+            @QueryParam("filter") String filterText) {
+
         String username = securityIdentity.getPrincipal().getName();
 
         List<Person> persons;
@@ -755,32 +797,32 @@ public class PersonResource {
 
         List<Gender> genderChoices = Gender.listAllOrdered();
 
+        // Return partial for HTMX requests, full page otherwise
+        if (isHtmxRequest(headers)) {
+            return Partials.persons_table(persons, filterText);
+        }
         return Templates.persons(
             "Persons", "persons", username,
             persons, filterText, genderChoices
         );
     }
 
-    // CREATE FORM
+    // CREATE form (GET) - returns partial for modal/inline form
     @GET
     @Path("/create")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        String username = securityIdentity.getPrincipal().getName();
         List<Gender> genderChoices = Gender.listAllOrdered();
-        return Templates.personForm(
-            "Create Person", "persons", username,
-            null, genderChoices, null
-        );
+        return Partials.person_form(null, genderChoices, null);
     }
 
-    // CREATE SUBMIT
+    // CREATE submit (POST)
     @POST
     @Path("/create")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Response create(
+    public TemplateInstance create(
             @FormParam("firstName") String firstName,
             @FormParam("lastName") String lastName,
             @FormParam("email") String email,
@@ -791,28 +833,19 @@ public class PersonResource {
         String username = securityIdentity.getPrincipal().getName();
         List<Gender> genderChoices = Gender.listAllOrdered();
 
-        // Validation
+        // Validation: email required
         if (email == null || email.trim().isEmpty()) {
-            return Response.ok(Templates.personForm(
-                "Create Person", "persons", username,
-                null, genderChoices, "Email is required."
-            )).build();
+            return Partials.person_form(null, genderChoices, "Email is required.");
         }
 
-        // Email format validation
+        // Validation: email format
         if (!isValidEmail(email)) {
-            return Response.ok(Templates.personForm(
-                "Create Person", "persons", username,
-                null, genderChoices, "Invalid email format."
-            )).build();
+            return Partials.person_form(null, genderChoices, "Invalid email format.");
         }
 
         // Check for duplicate email
         if (Person.findByEmail(email.trim()) != null) {
-            return Response.ok(Templates.personForm(
-                "Create Person", "persons", username,
-                null, genderChoices, "Email already registered."
-            )).build();
+            return Partials.person_form(null, genderChoices, "Email already registered.");
         }
 
         // Create entity
@@ -831,15 +864,15 @@ public class PersonResource {
 
         person.persist();
 
-        return Response.seeOther(URI.create("/persons")).build();
+        String displayName = person.getDisplayName();
+        return Partials.person_success("Person '" + displayName + "' was created successfully!");
     }
 
-    // EDIT FORM
+    // EDIT form (GET) - returns partial for modal/inline form
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        String username = securityIdentity.getPrincipal().getName();
         Person person = Person.findById(id);
 
         if (person == null) {
@@ -847,19 +880,16 @@ public class PersonResource {
         }
 
         List<Gender> genderChoices = Gender.listAllOrdered();
-        return Templates.personForm(
-            "Edit Person", "persons", username,
-            person, genderChoices, null
-        );
+        return Partials.person_form(person, genderChoices, null);
     }
 
-    // UPDATE SUBMIT
+    // UPDATE submit (POST)
     @POST
     @Path("/{id}/update")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Response update(
+    public TemplateInstance update(
             @PathParam("id") Long id,
             @FormParam("firstName") String firstName,
             @FormParam("lastName") String lastName,
@@ -876,21 +906,20 @@ public class PersonResource {
             throw new NotFoundException("Person not found");
         }
 
-        // Validation
+        // Validation: email required
         if (email == null || email.trim().isEmpty()) {
-            return Response.ok(Templates.personForm(
-                "Edit Person", "persons", username,
-                person, genderChoices, "Email is required."
-            )).build();
+            return Partials.person_form(person, genderChoices, "Email is required.");
+        }
+
+        // Validation: email format
+        if (!isValidEmail(email)) {
+            return Partials.person_form(person, genderChoices, "Invalid email format.");
         }
 
         // Check for duplicate email (excluding current record)
         Person existingEmail = Person.findByEmail(email.trim());
         if (existingEmail != null && !existingEmail.id.equals(id)) {
-            return Response.ok(Templates.personForm(
-                "Edit Person", "persons", username,
-                person, genderChoices, "Email already registered."
-            )).build();
+            return Partials.person_form(person, genderChoices, "Email already registered.");
         }
 
         // Update entity
@@ -906,8 +935,10 @@ public class PersonResource {
         } else {
             person.gender = null;
         }
+        // Managed entity - no explicit persist needed
 
-        return Response.seeOther(URI.create("/persons")).build();
+        String displayName = person.getDisplayName();
+        return Partials.person_success("Person '" + displayName + "' was updated successfully!");
     }
 
     // DELETE
@@ -915,24 +946,43 @@ public class PersonResource {
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public Response delete(@PathParam("id") Long id) {
+    public TemplateInstance delete(@PathParam("id") Long id) {
         Person person = Person.findById(id);
 
         if (person == null) {
             throw new NotFoundException("Person not found");
         }
 
+        String displayName = person.getDisplayName();
+
         // Cascade deletes UserLogin if exists (via orphanRemoval)
         person.delete();
 
-        return Response.seeOther(URI.create("/persons")).build();
+        return Partials.person_success("Person '" + displayName + "' was deleted successfully!");
     }
 
+    // Helper: detect HTMX requests
+    private boolean isHtmxRequest(HttpHeaders headers) {
+        return headers.getHeaderString("HX-Request") != null;
+    }
+
+    // Helper: validate email format
     private boolean isValidEmail(String email) {
         return email != null && email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     }
 }
 ```
+
+**Key Patterns**:
+- `Templates` class for full page renders (direct navigation)
+- `Partials` class with `basePath = "partials"` for HTMX fragment updates
+- `isHtmxRequest()` helper checks for `HX-Request` header
+- LIST returns table partial for filter updates, full page for direct access
+- CREATE/EDIT forms return partials for modal or inline display
+- Returns `TemplateInstance` directly (no `Response.seeOther()`)
+- Success/error partials for in-place feedback after mutations
+
+---
 
 ### 4.4 AuthResource (Authentication)
 
@@ -1118,6 +1168,34 @@ Templates are located based on resource class name:
 | `GenderResource` | `templates/GenderResource/` |
 | `PersonResource` | `templates/PersonResource/` |
 | `AuthResource` | `templates/AuthResource/` |
+| **Partials** | `templates/partials/` |
+
+**Partials Directory**: Templates in `templates/partials/` are used for HTMX fragment updates. They are referenced using `@CheckedTemplate(basePath = "partials")` in resource classes.
+
+```
+src/main/resources/templates/
+├── base.html                          # Base layout
+├── error.html                         # Error page
+├── IndexResource/
+│   └── index.html                     # Home page (full page)
+├── GenderResource/
+│   └── gender.html                    # Gender list (full page)
+├── PersonResource/
+│   └── persons.html                   # Persons list (full page)
+├── AuthResource/
+│   ├── login.html                     # Login page
+│   ├── signup.html                    # Signup page
+│   └── logout.html                    # Logout confirmation
+└── partials/                          # HTMX fragment templates
+    ├── gender_table.html              # Gender table partial
+    ├── gender_form.html               # Gender create/edit form partial
+    ├── gender_success.html            # Gender success message partial
+    ├── gender_error.html              # Gender error message partial
+    ├── persons_table.html             # Persons table partial
+    ├── person_form.html               # Person create/edit form partial
+    ├── person_success.html            # Person success message partial
+    └── person_error.html              # Person error message partial
+```
 
 ### 5.2 Base Template (Layout)
 
@@ -1239,9 +1317,11 @@ Templates are located based on resource class name:
 - `{#if currentPage == 'xyz'}uk-active{/if}` - Active page highlighting
 - `{userName??}` - Null-safe access
 
-### 5.3 Page Template (Extending Base)
+### 5.3 Page Template (Full Page with Partial Include)
 
 **File**: `templates/PersonResource/persons.html`
+
+Full page templates include the base layout and embed a partial for the dynamic content area. This allows the same table content to be rendered as a full page (direct navigation) or as a partial (HTMX update).
 
 ```html
 {@String title}
@@ -1255,26 +1335,64 @@ Templates are located based on resource class name:
 
 <h1 class="uk-heading-small">Persons</h1>
 
-<!-- Filter Form -->
+<!-- Filter Form - targets the table container for partial updates -->
 <div class="uk-margin">
-    <form class="uk-grid-small" uk-grid hx-get="/persons" hx-target="#main-content" hx-push-url="true">
+    <form class="uk-grid-small" uk-grid
+          hx-get="/persons"
+          hx-target="#persons-table-container"
+          hx-push-url="true">
         <div class="uk-width-1-2@s">
             <input class="uk-input" type="text" name="filter"
                    placeholder="Search by name..." value="{filterText ?: ''}"/>
         </div>
         <div class="uk-width-auto@s">
             <button type="submit" class="uk-button uk-button-primary">Filter</button>
-            <a href="/persons" class="uk-button uk-button-default">Clear</a>
+            <a href="/persons" class="uk-button uk-button-default"
+               hx-get="/persons" hx-target="#persons-table-container">Clear</a>
         </div>
     </form>
 </div>
 
-<!-- Add Button -->
+<!-- Add Button - opens form in modal -->
 <div class="uk-margin">
-    <a href="/persons/create" class="uk-button uk-button-primary">Add Person</a>
+    <button class="uk-button uk-button-primary"
+            hx-get="/persons/create"
+            hx-target="#modal-container"
+            hx-trigger="click">
+        Add Person
+    </button>
 </div>
 
-<!-- Persons Table -->
+<!-- Table Container - swapped by HTMX on filter/CRUD operations -->
+<div id="persons-table-container">
+    {#include partials/persons_table persons=persons filterText=filterText /}
+</div>
+
+<!-- Modal Container - for create/edit forms -->
+<div id="modal-container"></div>
+
+{/include}
+```
+
+**Key Patterns**:
+- `hx-target="#persons-table-container"` targets the table for partial updates
+- `{#include partials/persons_table ... /}` embeds the partial in full page render
+- Modal container receives form partials for create/edit operations
+
+---
+
+### 5.4 Partial Templates
+
+Partial templates are HTML fragments without the base layout. They are returned for HTMX requests to update specific page sections.
+
+#### 5.4.1 Table Partial
+
+**File**: `templates/partials/persons_table.html`
+
+```html
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
+{@String filterText}
+
 {#if persons.isEmpty}
 <p class="uk-text-muted">No persons found.</p>
 {#else}
@@ -1300,11 +1418,15 @@ Templates are located based on resource class name:
             <td>{person.dateOfBirth}</td>
             <td>{person.gender.description ?: ''}</td>
             <td>
-                <a href="/persons/{person.id}/edit" class="uk-button uk-button-small uk-button-default">Edit</a>
+                <button class="uk-button uk-button-small uk-button-default"
+                        hx-get="/persons/{person.id}/edit"
+                        hx-target="#modal-container">
+                    Edit
+                </button>
                 <button class="uk-button uk-button-small uk-button-danger"
                         hx-delete="/persons/{person.id}"
                         hx-confirm="Are you sure you want to delete this person?"
-                        hx-target="#main-content">
+                        hx-target="#persons-table-container">
                     Delete
                 </button>
             </td>
@@ -1313,97 +1435,270 @@ Templates are located based on resource class name:
     </tbody>
 </table>
 {/if}
-
-{/include}
 ```
 
-### 5.4 Form Template
+#### 5.4.2 Form Partial (Modal)
 
-**File**: `templates/PersonResource/personForm.html`
+**File**: `templates/partials/person_form.html`
 
 ```html
-{@String title}
-{@String currentPage}
-{@String userName}
 {@io.archton.scaffold.entity.Person person}
 {@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
 {@String error}
 
-{#include base}
+<div id="person-modal" uk-modal class="uk-open">
+    <div class="uk-modal-dialog uk-modal-body">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
 
-<h1 class="uk-heading-small">{#if person}Edit Person{#else}Create Person{/if}</h1>
+        <h2 class="uk-modal-title">{#if person}Edit Person{#else}Create Person{/if}</h2>
 
-{#if error}
-<div class="uk-alert uk-alert-danger" uk-alert>
-    <a class="uk-alert-close" uk-close></a>
-    <p>{error}</p>
+        {#if error}
+        <div class="uk-alert uk-alert-danger" uk-alert>
+            <a class="uk-alert-close" uk-close></a>
+            <p>{error}</p>
+        </div>
+        {/if}
+
+        <form hx-post="{#if person}/persons/{person.id}/update{#else}/persons/create{/if}"
+              hx-target="#modal-container"
+              class="uk-form-stacked">
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="firstName">First Name</label>
+                <input class="uk-input" type="text" id="firstName" name="firstName"
+                       value="{person.firstName ?: ''}"/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="lastName">Last Name</label>
+                <input class="uk-input" type="text" id="lastName" name="lastName"
+                       value="{person.lastName ?: ''}"/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="email">Email *</label>
+                <input class="uk-input" type="email" id="email" name="email" required
+                       value="{person.email ?: ''}"/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="phone">Phone</label>
+                <input class="uk-input" type="tel" id="phone" name="phone"
+                       value="{person.phone ?: ''}"/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="dateOfBirth">Date of Birth</label>
+                <input class="uk-input" type="date" id="dateOfBirth" name="dateOfBirth"
+                       value="{person.dateOfBirth}"/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="genderId">Gender</label>
+                <select class="uk-select" id="genderId" name="genderId">
+                    <option value="">-- Select --</option>
+                    {#for gender in genderChoices}
+                    <option value="{gender.id}" {#if person?? && person.gender?? && person.gender.id == gender.id}selected{/if}>
+                        {gender.description}
+                    </option>
+                    {/for}
+                </select>
+            </div>
+
+            <div class="uk-margin uk-text-right">
+                <button type="button" class="uk-button uk-button-default uk-modal-close">Cancel</button>
+                <button type="submit" class="uk-button uk-button-primary">Save</button>
+            </div>
+        </form>
+    </div>
 </div>
-{/if}
-
-<form method="POST"
-      action="{#if person}/persons/{person.id}/update{#else}/persons/create{/if}"
-      class="uk-form-stacked">
-
-    <div class="uk-margin">
-        <label class="uk-form-label" for="firstName">First Name</label>
-        <input class="uk-input" type="text" id="firstName" name="firstName"
-               value="{person.firstName ?: ''}"/>
-    </div>
-
-    <div class="uk-margin">
-        <label class="uk-form-label" for="lastName">Last Name</label>
-        <input class="uk-input" type="text" id="lastName" name="lastName"
-               value="{person.lastName ?: ''}"/>
-    </div>
-
-    <div class="uk-margin">
-        <label class="uk-form-label" for="email">Email *</label>
-        <input class="uk-input" type="email" id="email" name="email" required
-               value="{person.email ?: ''}"/>
-    </div>
-
-    <div class="uk-margin">
-        <label class="uk-form-label" for="phone">Phone</label>
-        <input class="uk-input" type="tel" id="phone" name="phone"
-               value="{person.phone ?: ''}"/>
-    </div>
-
-    <div class="uk-margin">
-        <label class="uk-form-label" for="dateOfBirth">Date of Birth</label>
-        <input class="uk-input" type="date" id="dateOfBirth" name="dateOfBirth"
-               value="{person.dateOfBirth}"/>
-    </div>
-
-    <div class="uk-margin">
-        <label class="uk-form-label" for="genderId">Gender</label>
-        <select class="uk-select" id="genderId" name="genderId">
-            <option value="">-- Select --</option>
-            {#for gender in genderChoices}
-            <option value="{gender.id}" {#if person?? && person.gender?? && person.gender.id == gender.id}selected{/if}>
-                {gender.description}
-            </option>
-            {/for}
-        </select>
-    </div>
-
-    {#if person}
-    <!-- Audit Fields (Read-only) -->
-    <div class="uk-margin uk-text-muted uk-text-small">
-        <p>Created: {person.createdAt} by {person.createdBy ?: 'unknown'}</p>
-        <p>Updated: {person.updatedAt} by {person.updatedBy ?: 'unknown'}</p>
-    </div>
-    {/if}
-
-    <div class="uk-margin">
-        <button type="submit" class="uk-button uk-button-primary">Save</button>
-        <a href="/persons" class="uk-button uk-button-default">Cancel</a>
-    </div>
-</form>
-
-{/include}
 ```
 
-### 5.5 Login Template
+#### 5.4.3 Success Partial
+
+**File**: `templates/partials/person_success.html`
+
+The success partial triggers a table refresh and displays a notification.
+
+```html
+{@String message}
+
+<!-- Close modal and refresh table -->
+<div hx-get="/persons"
+     hx-target="#persons-table-container"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+<!-- Display success notification using HX-Trigger header -->
+<script>
+    // Close the modal
+    UIkit.modal('#person-modal')?.hide();
+    // Show notification
+    UIkit.notification({message: '{message}', status: 'success', pos: 'top-center'});
+</script>
+```
+
+**Alternative using HX-Trigger header** (set in resource):
+```java
+return Response.ok(Partials.person_success(message))
+    .header("HX-Trigger", "{\"showNotification\": {\"message\": \"" + message + "\", \"type\": \"success\"}}")
+    .build();
+```
+
+#### 5.4.4 Error Partial
+
+**File**: `templates/partials/person_error.html`
+
+```html
+{@String message}
+
+<div class="uk-alert uk-alert-danger" uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    <p>{message}</p>
+</div>
+```
+
+---
+
+### 5.5 Gender Partial Templates
+
+#### 5.5.1 Gender Table Partial
+
+**File**: `templates/partials/gender_table.html`
+
+```html
+{@java.util.List<io.archton.scaffold.entity.Gender> genders}
+{@String filterText}
+
+{#if genders.isEmpty}
+<p class="uk-text-muted">No genders found.</p>
+{#else}
+<table class="uk-table uk-table-striped uk-table-hover">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Created</th>
+            <th>Updated</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {#for gender in genders}
+        <tr>
+            <td>{gender.code}</td>
+            <td>{gender.description}</td>
+            <td>{gender.createdAt}</td>
+            <td>{gender.updatedAt}</td>
+            <td>
+                <button class="uk-button uk-button-small uk-button-default"
+                        hx-get="/genders/{gender.id}/edit"
+                        hx-target="#modal-container">
+                    Edit
+                </button>
+                <button class="uk-button uk-button-small uk-button-danger"
+                        hx-delete="/genders/{gender.id}"
+                        hx-confirm="Are you sure you want to delete this gender?"
+                        hx-target="#gender-table-container">
+                    Delete
+                </button>
+            </td>
+        </tr>
+        {/for}
+    </tbody>
+</table>
+{/if}
+```
+
+#### 5.5.2 Gender Form Partial
+
+**File**: `templates/partials/gender_form.html`
+
+```html
+{@io.archton.scaffold.entity.Gender gender}
+{@String error}
+
+<div id="gender-modal" uk-modal class="uk-open">
+    <div class="uk-modal-dialog uk-modal-body">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+
+        <h2 class="uk-modal-title">{#if gender}Edit Gender{#else}Create Gender{/if}</h2>
+
+        {#if error}
+        <div class="uk-alert uk-alert-danger" uk-alert>
+            <a class="uk-alert-close" uk-close></a>
+            <p>{error}</p>
+        </div>
+        {/if}
+
+        <form hx-post="{#if gender}/genders/{gender.id}/update{#else}/genders/create{/if}"
+              hx-target="#modal-container"
+              class="uk-form-stacked">
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="code">Code *</label>
+                <input class="uk-input" type="text" id="code" name="code" required
+                       maxlength="7" style="text-transform: uppercase;"
+                       value="{gender.code ?: ''}"/>
+                <span class="uk-text-muted uk-text-small">Max 7 characters, will be uppercased</span>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="description">Description *</label>
+                <input class="uk-input" type="text" id="description" name="description" required
+                       value="{gender.description ?: ''}"/>
+            </div>
+
+            {#if gender}
+            <div class="uk-margin uk-text-muted uk-text-small">
+                <p>Created: {gender.createdAt} by {gender.createdBy ?: 'unknown'}</p>
+                <p>Updated: {gender.updatedAt} by {gender.updatedBy ?: 'unknown'}</p>
+            </div>
+            {/if}
+
+            <div class="uk-margin uk-text-right">
+                <button type="button" class="uk-button uk-button-default uk-modal-close">Cancel</button>
+                <button type="submit" class="uk-button uk-button-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+```
+
+#### 5.5.3 Gender Success/Error Partials
+
+**File**: `templates/partials/gender_success.html`
+
+```html
+{@String message}
+
+<div hx-get="/genders"
+     hx-target="#gender-table-container"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+<script>
+    UIkit.modal('#gender-modal')?.hide();
+    UIkit.notification({message: '{message}', status: 'success', pos: 'top-center'});
+</script>
+```
+
+**File**: `templates/partials/gender_error.html`
+
+```html
+{@String message}
+
+<div class="uk-alert uk-alert-danger" uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    <p>{message}</p>
+</div>
+```
+
+---
+
+### 5.6 Login Template
 
 **File**: `templates/AuthResource/login.html`
 
@@ -1455,7 +1750,7 @@ Templates are located based on resource class name:
 
 **Critical**: Form must POST to `/j_security_check` with fields named `j_username` and `j_password`.
 
-### 5.6 Signup Template
+### 5.7 Signup Template
 
 **File**: `templates/AuthResource/signup.html`
 
@@ -1527,18 +1822,43 @@ Templates are located based on resource class name:
 | `hx-get` | GET request | `hx-get="/persons"` |
 | `hx-post` | POST request | `hx-post="/persons/create"` |
 | `hx-delete` | DELETE request | `hx-delete="/persons/{id}"` |
-| `hx-target` | Element to update | `hx-target="#main-content"` |
+| `hx-target` | Element to update | `hx-target="#persons-table-container"` |
 | `hx-swap` | How to swap content | `hx-swap="outerHTML"`, `hx-swap="innerHTML"` |
 | `hx-push-url` | Update browser URL | `hx-push-url="true"` |
 | `hx-confirm` | Confirmation dialog | `hx-confirm="Are you sure?"` |
+| `hx-trigger` | When to trigger request | `hx-trigger="load"`, `hx-trigger="click"` |
 | `hx-indicator` | Loading indicator | `hx-indicator="#spinner"` |
 | `hx-include` | Include form values | `hx-include="#filterform"` |
 
-### 6.2 Filter Form with HTMX
+### 6.2 Full Page vs Partial Response Pattern
+
+The server detects HTMX requests via the `HX-Request` header and returns appropriate content:
+
+```java
+// In resource class
+private boolean isHtmxRequest(HttpHeaders headers) {
+    return headers.getHeaderString("HX-Request") != null;
+}
+
+@GET
+@Produces(MediaType.TEXT_HTML)
+public TemplateInstance list(@Context HttpHeaders headers) {
+    List<Person> persons = Person.listAllOrdered();
+
+    // Return partial for HTMX requests, full page otherwise
+    if (isHtmxRequest(headers)) {
+        return Partials.persons_table(persons, filterText);
+    }
+    return Templates.persons("Persons", "persons", username, persons, filterText, genderChoices);
+}
+```
+
+### 6.3 Filter Form with Partial Updates
 
 ```html
+<!-- Filter targets just the table container, not the whole page -->
 <form hx-get="/persons"
-      hx-target="#main-content"
+      hx-target="#persons-table-container"
       hx-push-url="true"
       class="uk-grid-small" uk-grid>
     <div class="uk-width-1-2@s">
@@ -1547,29 +1867,131 @@ Templates are located based on resource class name:
     </div>
     <div class="uk-width-auto@s">
         <button type="submit" class="uk-button uk-button-primary">Filter</button>
-        <a href="/persons" class="uk-button uk-button-default">Clear</a>
+        <a class="uk-button uk-button-default"
+           hx-get="/persons"
+           hx-target="#persons-table-container">Clear</a>
     </div>
 </form>
+
+<!-- Table container - only this element is swapped on filter -->
+<div id="persons-table-container">
+    {#include partials/persons_table ... /}
+</div>
 ```
 
-### 6.3 Delete with Confirmation
+### 6.4 Modal Forms with HTMX
+
+**Opening a form in a modal:**
+```html
+<button class="uk-button uk-button-primary"
+        hx-get="/persons/create"
+        hx-target="#modal-container"
+        hx-trigger="click">
+    Add Person
+</button>
+
+<!-- Modal container - receives form partial -->
+<div id="modal-container"></div>
+```
+
+**Form partial with HTMX submit:**
+```html
+<div id="person-modal" uk-modal class="uk-open">
+    <div class="uk-modal-dialog uk-modal-body">
+        <form hx-post="/persons/create"
+              hx-target="#modal-container"
+              class="uk-form-stacked">
+            <!-- form fields -->
+            <button type="submit" class="uk-button uk-button-primary">Save</button>
+        </form>
+    </div>
+</div>
+```
+
+### 6.5 Success Response with Table Refresh
+
+After a successful create/update/delete, the server returns a success partial that:
+1. Triggers a table refresh
+2. Closes the modal
+3. Shows a notification
+
+```html
+{@String message}
+
+<!-- Trigger table refresh on load -->
+<div hx-get="/persons"
+     hx-target="#persons-table-container"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>
+
+<script>
+    // Close the modal
+    UIkit.modal('#person-modal')?.hide();
+    // Show notification
+    UIkit.notification({message: '{message}', status: 'success', pos: 'top-center'});
+</script>
+```
+
+### 6.6 Delete with Confirmation
 
 ```html
 <button class="uk-button uk-button-small uk-button-danger"
         hx-delete="/persons/{person.id}"
         hx-confirm="Are you sure you want to delete this person?"
-        hx-target="#main-content">
+        hx-target="#persons-table-container">
     Delete
 </button>
 ```
 
-### 6.4 Loading Indicator
+**Server returns success partial** which refreshes the table and shows notification.
+
+### 6.7 Loading Indicator
 
 ```html
-<form hx-post="/persons/create" hx-indicator="#spinner">
+<form hx-post="/persons/create"
+      hx-target="#modal-container"
+      hx-indicator="#spinner">
     <!-- form fields -->
 </form>
-<div id="spinner" uk-spinner class="htmx-indicator"></div>
+
+<div id="spinner" class="htmx-indicator">
+    <div uk-spinner></div>
+</div>
+```
+
+### 6.8 Out-of-Band (OOB) Swaps
+
+For updating multiple page elements in a single response:
+
+```html
+<!-- Main response content -->
+<div id="persons-table-container">
+    <!-- Updated table content -->
+</div>
+
+<!-- OOB swap - also update notification area -->
+<div id="notification-area" hx-swap-oob="true">
+    <div class="uk-alert uk-alert-success">Person created successfully!</div>
+</div>
+```
+
+### 6.9 HX-Trigger Header for Events
+
+Server can trigger client-side events via response header:
+
+```java
+return Response.ok(templateInstance)
+    .header("HX-Trigger", "personCreated")
+    .build();
+```
+
+Client listens for the event:
+```html
+<div hx-get="/persons"
+     hx-target="#persons-table-container"
+     hx-trigger="personCreated from:body">
+</div>
 ```
 
 ---
