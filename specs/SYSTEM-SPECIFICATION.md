@@ -539,12 +539,25 @@ public class GenderResource {
             String filterText
         );
 
-        public static native TemplateInstance gender_form(
+        public static native TemplateInstance gender_row(
+            Gender gender
+        );
+
+        public static native TemplateInstance gender_row_edit(
             Gender gender,
             String error
         );
 
-        public static native TemplateInstance gender_success(String message);
+        public static native TemplateInstance gender_create_form(
+            String error
+        );
+
+        public static native TemplateInstance gender_create_button();
+
+        public static native TemplateInstance gender_success(
+            String message,
+            List<Gender> genders
+        );
 
         public static native TemplateInstance gender_error(String message);
     }
@@ -572,12 +585,20 @@ public class GenderResource {
         return Templates.gender("Gender Management", "gender", username, genders, filterText);
     }
 
-    // CREATE form (GET) - returns partial for modal/inline form
+    // CREATE form (GET) - returns inline form partial
     @GET
     @Path("/create")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        return Partials.gender_form(null, null);
+        return Partials.gender_create_form(null);
+    }
+
+    // CREATE cancel (GET) - returns the Add button
+    @GET
+    @Path("/create/cancel")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance createFormCancel() {
+        return Partials.gender_create_button();
     }
 
     // CREATE submit (POST)
@@ -594,27 +615,27 @@ public class GenderResource {
 
         // Validation: code required
         if (code == null || code.trim().isEmpty()) {
-            return Partials.gender_form(null, "Code is required.");
+            return Partials.gender_create_form("Code is required.");
         }
 
         // Validation: description required
         if (description == null || description.trim().isEmpty()) {
-            return Partials.gender_form(null, "Description is required.");
+            return Partials.gender_create_form("Description is required.");
         }
 
         // Validation: code max length
         if (code.trim().length() > 7) {
-            return Partials.gender_form(null, "Code must be 7 characters or less.");
+            return Partials.gender_create_form("Code must be 7 characters or less.");
         }
 
         // Check for duplicate code
         if (Gender.findByCode(code.trim()) != null) {
-            return Partials.gender_form(null, "Code already exists.");
+            return Partials.gender_create_form("Code already exists.");
         }
 
         // Check for duplicate description
         if (Gender.findByDescription(description.trim()) != null) {
-            return Partials.gender_form(null, "Description already exists.");
+            return Partials.gender_create_form("Description already exists.");
         }
 
         // Create entity
@@ -625,10 +646,26 @@ public class GenderResource {
         gender.updatedBy = username;
         gender.persist();
 
-        return Partials.gender_success("Gender '" + gender.code + "' was created successfully!");
+        // Return success with OOB table refresh
+        List<Gender> genders = Gender.listAllOrdered();
+        return Partials.gender_success("Gender '" + gender.code + "' was created successfully!", genders);
     }
 
-    // EDIT form (GET) - returns partial for modal/inline form
+    // ROW display (GET) - returns single row partial (for cancel)
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance getRow(@PathParam("id") Long id) {
+        Gender gender = Gender.findById(id);
+
+        if (gender == null) {
+            throw new NotFoundException("Gender not found");
+        }
+
+        return Partials.gender_row(gender);
+    }
+
+    // EDIT form (GET) - returns inline row edit partial
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
@@ -639,7 +676,7 @@ public class GenderResource {
             throw new NotFoundException("Gender not found");
         }
 
-        return Partials.gender_form(gender, null);
+        return Partials.gender_row_edit(gender, null);
     }
 
     // UPDATE submit (POST)
@@ -662,24 +699,24 @@ public class GenderResource {
 
         // Validation: code required
         if (code == null || code.trim().isEmpty()) {
-            return Partials.gender_form(gender, "Code is required.");
+            return Partials.gender_row_edit(gender, "Code is required.");
         }
 
         // Validation: description required
         if (description == null || description.trim().isEmpty()) {
-            return Partials.gender_form(gender, "Description is required.");
+            return Partials.gender_row_edit(gender, "Description is required.");
         }
 
         // Check for duplicate code (excluding current record)
         Gender existingCode = Gender.findByCode(code.trim());
         if (existingCode != null && !existingCode.id.equals(id)) {
-            return Partials.gender_form(gender, "Code already exists.");
+            return Partials.gender_row_edit(gender, "Code already exists.");
         }
 
         // Check for duplicate description (excluding current record)
         Gender existingDesc = Gender.findByDescription(description.trim());
         if (existingDesc != null && !existingDesc.id.equals(id)) {
-            return Partials.gender_form(gender, "Description already exists.");
+            return Partials.gender_row_edit(gender, "Description already exists.");
         }
 
         // Update entity
@@ -688,7 +725,8 @@ public class GenderResource {
         gender.updatedBy = username;
         // Managed entity - no explicit persist needed
 
-        return Partials.gender_success("Gender '" + gender.code + "' was updated successfully!");
+        // Return updated row partial
+        return Partials.gender_row(gender);
     }
 
     // DELETE
@@ -696,7 +734,7 @@ public class GenderResource {
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public TemplateInstance delete(@PathParam("id") Long id) {
+    public Response delete(@PathParam("id") Long id) {
         Gender gender = Gender.findById(id);
 
         if (gender == null) {
@@ -706,15 +744,15 @@ public class GenderResource {
         // Check if gender is in use by Person records
         long personCount = Person.count("gender.id", id);
         if (personCount > 0) {
-            return Partials.gender_error(
-                "Cannot delete: Gender is in use by " + personCount + " person(s)."
-            );
+            return Response.ok(Partials.gender_row_edit(gender, 
+                "Cannot delete: Gender is in use by " + personCount + " person(s)."))
+                .build();
         }
 
-        String deletedCode = gender.code;
         gender.delete();
 
-        return Partials.gender_success("Gender '" + deletedCode + "' was deleted successfully!");
+        // Return empty response - row removed via hx-swap="delete"
+        return Response.ok().build();
     }
 
     // Helper: detect HTMX requests
@@ -728,8 +766,9 @@ public class GenderResource {
 - `Templates` class for full page renders (direct navigation)
 - `Partials` class with `basePath = "partials"` for HTMX fragment updates
 - `isHtmxRequest()` helper checks for `HX-Request` header
-- Returns `TemplateInstance` directly (no `Response.seeOther()`)
-- Success/error partials for in-place feedback after mutations
+- **Inline row editing**: Edit form replaces table row, not modal
+- **Inline create form**: Form appears above table, not in modal
+- Delete returns empty response with `hx-swap="delete"` on client
 
 ---
 
@@ -768,13 +807,27 @@ public class PersonResource {
             String filterText
         );
 
-        public static native TemplateInstance person_form(
+        public static native TemplateInstance person_row(
+            Person person
+        );
+
+        public static native TemplateInstance person_row_edit(
             Person person,
             List<Gender> genderChoices,
             String error
         );
 
-        public static native TemplateInstance person_success(String message);
+        public static native TemplateInstance person_create_form(
+            List<Gender> genderChoices,
+            String error
+        );
+
+        public static native TemplateInstance person_create_button();
+
+        public static native TemplateInstance person_success(
+            String message,
+            List<Person> persons
+        );
 
         public static native TemplateInstance person_error(String message);
     }
@@ -807,13 +860,21 @@ public class PersonResource {
         );
     }
 
-    // CREATE form (GET) - returns partial for modal/inline form
+    // CREATE form (GET) - returns inline form partial
     @GET
     @Path("/create")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
         List<Gender> genderChoices = Gender.listAllOrdered();
-        return Partials.person_form(null, genderChoices, null);
+        return Partials.person_create_form(genderChoices, null);
+    }
+
+    // CREATE cancel (GET) - returns the Add button
+    @GET
+    @Path("/create/cancel")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance createFormCancel() {
+        return Partials.person_create_button();
     }
 
     // CREATE submit (POST)
@@ -835,17 +896,17 @@ public class PersonResource {
 
         // Validation: email required
         if (email == null || email.trim().isEmpty()) {
-            return Partials.person_form(null, genderChoices, "Email is required.");
+            return Partials.person_create_form(genderChoices, "Email is required.");
         }
 
         // Validation: email format
         if (!isValidEmail(email)) {
-            return Partials.person_form(null, genderChoices, "Invalid email format.");
+            return Partials.person_create_form(genderChoices, "Invalid email format.");
         }
 
         // Check for duplicate email
         if (Person.findByEmail(email.trim()) != null) {
-            return Partials.person_form(null, genderChoices, "Email already registered.");
+            return Partials.person_create_form(genderChoices, "Email already registered.");
         }
 
         // Create entity
@@ -864,11 +925,27 @@ public class PersonResource {
 
         person.persist();
 
+        // Return success with OOB table refresh
+        List<Person> persons = Person.listAllOrdered();
         String displayName = person.getDisplayName();
-        return Partials.person_success("Person '" + displayName + "' was created successfully!");
+        return Partials.person_success("Person '" + displayName + "' was created successfully!", persons);
     }
 
-    // EDIT form (GET) - returns partial for modal/inline form
+    // ROW display (GET) - returns single row partial (for cancel)
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance getRow(@PathParam("id") Long id) {
+        Person person = Person.findById(id);
+
+        if (person == null) {
+            throw new NotFoundException("Person not found");
+        }
+
+        return Partials.person_row(person);
+    }
+
+    // EDIT form (GET) - returns inline row edit partial
     @GET
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
@@ -880,7 +957,7 @@ public class PersonResource {
         }
 
         List<Gender> genderChoices = Gender.listAllOrdered();
-        return Partials.person_form(person, genderChoices, null);
+        return Partials.person_row_edit(person, genderChoices, null);
     }
 
     // UPDATE submit (POST)
@@ -908,18 +985,18 @@ public class PersonResource {
 
         // Validation: email required
         if (email == null || email.trim().isEmpty()) {
-            return Partials.person_form(person, genderChoices, "Email is required.");
+            return Partials.person_row_edit(person, genderChoices, "Email is required.");
         }
 
         // Validation: email format
         if (!isValidEmail(email)) {
-            return Partials.person_form(person, genderChoices, "Invalid email format.");
+            return Partials.person_row_edit(person, genderChoices, "Invalid email format.");
         }
 
         // Check for duplicate email (excluding current record)
         Person existingEmail = Person.findByEmail(email.trim());
         if (existingEmail != null && !existingEmail.id.equals(id)) {
-            return Partials.person_form(person, genderChoices, "Email already registered.");
+            return Partials.person_row_edit(person, genderChoices, "Email already registered.");
         }
 
         // Update entity
@@ -937,8 +1014,8 @@ public class PersonResource {
         }
         // Managed entity - no explicit persist needed
 
-        String displayName = person.getDisplayName();
-        return Partials.person_success("Person '" + displayName + "' was updated successfully!");
+        // Return updated row partial
+        return Partials.person_row(person);
     }
 
     // DELETE
@@ -946,19 +1023,18 @@ public class PersonResource {
     @Path("/{id}")
     @Produces(MediaType.TEXT_HTML)
     @Transactional
-    public TemplateInstance delete(@PathParam("id") Long id) {
+    public Response delete(@PathParam("id") Long id) {
         Person person = Person.findById(id);
 
         if (person == null) {
             throw new NotFoundException("Person not found");
         }
 
-        String displayName = person.getDisplayName();
-
         // Cascade deletes UserLogin if exists (via orphanRemoval)
         person.delete();
 
-        return Partials.person_success("Person '" + displayName + "' was deleted successfully!");
+        // Return empty response - row removed via hx-swap="delete"
+        return Response.ok().build();
     }
 
     // Helper: detect HTMX requests
@@ -978,9 +1054,9 @@ public class PersonResource {
 - `Partials` class with `basePath = "partials"` for HTMX fragment updates
 - `isHtmxRequest()` helper checks for `HX-Request` header
 - LIST returns table partial for filter updates, full page for direct access
-- CREATE/EDIT forms return partials for modal or inline display
-- Returns `TemplateInstance` directly (no `Response.seeOther()`)
-- Success/error partials for in-place feedback after mutations
+- **Inline row editing**: Edit form replaces table row, not modal
+- **Inline create form**: Form appears above table, not in modal
+- Delete returns empty response with `hx-swap="delete"` on client
 
 ---
 
@@ -1170,7 +1246,7 @@ Templates are located based on resource class name:
 | `AuthResource` | `templates/AuthResource/` |
 | **Partials** | `templates/partials/` |
 
-**Partials Directory**: Templates in `templates/partials/` are used for HTMX fragment updates. They are referenced using `@CheckedTemplate(basePath = "partials")` in resource classes.
+**Partials Directory**: Templates in `templates/partials/` are used for HTMX inline updates. They are referenced using `@CheckedTemplate(basePath = "partials")` in resource classes. The inline editing pattern replaces table rows directly without modals.
 
 ```
 src/main/resources/templates/
@@ -1186,15 +1262,21 @@ src/main/resources/templates/
 │   ├── login.html                     # Login page
 │   ├── signup.html                    # Signup page
 │   └── logout.html                    # Logout confirmation
-└── partials/                          # HTMX fragment templates
+└── partials/                          # HTMX inline fragment templates
     ├── gender_table.html              # Gender table partial
-    ├── gender_form.html               # Gender create/edit form partial
-    ├── gender_success.html            # Gender success message partial
-    ├── gender_error.html              # Gender error message partial
+    ├── gender_row.html                # Single gender row (display mode)
+    ├── gender_row_edit.html           # Single gender row (edit mode)
+    ├── gender_create_form.html        # Inline create form
+    ├── gender_create_button.html      # Add button partial
+    ├── gender_success.html            # Success message with OOB table refresh
+    ├── gender_error.html              # Error message partial
     ├── persons_table.html             # Persons table partial
-    ├── person_form.html               # Person create/edit form partial
-    ├── person_success.html            # Person success message partial
-    └── person_error.html              # Person error message partial
+    ├── person_row.html                # Single person row (display mode)
+    ├── person_row_edit.html           # Single person row (edit mode)
+    ├── person_create_form.html        # Inline create form
+    ├── person_create_button.html      # Add button partial
+    ├── person_success.html            # Success message with OOB table refresh
+    └── person_error.html              # Error message partial
 ```
 
 ### 5.2 Base Template (Layout)
@@ -1321,7 +1403,7 @@ src/main/resources/templates/
 
 **File**: `templates/PersonResource/persons.html`
 
-Full page templates include the base layout and embed a partial for the dynamic content area. This allows the same table content to be rendered as a full page (direct navigation) or as a partial (HTMX update).
+Full page templates include the base layout and embed a partial for the dynamic content area. This allows the same table content to be rendered as a full page (direct navigation) or as a partial (HTMX update). The inline form pattern places the create form above the table instead of in a modal.
 
 ```html
 {@String title}
@@ -1353,14 +1435,9 @@ Full page templates include the base layout and embed a partial for the dynamic 
     </form>
 </div>
 
-<!-- Add Button - opens form in modal -->
-<div class="uk-margin">
-    <button class="uk-button uk-button-primary"
-            hx-get="/persons/create"
-            hx-target="#modal-container"
-            hx-trigger="click">
-        Add Person
-    </button>
+<!-- Create Form Container - inline form appears here -->
+<div id="person-create-container">
+    {#include partials/person_create_button /}
 </div>
 
 <!-- Table Container - swapped by HTMX on filter/CRUD operations -->
@@ -1368,16 +1445,14 @@ Full page templates include the base layout and embed a partial for the dynamic 
     {#include partials/persons_table persons=persons filterText=filterText /}
 </div>
 
-<!-- Modal Container - for create/edit forms -->
-<div id="modal-container"></div>
-
 {/include}
 ```
 
 **Key Patterns**:
 - `hx-target="#persons-table-container"` targets the table for partial updates
 - `{#include partials/persons_table ... /}` embeds the partial in full page render
-- Modal container receives form partials for create/edit operations
+- `#person-create-container` receives inline create form (no modal)
+- Table rows swap in place for inline edit (via `hx-target="closest tr"`)
 
 ---
 
@@ -1388,6 +1463,8 @@ Partial templates are HTML fragments without the base layout. They are returned 
 #### 5.4.1 Table Partial
 
 **File**: `templates/partials/persons_table.html`
+
+The table partial includes individual rows via the `person_row` partial. Edit/Delete buttons target `closest tr` for inline row replacement.
 
 ```html
 {@java.util.List<io.archton.scaffold.entity.Person> persons}
@@ -1408,145 +1485,212 @@ Partial templates are HTML fragments without the base layout. They are returned 
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="persons-table-body">
         {#for person in persons}
-        <tr>
-            <td>{person.firstName ?: ''}</td>
-            <td>{person.lastName ?: ''}</td>
-            <td>{person.email}</td>
-            <td>{person.phone ?: ''}</td>
-            <td>{person.dateOfBirth}</td>
-            <td>{person.gender.description ?: ''}</td>
-            <td>
-                <button class="uk-button uk-button-small uk-button-default"
-                        hx-get="/persons/{person.id}/edit"
-                        hx-target="#modal-container">
-                    Edit
-                </button>
-                <button class="uk-button uk-button-small uk-button-danger"
-                        hx-delete="/persons/{person.id}"
-                        hx-confirm="Are you sure you want to delete this person?"
-                        hx-target="#persons-table-container">
-                    Delete
-                </button>
-            </td>
-        </tr>
+        {#include partials/person_row person=person /}
         {/for}
     </tbody>
 </table>
 {/if}
 ```
 
-#### 5.4.2 Form Partial (Modal)
+#### 5.4.2 Row Partial (Display Mode)
 
-**File**: `templates/partials/person_form.html`
+**File**: `templates/partials/person_row.html`
+
+Single row in display mode. Edit button swaps this row with the edit form row.
+
+```html
+{@io.archton.scaffold.entity.Person person}
+
+<tr>
+    <td>{person.firstName ?: ''}</td>
+    <td>{person.lastName ?: ''}</td>
+    <td>{person.email}</td>
+    <td>{person.phone ?: ''}</td>
+    <td>{person.dateOfBirth}</td>
+    <td>{person.gender.description ?: ''}</td>
+    <td>
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/persons/{person.id}/edit"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Edit
+        </button>
+        <button class="uk-button uk-button-small uk-button-danger"
+                hx-delete="/persons/{person.id}"
+                hx-confirm="Are you sure you want to delete this person?"
+                hx-target="closest tr"
+                hx-swap="delete swap:300ms">
+            Delete
+        </button>
+    </td>
+</tr>
+```
+
+#### 5.4.3 Row Edit Partial (Inline Edit Mode)
+
+**File**: `templates/partials/person_row_edit.html`
+
+Single row in edit mode. Form inputs replace display cells. Cancel returns to display mode, Save updates and returns display row.
 
 ```html
 {@io.archton.scaffold.entity.Person person}
 {@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
 {@String error}
 
-<div id="person-modal" uk-modal class="uk-open">
-    <div class="uk-modal-dialog uk-modal-body">
-        <button class="uk-modal-close-default" type="button" uk-close></button>
+<tr class="editing">
+    <td><input class="uk-input uk-form-small" type="text" name="firstName"
+               value="{person.firstName ?: ''}" placeholder="First Name"/></td>
+    <td><input class="uk-input uk-form-small" type="text" name="lastName"
+               value="{person.lastName ?: ''}" placeholder="Last Name"/></td>
+    <td><input class="uk-input uk-form-small" type="email" name="email" required
+               value="{person.email ?: ''}" placeholder="Email *"/></td>
+    <td><input class="uk-input uk-form-small" type="tel" name="phone"
+               value="{person.phone ?: ''}" placeholder="Phone"/></td>
+    <td><input class="uk-input uk-form-small" type="date" name="dateOfBirth"
+               value="{person.dateOfBirth}"/></td>
+    <td>
+        <select class="uk-select uk-form-small" name="genderId">
+            <option value="">-- Select --</option>
+            {#for gender in genderChoices}
+            <option value="{gender.id}" {#if person.gender?? && person.gender.id == gender.id}selected{/if}>
+                {gender.description}
+            </option>
+            {/for}
+        </select>
+    </td>
+    <td>
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/persons/{person.id}"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Cancel
+        </button>
+        <button class="uk-button uk-button-small uk-button-primary"
+                hx-post="/persons/{person.id}/update"
+                hx-include="closest tr"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Save
+        </button>
+    </td>
+</tr>
+{#if error}
+<tr class="uk-alert uk-alert-danger">
+    <td colspan="7">{error}</td>
+</tr>
+{/if}
+```
 
-        <h2 class="uk-modal-title">{#if person}Edit Person{#else}Create Person{/if}</h2>
+#### 5.4.4 Create Form Partial (Inline)
 
-        {#if error}
-        <div class="uk-alert uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            <p>{error}</p>
-        </div>
-        {/if}
+**File**: `templates/partials/person_create_form.html`
 
-        <form hx-post="{#if person}/persons/{person.id}/update{#else}/persons/create{/if}"
-              hx-target="#modal-container"
-              class="uk-form-stacked">
+Inline create form that appears above the table. Replaces the Add button when shown.
 
-            <div class="uk-margin">
-                <label class="uk-form-label" for="firstName">First Name</label>
-                <input class="uk-input" type="text" id="firstName" name="firstName"
-                       value="{person.firstName ?: ''}"/>
-            </div>
+```html
+{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
+{@String error}
 
-            <div class="uk-margin">
-                <label class="uk-form-label" for="lastName">Last Name</label>
-                <input class="uk-input" type="text" id="lastName" name="lastName"
-                       value="{person.lastName ?: ''}"/>
-            </div>
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h3 class="uk-card-title">Add Person</h3>
 
-            <div class="uk-margin">
-                <label class="uk-form-label" for="email">Email *</label>
-                <input class="uk-input" type="email" id="email" name="email" required
-                       value="{person.email ?: ''}"/>
-            </div>
-
-            <div class="uk-margin">
-                <label class="uk-form-label" for="phone">Phone</label>
-                <input class="uk-input" type="tel" id="phone" name="phone"
-                       value="{person.phone ?: ''}"/>
-            </div>
-
-            <div class="uk-margin">
-                <label class="uk-form-label" for="dateOfBirth">Date of Birth</label>
-                <input class="uk-input" type="date" id="dateOfBirth" name="dateOfBirth"
-                       value="{person.dateOfBirth}"/>
-            </div>
-
-            <div class="uk-margin">
-                <label class="uk-form-label" for="genderId">Gender</label>
-                <select class="uk-select" id="genderId" name="genderId">
-                    <option value="">-- Select --</option>
-                    {#for gender in genderChoices}
-                    <option value="{gender.id}" {#if person?? && person.gender?? && person.gender.id == gender.id}selected{/if}>
-                        {gender.description}
-                    </option>
-                    {/for}
-                </select>
-            </div>
-
-            <div class="uk-margin uk-text-right">
-                <button type="button" class="uk-button uk-button-default uk-modal-close">Cancel</button>
-                <button type="submit" class="uk-button uk-button-primary">Save</button>
-            </div>
-        </form>
+    {#if error}
+    <div class="uk-alert uk-alert-danger" uk-alert>
+        <a class="uk-alert-close" uk-close></a>
+        <p>{error}</p>
     </div>
+    {/if}
+
+    <form hx-post="/persons/create"
+          hx-target="#person-create-container"
+          hx-swap="innerHTML"
+          class="uk-grid-small" uk-grid>
+        <div class="uk-width-1-6@m">
+            <input class="uk-input" type="text" name="firstName" placeholder="First Name"/>
+        </div>
+        <div class="uk-width-1-6@m">
+            <input class="uk-input" type="text" name="lastName" placeholder="Last Name"/>
+        </div>
+        <div class="uk-width-1-4@m">
+            <input class="uk-input" type="email" name="email" placeholder="Email *" required/>
+        </div>
+        <div class="uk-width-1-6@m">
+            <input class="uk-input" type="tel" name="phone" placeholder="Phone"/>
+        </div>
+        <div class="uk-width-1-6@m">
+            <input class="uk-input" type="date" name="dateOfBirth"/>
+        </div>
+        <div class="uk-width-1-6@m">
+            <select class="uk-select" name="genderId">
+                <option value="">Gender</option>
+                {#for gender in genderChoices}
+                <option value="{gender.id}">{gender.description}</option>
+                {/for}
+            </select>
+        </div>
+        <div class="uk-width-auto@m">
+            <button type="submit" class="uk-button uk-button-primary">Save</button>
+            <button type="button" class="uk-button uk-button-default"
+                    hx-get="/persons/create/cancel"
+                    hx-target="#person-create-container"
+                    hx-swap="innerHTML">Cancel</button>
+        </div>
+    </form>
 </div>
 ```
 
-#### 5.4.3 Success Partial
+#### 5.4.5 Create Button Partial
+
+**File**: `templates/partials/person_create_button.html`
+
+The Add button that loads the create form when clicked.
+
+```html
+<button class="uk-button uk-button-primary"
+        hx-get="/persons/create"
+        hx-target="#person-create-container"
+        hx-swap="innerHTML">
+    Add Person
+</button>
+```
+
+#### 5.4.6 Success Partial (with OOB Table Refresh)
 
 **File**: `templates/partials/person_success.html`
 
-The success partial triggers a table refresh and displays a notification.
+Success partial returns the Add button (replacing the form) and uses Out-of-Band (OOB) swap to refresh the table body.
 
 ```html
 {@String message}
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
 
-<!-- Close modal and refresh table -->
-<div hx-get="/persons"
-     hx-target="#persons-table-container"
-     hx-trigger="load"
-     hx-swap="innerHTML">
+<!-- Replace create form container with Add button -->
+<button class="uk-button uk-button-primary"
+        hx-get="/persons/create"
+        hx-target="#person-create-container"
+        hx-swap="innerHTML">
+    Add Person
+</button>
+
+<!-- Success notification -->
+<div class="uk-alert uk-alert-success uk-margin-small-top" uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    <p>{message}</p>
 </div>
 
-<!-- Display success notification using HX-Trigger header -->
-<script>
-    // Close the modal
-    UIkit.modal('#person-modal')?.hide();
-    // Show notification
-    UIkit.notification({message: '{message}', status: 'success', pos: 'top-center'});
-</script>
+<!-- OOB swap to refresh table body -->
+<tbody id="persons-table-body" hx-swap-oob="true">
+    {#for person in persons}
+    {#include partials/person_row person=person /}
+    {/for}
+</tbody>
 ```
 
-**Alternative using HX-Trigger header** (set in resource):
-```java
-return Response.ok(Partials.person_success(message))
-    .header("HX-Trigger", "{\"showNotification\": {\"message\": \"" + message + "\", \"type\": \"success\"}}")
-    .build();
-```
+**Key Pattern**: The `hx-swap-oob="true"` attribute causes HTMX to find the element with matching `id` in the current page and replace it with this content, regardless of the main swap target.
 
-#### 5.4.4 Error Partial
+#### 5.4.7 Error Partial
 
 **File**: `templates/partials/person_error.html`
 
@@ -1567,6 +1711,8 @@ return Response.ok(Partials.person_success(message))
 
 **File**: `templates/partials/gender_table.html`
 
+The table partial includes individual rows via the `gender_row` partial. Edit/Delete buttons target `closest tr` for inline row replacement.
+
 ```html
 {@java.util.List<io.archton.scaffold.entity.Gender> genders}
 {@String filterText}
@@ -1584,106 +1730,182 @@ return Response.ok(Partials.person_success(message))
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="gender-table-body">
         {#for gender in genders}
-        <tr>
-            <td>{gender.code}</td>
-            <td>{gender.description}</td>
-            <td>{gender.createdAt}</td>
-            <td>{gender.updatedAt}</td>
-            <td>
-                <button class="uk-button uk-button-small uk-button-default"
-                        hx-get="/genders/{gender.id}/edit"
-                        hx-target="#modal-container">
-                    Edit
-                </button>
-                <button class="uk-button uk-button-small uk-button-danger"
-                        hx-delete="/genders/{gender.id}"
-                        hx-confirm="Are you sure you want to delete this gender?"
-                        hx-target="#gender-table-container">
-                    Delete
-                </button>
-            </td>
-        </tr>
+        {#include partials/gender_row gender=gender /}
         {/for}
     </tbody>
 </table>
 {/if}
 ```
 
-#### 5.5.2 Gender Form Partial
+#### 5.5.2 Gender Row Partial (Display Mode)
 
-**File**: `templates/partials/gender_form.html`
+**File**: `templates/partials/gender_row.html`
+
+Single row in display mode. Edit button swaps this row with the edit form row.
+
+```html
+{@io.archton.scaffold.entity.Gender gender}
+
+<tr>
+    <td>{gender.code}</td>
+    <td>{gender.description}</td>
+    <td>{gender.createdAt}</td>
+    <td>{gender.updatedAt}</td>
+    <td>
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/genders/{gender.id}/edit"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Edit
+        </button>
+        <button class="uk-button uk-button-small uk-button-danger"
+                hx-delete="/genders/{gender.id}"
+                hx-confirm="Are you sure you want to delete this gender?"
+                hx-target="closest tr"
+                hx-swap="delete swap:300ms">
+            Delete
+        </button>
+    </td>
+</tr>
+```
+
+#### 5.5.3 Gender Row Edit Partial (Inline Edit Mode)
+
+**File**: `templates/partials/gender_row_edit.html`
+
+Single row in edit mode. Form inputs replace display cells. Cancel returns to display mode, Save updates and returns display row.
 
 ```html
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
 
-<div id="gender-modal" uk-modal class="uk-open">
-    <div class="uk-modal-dialog uk-modal-body">
-        <button class="uk-modal-close-default" type="button" uk-close></button>
+<tr class="editing">
+    <td>
+        <input class="uk-input uk-form-small" type="text" name="code" required
+               maxlength="7" style="text-transform: uppercase;"
+               value="{gender.code ?: ''}" placeholder="Code *"/>
+    </td>
+    <td>
+        <input class="uk-input uk-form-small" type="text" name="description" required
+               value="{gender.description ?: ''}" placeholder="Description *"/>
+    </td>
+    <td class="uk-text-muted uk-text-small">{gender.createdAt}</td>
+    <td class="uk-text-muted uk-text-small">{gender.updatedAt}</td>
+    <td>
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/genders/{gender.id}"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Cancel
+        </button>
+        <button class="uk-button uk-button-small uk-button-primary"
+                hx-post="/genders/{gender.id}/update"
+                hx-include="closest tr"
+                hx-target="closest tr"
+                hx-swap="outerHTML">
+            Save
+        </button>
+    </td>
+</tr>
+{#if error}
+<tr class="uk-alert uk-alert-danger">
+    <td colspan="5">{error}</td>
+</tr>
+{/if}
+```
 
-        <h2 class="uk-modal-title">{#if gender}Edit Gender{#else}Create Gender{/if}</h2>
+#### 5.5.4 Gender Create Form Partial (Inline)
 
-        {#if error}
-        <div class="uk-alert uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            <p>{error}</p>
-        </div>
-        {/if}
+**File**: `templates/partials/gender_create_form.html`
 
-        <form hx-post="{#if gender}/genders/{gender.id}/update{#else}/genders/create{/if}"
-              hx-target="#modal-container"
-              class="uk-form-stacked">
+Inline create form that appears above the table. Replaces the Add button when shown.
 
-            <div class="uk-margin">
-                <label class="uk-form-label" for="code">Code *</label>
-                <input class="uk-input" type="text" id="code" name="code" required
-                       maxlength="7" style="text-transform: uppercase;"
-                       value="{gender.code ?: ''}"/>
-                <span class="uk-text-muted uk-text-small">Max 7 characters, will be uppercased</span>
-            </div>
+```html
+{@String error}
 
-            <div class="uk-margin">
-                <label class="uk-form-label" for="description">Description *</label>
-                <input class="uk-input" type="text" id="description" name="description" required
-                       value="{gender.description ?: ''}"/>
-            </div>
+<div class="uk-card uk-card-default uk-card-body uk-margin">
+    <h3 class="uk-card-title">Add Gender</h3>
 
-            {#if gender}
-            <div class="uk-margin uk-text-muted uk-text-small">
-                <p>Created: {gender.createdAt} by {gender.createdBy ?: 'unknown'}</p>
-                <p>Updated: {gender.updatedAt} by {gender.updatedBy ?: 'unknown'}</p>
-            </div>
-            {/if}
-
-            <div class="uk-margin uk-text-right">
-                <button type="button" class="uk-button uk-button-default uk-modal-close">Cancel</button>
-                <button type="submit" class="uk-button uk-button-primary">Save</button>
-            </div>
-        </form>
+    {#if error}
+    <div class="uk-alert uk-alert-danger" uk-alert>
+        <a class="uk-alert-close" uk-close></a>
+        <p>{error}</p>
     </div>
+    {/if}
+
+    <form hx-post="/genders/create"
+          hx-target="#gender-create-container"
+          hx-swap="innerHTML"
+          class="uk-grid-small" uk-grid>
+        <div class="uk-width-1-4@m">
+            <input class="uk-input" type="text" name="code" placeholder="Code *"
+                   maxlength="7" style="text-transform: uppercase;" required/>
+            <span class="uk-text-muted uk-text-small">Max 7 chars, uppercased</span>
+        </div>
+        <div class="uk-width-1-2@m">
+            <input class="uk-input" type="text" name="description" placeholder="Description *" required/>
+        </div>
+        <div class="uk-width-auto@m">
+            <button type="submit" class="uk-button uk-button-primary">Save</button>
+            <button type="button" class="uk-button uk-button-default"
+                    hx-get="/genders/create/cancel"
+                    hx-target="#gender-create-container"
+                    hx-swap="innerHTML">Cancel</button>
+        </div>
+    </form>
 </div>
 ```
 
-#### 5.5.3 Gender Success/Error Partials
+#### 5.5.5 Gender Create Button Partial
+
+**File**: `templates/partials/gender_create_button.html`
+
+The Add button that loads the create form when clicked.
+
+```html
+<button class="uk-button uk-button-primary"
+        hx-get="/genders/create"
+        hx-target="#gender-create-container"
+        hx-swap="innerHTML">
+    Add Gender
+</button>
+```
+
+#### 5.5.6 Gender Success Partial (with OOB Table Refresh)
 
 **File**: `templates/partials/gender_success.html`
 
+Success partial returns the Add button and uses OOB swap to refresh the table body.
+
 ```html
 {@String message}
+{@java.util.List<io.archton.scaffold.entity.Gender> genders}
 
-<div hx-get="/genders"
-     hx-target="#gender-table-container"
-     hx-trigger="load"
-     hx-swap="innerHTML">
+<!-- Replace create form container with Add button -->
+<button class="uk-button uk-button-primary"
+        hx-get="/genders/create"
+        hx-target="#gender-create-container"
+        hx-swap="innerHTML">
+    Add Gender
+</button>
+
+<!-- Success notification -->
+<div class="uk-alert uk-alert-success uk-margin-small-top" uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    <p>{message}</p>
 </div>
 
-<script>
-    UIkit.modal('#gender-modal')?.hide();
-    UIkit.notification({message: '{message}', status: 'success', pos: 'top-center'});
-</script>
+<!-- OOB swap to refresh table body -->
+<tbody id="gender-table-body" hx-swap-oob="true">
+    {#for gender in genders}
+    {#include partials/gender_row gender=gender /}
+    {/for}
+</tbody>
 ```
+
+#### 5.5.7 Gender Error Partial
 
 **File**: `templates/partials/gender_error.html`
 
@@ -1879,49 +2101,91 @@ public TemplateInstance list(@Context HttpHeaders headers) {
 </div>
 ```
 
-### 6.4 Success Response with Table Refresh
+### 6.4 Inline Row Editing Pattern
 
-After a successful create/update/delete, the server returns a success partial that:
-1. Triggers a table refresh
-2. Closes the modal
-3. Shows a notification
+The click-to-edit pattern replaces table rows inline without modals:
 
 ```html
-{@String message}
+<!-- Display Row -->
+<tr>
+    <td>{person.firstName}</td>
+    <td>{person.email}</td>
+    <td>
+        <button hx-get="/persons/{person.id}/edit"
+                hx-target="closest tr"
+                hx-swap="outerHTML">Edit</button>
+    </td>
+</tr>
 
-<!-- Trigger table refresh on load -->
-<div hx-get="/persons"
-     hx-target="#persons-table-container"
-     hx-trigger="load"
-     hx-swap="innerHTML">
-</div>
-
-<script>
-    // Close the modal
-    UIkit.modal('#person-modal')?.hide();
-    // Show notification
-    UIkit.notification({message: '{message}', status: 'success', pos: 'top-center'});
-</script>
+<!-- Edit Row (returned by server) -->
+<tr class="editing">
+    <td><input name="firstName" value="{person.firstName}"/></td>
+    <td><input name="email" value="{person.email}"/></td>
+    <td>
+        <button hx-get="/persons/{person.id}"
+                hx-target="closest tr"
+                hx-swap="outerHTML">Cancel</button>
+        <button hx-post="/persons/{person.id}/update"
+                hx-include="closest tr"
+                hx-target="closest tr"
+                hx-swap="outerHTML">Save</button>
+    </td>
+</tr>
 ```
 
-### 6.5 Delete with Confirmation
+**Key Attributes**:
+- `hx-target="closest tr"` - Targets the parent row
+- `hx-swap="outerHTML"` - Replaces the entire row
+- `hx-include="closest tr"` - Includes all inputs from the row
+
+### 6.5 Inline Create Form Pattern
+
+The create form appears above the table instead of in a modal:
+
+```html
+<!-- Create Form Container -->
+<div id="person-create-container">
+    <button hx-get="/persons/create"
+            hx-target="#person-create-container"
+            hx-swap="innerHTML">Add Person</button>
+</div>
+
+<!-- Create Form (returned by server) -->
+<div class="uk-card uk-card-body">
+    <form hx-post="/persons/create"
+          hx-target="#person-create-container"
+          hx-swap="innerHTML">
+        <input name="firstName" placeholder="First Name"/>
+        <input name="email" placeholder="Email" required/>
+        <button type="submit">Save</button>
+        <button type="button"
+                hx-get="/persons/create/cancel"
+                hx-target="#person-create-container">Cancel</button>
+    </form>
+</div>
+```
+
+### 6.6 Delete with Row Removal
+
+Delete button removes the row directly using `hx-swap="delete"`:
 
 ```html
 <button class="uk-button uk-button-small uk-button-danger"
         hx-delete="/persons/{person.id}"
         hx-confirm="Are you sure you want to delete this person?"
-        hx-target="#persons-table-container">
+        hx-target="closest tr"
+        hx-swap="delete swap:300ms">
     Delete
 </button>
 ```
 
-**Server returns success partial** which refreshes the table and shows notification.
+**Server returns empty response** - the row fades out and is removed.
 
-### 6.6 Loading Indicator
+### 6.7 Loading Indicator
 
 ```html
 <form hx-post="/persons/create"
-      hx-target="#modal-container"
+      hx-target="#person-create-container"
       hx-indicator="#spinner">
     <!-- form fields -->
 </form>
@@ -1931,23 +2195,35 @@ After a successful create/update/delete, the server returns a success partial th
 </div>
 ```
 
-### 6.7 Out-of-Band (OOB) Swaps
+### 6.8 Out-of-Band (OOB) Swaps
 
-For updating multiple page elements in a single response:
+For updating multiple page elements in a single response. Used after create to refresh the table while replacing the form:
 
 ```html
-<!-- Main response content -->
-<div id="persons-table-container">
-    <!-- Updated table content -->
+{@String message}
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
+
+<!-- Main response: replaces the create form container -->
+<button hx-get="/persons/create"
+        hx-target="#person-create-container"
+        hx-swap="innerHTML">Add Person</button>
+
+<!-- Success notification -->
+<div class="uk-alert uk-alert-success uk-margin-small-top" uk-alert>
+    <p>{message}</p>
 </div>
 
-<!-- OOB swap - also update notification area -->
-<div id="notification-area" hx-swap-oob="true">
-    <div class="uk-alert uk-alert-success">Person created successfully!</div>
-</div>
+<!-- OOB swap: refreshes the table body independently -->
+<tbody id="persons-table-body" hx-swap-oob="true">
+    {#for person in persons}
+    {#include partials/person_row person=person /}
+    {/for}
+</tbody>
 ```
 
-### 6.8 HX-Trigger Header for Events
+**Key Pattern**: The `hx-swap-oob="true"` attribute causes HTMX to find the element with matching `id` and replace it, regardless of the main swap target.
+
+### 6.9 HX-Trigger Header for Events
 
 Server can trigger client-side events via response header:
 
@@ -2360,20 +2636,20 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 
 | Use Case | Components | Templates | Routes |
 |----------|------------|-----------|--------|
-| **UC-2.1: View Gender List** | `GenderResource.list()`, `Gender.listAllOrdered()` | `GenderResource/gender.html` | GET `/genders` |
-| **UC-2.2: Create Gender** | `GenderResource.createForm()`, `GenderResource.create()` | `GenderResource/genderForm.html` | GET/POST `/genders/create` |
-| **UC-2.3: Edit Gender** | `GenderResource.editForm()`, `GenderResource.update()` | `GenderResource/genderForm.html` | GET `/genders/{id}/edit`, POST `/genders/{id}/update` |
-| **UC-2.4: Delete Gender** | `GenderResource.delete()`, HTMX `hx-confirm` | N/A | DELETE `/genders/{id}` |
+| **UC-2.1: View Gender List** | `GenderResource.list()`, `Gender.listAllOrdered()` | `GenderResource/gender.html`, `partials/gender_table.html`, `partials/gender_row.html` | GET `/genders` |
+| **UC-2.2: Create Gender** | `GenderResource.createForm()`, `GenderResource.create()` | `partials/gender_create_form.html`, `partials/gender_create_button.html`, `partials/gender_success.html` | GET/POST `/genders/create`, GET `/genders/create/cancel` |
+| **UC-2.3: Edit Gender** | `GenderResource.getRow()`, `GenderResource.editForm()`, `GenderResource.update()` | `partials/gender_row.html`, `partials/gender_row_edit.html` | GET `/genders/{id}`, GET `/genders/{id}/edit`, POST `/genders/{id}/update` |
+| **UC-2.4: Delete Gender** | `GenderResource.delete()`, HTMX `hx-confirm`, `hx-swap="delete"` | N/A | DELETE `/genders/{id}` |
 
 ### 13.3 Persons Management Use Cases (UC-3.x)
 
 | Use Case | Components | Templates | Routes |
 |----------|------------|-----------|--------|
-| **UC-3.1: View Persons List** | `PersonResource.list()`, `Person.listAllOrdered()` | `PersonResource/persons.html` | GET `/persons` |
-| **UC-3.2: Create Person** | `PersonResource.createForm()`, `PersonResource.create()` | `PersonResource/personForm.html` | GET/POST `/persons/create` |
-| **UC-3.3: Edit Person** | `PersonResource.editForm()`, `PersonResource.update()` | `PersonResource/personForm.html` | GET `/persons/{id}/edit`, POST `/persons/{id}/update` |
-| **UC-3.4: Delete Person** | `PersonResource.delete()`, cascade to UserLogin | N/A | DELETE `/persons/{id}` |
-| **UC-3.5: Filter Persons** | `PersonResource.list()` with `@QueryParam`, `Person.findByNameContaining()` | `PersonResource/persons.html` | GET `/persons?filter=text` |
+| **UC-3.1: View Persons List** | `PersonResource.list()`, `Person.listAllOrdered()` | `PersonResource/persons.html`, `partials/persons_table.html`, `partials/person_row.html` | GET `/persons` |
+| **UC-3.2: Create Person** | `PersonResource.createForm()`, `PersonResource.create()` | `partials/person_create_form.html`, `partials/person_create_button.html`, `partials/person_success.html` | GET/POST `/persons/create`, GET `/persons/create/cancel` |
+| **UC-3.3: Edit Person** | `PersonResource.getRow()`, `PersonResource.editForm()`, `PersonResource.update()` | `partials/person_row.html`, `partials/person_row_edit.html` | GET `/persons/{id}`, GET `/persons/{id}/edit`, POST `/persons/{id}/update` |
+| **UC-3.4: Delete Person** | `PersonResource.delete()`, cascade to UserLogin, `hx-swap="delete"` | N/A | DELETE `/persons/{id}` |
+| **UC-3.5: Filter Persons** | `PersonResource.list()` with `@QueryParam`, `Person.findByNameContaining()` | `PersonResource/persons.html`, `partials/persons_table.html` | GET `/persons?filter=text` |
 
 ### 13.4 Cross-Cutting Concerns
 
@@ -2400,19 +2676,23 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | `/persons` | GET | PersonResource.list() | Yes | user, admin |
 | `/persons/create` | GET | PersonResource.createForm() | Yes | user, admin |
 | `/persons/create` | POST | PersonResource.create() | Yes | user, admin |
+| `/persons/create/cancel` | GET | PersonResource.createFormCancel() | Yes | user, admin |
+| `/persons/{id}` | GET | PersonResource.getRow() | Yes | user, admin |
 | `/persons/{id}/edit` | GET | PersonResource.editForm() | Yes | user, admin |
 | `/persons/{id}/update` | POST | PersonResource.update() | Yes | user, admin |
 | `/persons/{id}` | DELETE | PersonResource.delete() | Yes | user, admin |
 | `/genders` | GET | GenderResource.list() | Yes | admin |
 | `/genders/create` | GET | GenderResource.createForm() | Yes | admin |
 | `/genders/create` | POST | GenderResource.create() | Yes | admin |
+| `/genders/create/cancel` | GET | GenderResource.createFormCancel() | Yes | admin |
+| `/genders/{id}` | GET | GenderResource.getRow() | Yes | admin |
 | `/genders/{id}/edit` | GET | GenderResource.editForm() | Yes | admin |
 | `/genders/{id}/update` | POST | GenderResource.update() | Yes | admin |
 | `/genders/{id}` | DELETE | GenderResource.delete() | Yes | admin |
 
 ---
 
-*Document Version: 2.1*
+*Document Version: 2.2*
 *Last Updated: December 2025*
 
 ---
@@ -2424,3 +2704,4 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | 1.0 | December 2024 | Developer | Initial release (from HX Finance App) |
 | 2.0 | December 2024 | Senior Developer | Complete rewrite for HX Qute: removed Transaction/Category/Charts, added Gender/Person/Auth aligned with USE-CASES.md, updated package to io.archton.scaffold, CDN-based assets, Phase 1 scope |
 | 2.1 | December 2025 | Senior Developer | Added: password max length validation (NIST), session-based filter persistence, signup.html template, UIKit 3.25, standardized error punctuation |
+| 2.2 | December 2025 | Senior Developer | Replaced modal forms with inline partial templates following HTMX best practices: click-to-edit row pattern, inline create forms, OOB swaps for table refresh, removed JavaScript dependencies for modal handling |
