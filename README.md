@@ -25,8 +25,10 @@ Run the application in dev mode to enable live coding:
 quarkus dev
 ```
 
-- Application is at <http://localhost:8080>
-- Browse to the Dev UI: <http://localhost:8080/q/dev/>
+- Application is at <http://localhost:9080>
+- Browse to the Dev UI: <http://localhost:9080/q/dev/>
+
+> **Note:** Port 9080 is used instead of the default 8080 to avoid conflicts with other local services.
 
 ### Packaging  the application
 #### Layered package

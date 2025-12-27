@@ -13,7 +13,7 @@ Quarkus+HTMX application demonstrating server-rendered web apps with SPA-like in
 ## Key Commands
 
 ```bash
-# Development (live reload at http://localhost:8080)
+# Development (live reload at http://localhost:9080)
 ./mvnw compile quarkus:dev
 
 # Testing
@@ -104,7 +104,7 @@ Edit sidebar in `templates/base.html` - add `uk-active` class conditionally usin
 
 ## Configuration
 - `src/main/resources/application.properties` - Main config
-- Dev UI: http://localhost:8080/q/dev/
+- Dev UI: http://localhost:9080/q/dev/
 
 ## Development Workflow
 
@@ -118,7 +118,7 @@ Note that the spec file is too large, so search for the relevant section using t
 
 Implement the use case as per the technical specification.
 
-Issue a `curl http://127.0.0.1:8080/q/health` after a code update to trigger a server refresh.
+Issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
 
 After completing each use case, find the corresponding test file in `specs/TEST-CASES.md` and run the test using chrome-devtools MCP in a sub-agent. After each test has completed, the sub-agent must update the relevant use case in `PROJECT-PLAN.md` with the test results.
 
@@ -126,9 +126,9 @@ After completing each use case, find the corresponding test file in `specs/TEST-
 
 ## Managing the backend server
 
-This project uses the Quarkus dev server which runs all the time, so issue a `curl http://127.0.0.1:8080/q/health` after a code update to trigger a server refresh.
+This project uses the Quarkus dev server which runs all the time, so issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
 
-If the curl command fails, check if the server is listening on port 8080 with `ss -tlnp | grep 8080`.
+If the curl command fails, check if the server is listening on port 9080 with `ss -tlnp | grep 9080`.
 
 If it is not running, start it in the background with `./mvnw quarkus:dev -Dquarkus.console.enabled=false`.
 
