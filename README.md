@@ -70,3 +70,4 @@ Or run the build in a GraalVM container using:
 - Quarkus website: <https://quarkus.io/>.
 - REST Qute ([guide](https://quarkus.io/guides/qute-reference#rest_integration)): Qute integration for Quarkus REST. This extension is not compatible with the older classic quarkus-resteasy extension.
 - Building native executables: <https://quarkus.io/guides/maven-tooling>.
+- Banner: https://patorjk.com/software/taag/#p=display&f=Acrobatic&t=hx-qute
