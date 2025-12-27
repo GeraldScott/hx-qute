@@ -5,9 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Quarkus+HTMX application demonstrating server-rendered web apps with SPA-like interactions:
-- **Quarkus 3.30** with REST endpoints and Qute templating
-- **HTMX 2.0** for dynamic HTML updates without client-side JavaScript
-- **UIkit 3** CSS framework for styling
+- **Quarkus 3.30.3** with REST endpoints and Qute templating
+- **HTMX 2.0.8** for dynamic HTML updates without client-side JavaScript
+- **UIkit 3.25** CSS framework for styling
 - **Hibernate ORM Panache** with PostgreSQL and Flyway migrations
 
 ## Key Commands
@@ -62,23 +62,6 @@ public static class Templates {
         String title, String currentPage, String userName, List<Gender> genders);
 }
 ```
-
-### CRUD Endpoint Pattern (HTMX)
-
-Standard REST endpoints for CRUD with HTML partials:
-
-| Method | Path | Description | Returns |
-|--------|------|-------------|---------|
-| GET | /items | Main page | Full HTML |
-| GET | /items/table | Table partial | Table HTML |
-| GET | /items/new | Add form | Form in dialog |
-| GET | /items/{id}/edit | Edit form | Form in dialog |
-| GET | /items/{id}/delete | Delete confirm | Confirm dialog |
-| POST | /items | Create | Form HTML or 204 |
-| PUT | /items/{id} | Update | Form HTML or 204 |
-| DELETE | /items/{id} | Delete | 204 |
-
-Forms use `<dialog>` elements with htmx attributes for modal interactions.
 
 ### Database Migrations
 - Location: `src/main/resources/db/migration/`
