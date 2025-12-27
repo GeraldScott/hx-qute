@@ -107,6 +107,58 @@ After completing each use case, find the corresponding test file in `specs/TEST-
 
 **IMPORTANT**: After completing the tests for each use case, STOP and ask for user feedback before proceeding.
 
+## Tracking Progress in PROJECT-PLAN.md
+
+The `PROJECT-PLAN.md` file serves as the single source of truth for implementation progress. Update it as follows:
+
+### Status Badges
+Update the status field for each use case:
+- `🔲 Not Started` - Work has not begun
+- `🔄 In Progress` - Currently being implemented
+- `✅ Complete` - Implementation and tests passed
+- `❌ Blocked` - Cannot proceed due to dependency or issue
+
+### Implementation Checkboxes
+Mark tasks complete as you finish them:
+```markdown
+- [x] Create entity class
+- [x] Create repository
+- [ ] Create resource endpoint  ← currently working on
+```
+
+### Test Results Block
+After running chrome-devtools tests, update:
+```markdown
+**Test Results:**
+Test ID: TC-1.3
+Status: ✅ Passed
+Notes: All assertions passed on 2025-12-27
+```
+
+### Current Status Section
+Always update this section to reflect current position:
+```markdown
+## Current Status
+
+**Current Phase:** Phase 1 - Authentication
+**Next Use Case:** UC-1.3 - Display Login Page
+**Blockers:** None
+```
+
+### Progress Summary Table
+Update counts after completing each use case.
+
+### Workflow Checklist
+When starting a use case:
+1. Set status to `🔄 In Progress`
+2. Update **Current Status** section
+3. Check off implementation tasks as completed
+4. Run tests and update **Test Results**
+5. Set status to `✅ Complete`
+6. Update **Progress Summary** counts
+7. Set **Next Use Case** to the next item
+8. **STOP** and ask for user feedback
+
 ## Managing the backend server
 
 This project uses the Quarkus dev server which runs all the time, so issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
