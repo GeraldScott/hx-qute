@@ -12,6 +12,11 @@ This document provides a comprehensive technical specification for HX Qute, a re
 4. [Resource Layer (Controllers)](#4-resource-layer-controllers)
 5. [Template System](#5-template-system)
 6. [HTMX Integration Patterns](#6-htmx-integration-patterns)
+   - [6.10 Progressive Enhancement with hx-boost](#610-progressive-enhancement-with-hx-boost)
+   - [6.11 Request Synchronization with hx-sync](#611-request-synchronization-with-hx-sync)
+   - [6.12 Attribute Inheritance Best Practices](#612-attribute-inheritance-best-practices)
+   - [6.13 Loading Indicators](#613-loading-indicators)
+   - [6.14 Response Status Code Standards](#614-response-status-code-standards)
 7. [Security Architecture](#7-security-architecture)
 8. [Query Filtering Pattern](#8-query-filtering-pattern)
 9. [Startup and Data Initialization](#9-startup-and-data-initialization)
@@ -2241,6 +2246,401 @@ Client listens for the event:
 </div>
 ```
 
+### 6.10 Progressive Enhancement with hx-boost
+
+Enable `hx-boost="true"` on the body element to automatically convert standard navigation to HTMX requests. This provides faster navigation without full page reloads while maintaining graceful degradation when JavaScript is disabled.
+
+**Base template** (`templates/base.html`):
+
+```html
+<body hx-boost="true">
+    <div class="uk-offcanvas-content">
+        ...
+    </div>
+</body>
+```
+
+**Benefits**:
+
+| Benefit | Description |
+|---------|-------------|
+| Faster navigation | No full page reload for internal links |
+| Automatic URL updates | Browser history works correctly via `hx-push-url` |
+| Graceful degradation | Works without JavaScript enabled |
+| Less boilerplate | No need to add `hx-get` to every link |
+
+**Opt-out for specific elements**:
+
+```html
+<!-- External links -->
+<a href="https://external-site.com" hx-boost="false">External Link</a>
+
+<!-- File downloads -->
+<a href="/download/report.pdf" hx-boost="false">Download PDF</a>
+
+<!-- Entire sections -->
+<nav hx-boost="false">
+    <!-- External links here -->
+</nav>
+```
+
+**Important**: Forms using `hx-boost` will automatically submit via AJAX. For the login form which posts to `/j_security_check`, this works correctly as the server redirects via `HX-Redirect` header after successful authentication.
+
+### 6.11 Request Synchronization with hx-sync
+
+Use `hx-sync` to manage concurrent requests and prevent race conditions, particularly critical for filter/search operations.
+
+**Problem Scenario** (without sync):
+
+1. User types "Jo" → Request 1 sent
+2. User types "John" → Request 2 sent
+3. Request 2 returns first (faster query)
+4. Request 1 returns last → **Overwrites correct results!**
+
+**Solution - Filter Form with Sync**:
+
+```html
+<form hx-get="/persons"
+      hx-target="#persons-table-container"
+      hx-sync="this:replace"
+      hx-push-url="true"
+      class="uk-grid-small" uk-grid>
+    <div class="uk-width-1-2@s">
+        <input class="uk-input"
+               type="search"
+               name="filter"
+               placeholder="Search by name..."
+               value="{filterText ?: ''}"
+               hx-get="/persons"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#persons-table-container"
+               hx-sync="closest form:abort"/>
+    </div>
+    <div class="uk-width-auto@s">
+        <button type="submit" class="uk-button uk-button-primary">Filter</button>
+        <a class="uk-button uk-button-default"
+           hx-get="/persons"
+           hx-target="#persons-table-container"
+           hx-push-url="/persons">Clear</a>
+    </div>
+</form>
+```
+
+**Sync Strategies**:
+
+| Strategy | Behavior | Use Case |
+|----------|----------|----------|
+| `drop` | Drop new request if one in flight | Prevent duplicate form submissions |
+| `abort` | Abort current, start new | Search/filter (latest wins) |
+| `replace` | Abort current, replace with new | Default for forms |
+| `queue` | Queue requests, execute in order | Sequential operations |
+| `queue last` | Queue, keep only last | Latest state wins |
+
+**Trigger Modifiers** for active search:
+
+| Modifier | Purpose |
+|----------|---------|
+| `input` | Fires on every keystroke |
+| `changed` | Only if value actually changed |
+| `delay:300ms` | Wait 300ms after last keystroke (debounce) |
+| `search` | Also fires on search input clear (×) button |
+
+**Submit Button** (prevent double-click):
+
+```html
+<button hx-post="/persons/create"
+        hx-sync="this:drop">
+    Save
+</button>
+```
+
+### 6.12 Attribute Inheritance Best Practices
+
+HTMX supports attribute inheritance from parent elements, reducing repetition in templates. Child elements inherit attributes from their ancestors unless explicitly overridden.
+
+**Inheritable Attributes**:
+
+| Attribute | Inherits | Notes |
+|-----------|----------|-------|
+| `hx-target` | Yes | Child elements use parent's target |
+| `hx-swap` | Yes | Can be overridden per-element |
+| `hx-boost` | Yes | Applies to all descendant links/forms |
+| `hx-confirm` | No | Must be specified per-element |
+| `hx-indicator` | Yes | Useful for section-wide spinners |
+| `hx-headers` | Yes | Merged with child headers |
+| `hx-sync` | Yes | Useful for form-wide sync strategy |
+
+**Before (Repetitive)**:
+
+```html
+<tbody>
+    <tr>
+        <td>...</td>
+        <td>
+            <button hx-get="/persons/{id}/edit"
+                    hx-target="closest tr"
+                    hx-swap="outerHTML">Edit</button>
+            <button hx-delete="/persons/{id}"
+                    hx-target="closest tr"
+                    hx-swap="delete swap:300ms"
+                    hx-confirm="Are you sure?">Delete</button>
+        </td>
+    </tr>
+</tbody>
+```
+
+**After (With Inheritance)**:
+
+```html
+<tbody hx-target="closest tr" hx-swap="outerHTML">
+    <tr>
+        <td>...</td>
+        <td>
+            <button hx-get="/persons/{id}/edit">Edit</button>
+            <button hx-delete="/persons/{id}"
+                    hx-swap="delete swap:300ms"
+                    hx-confirm="Are you sure?">Delete</button>
+        </td>
+    </tr>
+</tbody>
+```
+
+**Key Patterns**:
+
+- Place common `hx-target` on `<tbody>` for table row operations
+- Override `hx-swap` only where needed (e.g., delete uses `delete` instead of `outerHTML`)
+- `hx-confirm` cannot be inherited - always specify on individual delete buttons
+- `hx-boost="true"` on `<body>` applies to all navigation links
+
+**Template Application**:
+
+Update `templates/partials/persons_table.html`:
+
+```html
+<tbody id="persons-table-body" hx-target="closest tr" hx-swap="outerHTML">
+    {#for person in persons}
+    {#include partials/person_row person=person /}
+    {/for}
+</tbody>
+```
+
+Update `templates/partials/person_row.html`:
+
+```html
+<tr>
+    <td>{person.firstName ?: ''}</td>
+    <td>{person.lastName ?: ''}</td>
+    <td>{person.email}</td>
+    <td>{person.phone ?: ''}</td>
+    <td>{person.dateOfBirth}</td>
+    <td>{person.gender.description ?: ''}</td>
+    <td>
+        <!-- Inherits hx-target and hx-swap from tbody -->
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/persons/{person.id}/edit">
+            Edit
+        </button>
+        <!-- Override hx-swap for delete behavior -->
+        <button class="uk-button uk-button-small uk-button-danger"
+                hx-delete="/persons/{person.id}"
+                hx-confirm="Are you sure you want to delete this person?"
+                hx-swap="delete swap:300ms">
+            Delete
+        </button>
+    </td>
+</tr>
+```
+
+### 6.13 Loading Indicators
+
+Use `hx-indicator` to provide visual feedback during HTMX requests. This improves user experience by showing that an action is in progress.
+
+**Global Loading Indicator**
+
+Add to `templates/base.html`:
+
+```html
+<body hx-boost="true">
+    <!-- Global loading indicator -->
+    <div id="global-spinner" class="htmx-indicator">
+        <div uk-spinner></div>
+        <span class="uk-margin-small-left">Loading...</span>
+    </div>
+
+    <div class="uk-offcanvas-content">
+        ...
+    </div>
+</body>
+```
+
+**CSS for Loading States** (`style.css`):
+
+```css
+/* HTMX Loading Indicators */
+.htmx-indicator {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    background: var(--sidebar-bg, #f8f9fa);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Show indicator when HTMX request is in flight */
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: flex;
+    align-items: center;
+}
+
+/* Disable interactive elements during request */
+.htmx-request button[hx-get],
+.htmx-request button[hx-post],
+.htmx-request button[hx-put],
+.htmx-request button[hx-delete],
+.htmx-request a[hx-get] {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: wait;
+}
+
+/* Table row loading state */
+tr.htmx-request {
+    opacity: 0.6;
+    background: #f5f5f5;
+}
+
+/* Inline button spinner */
+.btn-spinner {
+    display: none;
+}
+
+.htmx-request .btn-spinner {
+    display: inline-block;
+}
+
+.htmx-request .btn-text {
+    display: none;
+}
+```
+
+**Per-Element Indicator**:
+
+```html
+<button hx-post="/persons/create"
+        hx-target="#person-create-container"
+        hx-indicator="#create-spinner"
+        class="uk-button uk-button-primary">
+    <span id="create-spinner" class="htmx-indicator btn-spinner" uk-spinner="ratio: 0.5"></span>
+    <span class="btn-text">Save</span>
+</button>
+```
+
+**Table Row Loading State**:
+
+```html
+<tr hx-indicator="this">
+    <td>
+        <button hx-get="/persons/{id}/edit">Edit</button>
+    </td>
+</tr>
+```
+
+When the Edit button is clicked, the entire row dims to indicate loading.
+
+### 6.14 Response Status Code Standards
+
+HTMX handles HTTP status codes differently than traditional AJAX. Understanding these behaviors is critical for proper error handling.
+
+**HTMX Response Code Behavior**:
+
+| Status | HTMX Behavior |
+|--------|---------------|
+| 2xx | Normal swap |
+| 204 No Content | No swap, good for deletes |
+| 3xx | **Not followed by default!** Use HX-Redirect header instead |
+| 4xx | Error event triggered, no swap by default |
+| 5xx | Error event triggered, no swap by default |
+
+**Recommended Status Codes**:
+
+| Scenario | Status | Response Body | Headers |
+|----------|--------|---------------|---------|
+| Success with content | 200 | HTML partial | - |
+| Success, no content (delete) | 200 or 204 | Empty | - |
+| Validation error | 200 | Form with error message | - |
+| Not found | 404 | Error partial | `HX-Retarget: #error-container` |
+| Redirect needed | 200 | Empty | `HX-Redirect: /path` |
+| Server error | 500 | Error partial | `HX-Retarget: #error-container` |
+
+**Important: Redirects**
+
+HTMX does **not** follow HTTP 3xx redirects by default. Use response headers instead:
+
+```java
+// DON'T DO THIS - Won't work as expected with HTMX
+return Response.seeOther(URI.create("/persons")).build();
+
+// DO THIS INSTEAD - Full page redirect
+return Response.ok()
+    .header("HX-Redirect", "/persons")
+    .build();
+
+// Or for in-page navigation (AJAX-style)
+return Response.ok()
+    .header("HX-Location", "/persons")
+    .build();
+```
+
+**Dynamic Error Targeting with HX-Retarget**:
+
+When errors need different placement than the original target:
+
+```java
+@POST
+@Path("/create")
+public Response create(...) {
+    try {
+        // ... validation and creation ...
+        return Response.ok(Partials.person_success(...))
+            .header("HX-Trigger", "personCreated")
+            .build();
+
+    } catch (ValidationException e) {
+        // Return error to a different location
+        return Response.ok(Partials.error_message(e.getMessage()))
+            .header("HX-Retarget", "#notification-area")
+            .header("HX-Reswap", "beforeend")
+            .build();
+    }
+}
+```
+
+**Client-Side Error Handling**:
+
+Add global error handling in `base.html`:
+
+```html
+<body hx-boost="true"
+      hx-on::response-error="handleHtmxError(event)">
+```
+
+```javascript
+function handleHtmxError(event) {
+    const xhr = event.detail.xhr;
+    if (xhr.status >= 500) {
+        UIkit.notification({
+            message: 'Server error. Please try again.',
+            status: 'danger',
+            pos: 'top-right'
+        });
+    }
+}
+```
+
 ---
 
 ## 7. Security Architecture
@@ -2692,7 +3092,7 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 
 ---
 
-*Document Version: 2.2*
+*Document Version: 2.4*
 *Last Updated: December 2025*
 
 ---
@@ -2705,3 +3105,5 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | 2.0 | December 2024 | Senior Developer | Complete rewrite for HX Qute: removed Transaction/Category/Charts, added Gender/Person/Auth aligned with USE-CASES.md, updated package to io.archton.scaffold, CDN-based assets, Phase 1 scope |
 | 2.1 | December 2025 | Senior Developer | Added: password max length validation (NIST), session-based filter persistence, signup.html template, UIKit 3.25, standardized error punctuation |
 | 2.2 | December 2025 | Senior Developer | Replaced modal forms with inline partial templates following HTMX best practices: click-to-edit row pattern, inline create forms, OOB swaps for table refresh, removed JavaScript dependencies for modal handling |
+| 2.3 | December 2025 | Senior Developer | Added HTMX best practices: Section 6.10 (hx-boost for progressive enhancement), Section 6.11 (hx-sync for request synchronization), Section 6.12 (attribute inheritance patterns) |
+| 2.4 | December 2025 | Senior Developer | Added Section 6.13 (loading indicators with hx-indicator), Section 6.14 (response status code standards, HX-Redirect, HX-Retarget patterns) |
