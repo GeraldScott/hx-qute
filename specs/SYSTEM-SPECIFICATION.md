@@ -1879,36 +1879,7 @@ public TemplateInstance list(@Context HttpHeaders headers) {
 </div>
 ```
 
-### 6.4 Modal Forms with HTMX
-
-**Opening a form in a modal:**
-```html
-<button class="uk-button uk-button-primary"
-        hx-get="/persons/create"
-        hx-target="#modal-container"
-        hx-trigger="click">
-    Add Person
-</button>
-
-<!-- Modal container - receives form partial -->
-<div id="modal-container"></div>
-```
-
-**Form partial with HTMX submit:**
-```html
-<div id="person-modal" uk-modal class="uk-open">
-    <div class="uk-modal-dialog uk-modal-body">
-        <form hx-post="/persons/create"
-              hx-target="#modal-container"
-              class="uk-form-stacked">
-            <!-- form fields -->
-            <button type="submit" class="uk-button uk-button-primary">Save</button>
-        </form>
-    </div>
-</div>
-```
-
-### 6.5 Success Response with Table Refresh
+### 6.4 Success Response with Table Refresh
 
 After a successful create/update/delete, the server returns a success partial that:
 1. Triggers a table refresh
@@ -1933,7 +1904,7 @@ After a successful create/update/delete, the server returns a success partial th
 </script>
 ```
 
-### 6.6 Delete with Confirmation
+### 6.5 Delete with Confirmation
 
 ```html
 <button class="uk-button uk-button-small uk-button-danger"
@@ -1946,7 +1917,7 @@ After a successful create/update/delete, the server returns a success partial th
 
 **Server returns success partial** which refreshes the table and shows notification.
 
-### 6.7 Loading Indicator
+### 6.6 Loading Indicator
 
 ```html
 <form hx-post="/persons/create"
@@ -1960,7 +1931,7 @@ After a successful create/update/delete, the server returns a success partial th
 </div>
 ```
 
-### 6.8 Out-of-Band (OOB) Swaps
+### 6.7 Out-of-Band (OOB) Swaps
 
 For updating multiple page elements in a single response:
 
@@ -1976,7 +1947,7 @@ For updating multiple page elements in a single response:
 </div>
 ```
 
-### 6.9 HX-Trigger Header for Events
+### 6.8 HX-Trigger Header for Events
 
 Server can trigger client-side events via response header:
 
