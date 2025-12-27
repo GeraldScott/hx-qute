@@ -242,7 +242,7 @@ Use `@QuarkusComponentTest` for fast unit-style tests that don't require the ful
 ### Basic Component Test
 
 ```java
-package io.archton.htmx.component;
+package io.archton.scaffold.component;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.component.QuarkusComponentTest;
@@ -286,7 +286,7 @@ public class TransactionServiceTest {
 For services that use Panache's Active Record pattern:
 
 ```java
-package io.archton.htmx.component;
+package io.archton.scaffold.component;
 
 import io.quarkus.panache.mock.MockPanacheEntities;
 import io.quarkus.test.component.QuarkusComponentTest;
@@ -327,7 +327,7 @@ Test profiles allow configuration overrides and selective test execution based o
 ### Define Test Profiles
 
 ```java
-package io.archton.htmx.profile;
+package io.archton.scaffold.profile;
 
 import io.quarkus.test.junit.QuarkusTestProfile;
 import java.util.Map;

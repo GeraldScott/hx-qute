@@ -412,7 +412,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender` (via Maintenance menu)
+2. Navigate to `/genders` (via Maintenance menu)
 3. Take a snapshot of the page
 
 **Expected:**
@@ -430,7 +430,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Verify table content
 
 **Expected:**
@@ -449,7 +449,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 
 **Expected:**
 - [ ] Message "No gender entries found" displayed
@@ -464,7 +464,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Add button
 
 **Expected:**
@@ -482,7 +482,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
    - code: `x`
@@ -503,7 +503,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
    - code: `abc` (lowercase)
@@ -525,7 +525,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
    - code: `M`
@@ -547,7 +547,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
    - code: `Z`
@@ -567,7 +567,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
    - code: `ABCDEFGH` (8 characters, exceeds 7)
@@ -589,7 +589,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Edit button for an existing entry
 
 **Expected:**
@@ -610,7 +610,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Edit button for an existing entry
 4. Modify description to `Updated Description`
 5. Click Save button
@@ -629,7 +629,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Edit button for an existing entry
 4. Modify description
 5. Click Cancel button
@@ -649,7 +649,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Delete button for an existing entry
 
 **Expected:**
@@ -668,7 +668,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Delete button for an entry
 4. Confirm deletion
 
@@ -685,7 +685,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as `admin` / `Admin@01`
-2. Navigate to `/gender`
+2. Navigate to `/genders`
 3. Click Delete button for an entry
 4. Click Cancel in confirmation dialog
 
@@ -704,7 +704,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Steps:**
 1. Login as non-admin user
-2. Attempt to navigate to `/gender`
+2. Attempt to navigate to `/genders`
 
 **Expected:**
 - [ ] Access denied or redirected
@@ -726,7 +726,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 **Expected:**
 - [ ] Page title contains "Persons"
-- [ ] Table with columns: First Name, Last Name, Email, Phone, Date of Birth, Actions
+- [ ] Table with columns: First Name, Last Name, Email, Phone, Date of Birth, Gender, Actions
 - [ ] Add button is visible
 - [ ] Filter panel is visible above table
 
@@ -783,6 +783,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 - [ ] email input field exists
 - [ ] phone input field exists
 - [ ] dateOfBirth date picker exists
+- [ ] gender dropdown exists with available options
 - [ ] Save and Cancel buttons visible
 
 ---
@@ -802,12 +803,14 @@ This document defines the test cases for browser-based testing using Chrome DevT
    - email: `john.doe@example.com`
    - phone: `555-1234`
    - dateOfBirth: `1990-01-15`
+   - gender: Select an available option
 5. Click Save button
 
 **Expected:**
 - [ ] Redirected to persons list
 - [ ] New entry appears in list
 - [ ] Email stored as lowercase
+- [ ] Gender selection saved correctly
 
 ---
 
@@ -891,6 +894,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Expected:**
 - [ ] Edit form displayed
 - [ ] All fields pre-populated with current values
+- [ ] Gender dropdown shows current selection
 - [ ] Audit fields displayed (read-only)
 - [ ] Save and Cancel buttons visible
 

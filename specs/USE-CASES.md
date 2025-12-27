@@ -73,14 +73,15 @@ This document defines the use cases derived from the user stories and technical 
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 1a | Username empty | Display "Username is required" error |
-| 1b | Username < 3 chars | Display "Username must be at least 3 characters" error |
-| 2a | Email empty | Display "Email is required" error |
-| 2b | Email invalid format | Display "Invalid email format" error |
-| 3a | Password empty | Display "Password is required" error |
-| 3b | Password < 8 chars | Display "Password must be at least 8 characters" error |
-| 6a | Username exists (case-insensitive) | Display "Username already exists" error |
-| 7a | Email exists (case-insensitive) | Display "Email already registered" error |
+| 1a | Username empty | Display "Username is required." error |
+| 1b | Username < 3 chars | Display "Username must be at least 3 characters." error |
+| 2a | Email empty | Display "Email is required." error |
+| 2b | Email invalid format | Display "Invalid email format." error |
+| 3a | Password empty | Display "Password is required." error |
+| 3b | Password < 8 chars | Display "Password must be at least 8 characters." error |
+| 3c | Password > 64 chars | Display "Password must be 64 characters or less." error |
+| 6a | Username exists (case-insensitive) | Display "Username already exists." error |
+| 7a | Email exists (case-insensitive) | Display "Email already registered." error |
 
 **Postcondition:** User account created; user redirected to login page
 
@@ -307,7 +308,7 @@ This document defines the use cases derived from the user stories and technical 
 **Main Flow:**
 1. System retrieves all Person records
 2. System sorts records by lastName, then firstName (ascending)
-3. System displays records in table format (firstName, lastName, email, phone, dateOfBirth)
+3. System displays records in table format (firstName, lastName, email, phone, dateOfBirth, gender)
 4. System displays Add button
 5. System displays filter panel
 
@@ -331,19 +332,20 @@ This document defines the use cases derived from the user stories and technical 
 | Trigger | User clicks Add button |
 
 **Main Flow:**
-1. System displays create form with fields: firstName, lastName, email, phone, dateOfBirth
+1. System displays create form with fields: firstName, lastName, email, phone, dateOfBirth, gender
 2. User enters firstName
 3. User enters lastName
 4. User enters email (valid format)
 5. User enters phone (optional)
 6. User selects dateOfBirth using date picker
-7. User submits form
-8. System validates required fields
-9. System normalizes email to lowercase
-10. System validates email uniqueness
-11. System sets audit fields (createdBy, createdAt)
-12. System persists new Person record
-13. System redirects to Persons list
+7. User selects gender from dropdown (optional)
+8. User submits form
+9. System validates required fields
+10. System normalizes email to lowercase
+11. System validates email uniqueness
+12. System sets audit fields (createdBy, createdAt)
+13. System persists new Person record
+14. System redirects to Persons list
 
 **Alternative Flows:**
 

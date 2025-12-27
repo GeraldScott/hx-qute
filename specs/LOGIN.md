@@ -319,7 +319,7 @@ Per NIST SP 800-63-4, MFA SHALL be supported with the following priority:
 ### 7.1 Person Entity
 
 ```java
-package io.archton.htmx.entity;
+package io.archton.scaffold.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
@@ -418,7 +418,7 @@ public class Person extends PanacheEntity {
 ### 7.2 UserLogin Entity
 
 ```java
-package io.archton.htmx.entity;
+package io.archton.scaffold.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.elytron.security.common.BcryptUtil;
@@ -559,7 +559,7 @@ public class UserLogin extends PanacheEntity {
 ### 7.3 Password Service
 
 ```java
-package io.archton.htmx.service;
+package io.archton.scaffold.service;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
