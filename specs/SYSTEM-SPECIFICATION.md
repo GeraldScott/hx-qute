@@ -1135,9 +1135,7 @@ public class AuthResource {
     @Transactional
     public Response signup(
             @FormParam("email") String email,
-            @FormParam("password") String password,
-            @FormParam("firstName") String firstName,
-            @FormParam("lastName") String lastName) {
+            @FormParam("password") String password) {
 
         // Validation: email required
         if (email == null || email.trim().isEmpty()) {
@@ -1168,8 +1166,6 @@ public class AuthResource {
 
         // Create UserLogin with hashed password
         UserLogin user = UserLogin.create(email.trim(), password, "user");
-        user.firstName = firstName != null ? firstName.trim() : null;
-        user.lastName = lastName != null ? lastName.trim() : null;
         user.persist();
 
         return Response.seeOther(URI.create("/login")).build();
@@ -1998,18 +1994,6 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
             </div>
 
             <div class="uk-margin">
-                <label class="uk-form-label" for="firstName">First Name (optional)</label>
-                <input class="uk-input" type="text" id="firstName" name="firstName"
-                       placeholder="First name"/>
-            </div>
-
-            <div class="uk-margin">
-                <label class="uk-form-label" for="lastName">Last Name (optional)</label>
-                <input class="uk-input" type="text" id="lastName" name="lastName"
-                       placeholder="Last name"/>
-            </div>
-
-            <div class="uk-margin">
                 <button type="submit" class="uk-button uk-button-primary">Sign Up</button>
             </div>
         </form>
@@ -2024,7 +2008,7 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
 ```
 
 **Key Elements**:
-- Input id: `email`, `password`, `firstName`, `lastName`
+- Input id: `email`, `password`
 - No username field - email is the login identifier
 - Button text: "Sign Up"
 - Link to login page with text "Login"

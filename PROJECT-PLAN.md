@@ -9,7 +9,7 @@
 ## Current Status
 
 **Current Phase:** Phase 1 - Authentication
-**Next Use Case:** UC-1.1 - Display Signup Page
+**Next Use Case:** UC-1.2 - Register New User
 **Blockers:** None
 
 ---
@@ -19,8 +19,8 @@
 | Phase | Use Cases | Completed | Remaining |
 |-------|-----------|-----------|-----------|
 | Phase 0 - Foundation | 4 | 4 | 0 |
-| Phase 1 - Authentication | 6 | 0 | 6 |
-| **Total** | **10** | **4** | **6** |
+| Phase 1 - Authentication | 6 | 1 | 5 |
+| **Total** | **10** | **5** | **5** |
 
 ---
 
@@ -153,20 +153,20 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 ### UC-1.1: Display Signup Page
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-1.1 - User Registration
 
 **Description:** Display signup form with email and password fields.
 
 **Implementation Tasks:**
-- [ ] Create `router/AuthResource.java` with `@Path("/")`
-- [ ] Add `@CheckedTemplate` class with `signup()` method
-- [ ] Implement `GET /signup` endpoint returning signup template
-- [ ] Create `templates/AuthResource/signup.html`
-- [ ] Include email input (id: `email`)
-- [ ] Include password input (id: `password`)
-- [ ] Include "Sign Up" submit button
-- [ ] Include link to login page
+- [x] Create `router/AuthResource.java` with `@Path("/")`
+- [x] Add `@CheckedTemplate` class with `signup()` method
+- [x] Implement `GET /signup` endpoint returning signup template
+- [x] Create `templates/AuthResource/signup.html`
+- [x] Include email input (id: `email`)
+- [x] Include password input (id: `password`)
+- [x] Include "Sign Up" submit button
+- [x] Include link to login page
 
 **Endpoints:**
 | Method | Path | Description |
@@ -175,8 +175,8 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 **Test Results:**
 - Test ID: TC-1.01
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: All 5 expected elements verified on 2025-12-28. Page title "Sign Up", email input (id=email), password input (id=password), "Sign Up" button, and link to login page all present and correctly configured.
 
 ---
 
