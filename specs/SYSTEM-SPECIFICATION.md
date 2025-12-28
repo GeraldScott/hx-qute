@@ -1142,6 +1142,11 @@ public class AuthResource {
             return Response.seeOther(URI.create("/signup?error=email_required")).build();
         }
 
+        // Validation: email format
+        if (!isValidEmail(email)) {
+            return Response.seeOther(URI.create("/signup?error=email_invalid")).build();
+        }
+
         // Validation: password required
         if (password == null || password.isEmpty()) {
             return Response.seeOther(URI.create("/signup?error=password_required")).build();
@@ -1197,12 +1202,17 @@ public class AuthResource {
         if (error == null) return null;
         return switch (error) {
             case "email_required" -> "Email is required.";
+            case "email_invalid" -> "Invalid email format.";
             case "password_required" -> "Password is required.";
             case "password_short" -> "Password must be at least 15 characters.";
             case "password_long" -> "Password must be 128 characters or less.";
             case "email_exists" -> "Email already registered.";
             default -> "An error occurred. Please try again.";
         };
+    }
+
+    private boolean isValidEmail(String email) {
+        return email != null && email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     }
 }
 ```
