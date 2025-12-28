@@ -276,7 +276,7 @@ public class PasswordValidator {
 # --- Form Authentication ---
 quarkus.http.auth.form.enabled=true
 quarkus.http.auth.form.login-page=/login
-quarkus.http.auth.form.landing-page=/dashboard
+quarkus.http.auth.form.landing-page=/
 quarkus.http.auth.form.error-page=/login?error=true
 quarkus.http.auth.form.timeout=PT30M
 quarkus.http.auth.form.cookie-name=quarkus-credential

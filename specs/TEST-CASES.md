@@ -22,13 +22,13 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 - Application running at `http://localhost:9080`
 - Fresh database state (or known test data)
-- Default admin user: `admin@example.com` / `Admin@01`
+- Default admin user: `admin@example.com` / `AdminPassword123`
 
 ### Test Data
 
 | Email | Password | Role |
 |-------|----------|------|
-| admin@example.com | Admin@01 | admin |
+| admin@example.com | AdminPassword123 | admin |
 
 **Note:** Per NIST SP 800-63B-4, new user passwords must be at least 15 characters. 
 
@@ -172,7 +172,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 1. Navigate to `/login`
 2. Fill form:
    - j_username: `admin@example.com`
-   - j_password: `Admin@01`
+   - j_password: `AdminPassword123`
 3. Click "Login" button
 4. Wait for navigation
 
@@ -228,7 +228,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 1. Navigate to `/login`
 2. Fill form:
    - j_username: `ADMIN@EXAMPLE.COM` (uppercase)
-   - j_password: `Admin@01`
+   - j_password: `AdminPassword123`
 3. Click "Login" button
 
 **Expected:**
@@ -259,7 +259,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify user can logout successfully.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/logout`
 3. Take a snapshot of the page
 
@@ -291,7 +291,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify authenticated users can access protected routes.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 
 **Expected:**
@@ -367,7 +367,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify gender list page renders correctly.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders` (via Maintenance menu)
 3. Take a snapshot of the page
 
@@ -385,7 +385,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify gender list displays existing records.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Verify table content
 
@@ -404,7 +404,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** No gender records in database
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 
 **Expected:**
@@ -419,7 +419,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify create form displays correctly.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 
@@ -437,7 +437,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify successful gender creation.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
@@ -458,7 +458,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify code is coerced to uppercase.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
@@ -480,7 +480,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Gender with code `M` exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
@@ -502,7 +502,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Gender with description `Male` exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
@@ -522,7 +522,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify code maximum length validation.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
@@ -544,7 +544,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Gender record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Edit button for an existing entry
 
@@ -565,7 +565,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Gender record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Edit button for an existing entry
 4. Modify description to `Updated Description`
@@ -584,7 +584,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify cancel discards changes.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Edit button for an existing entry
 4. Modify description
@@ -604,7 +604,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Gender record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Delete button for an existing entry
 
@@ -623,7 +623,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Gender record exists (not in use)
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Delete button for an entry
 4. Confirm deletion
@@ -640,7 +640,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify cancel preserves record.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Delete button for an entry
 4. Click Cancel in confirmation dialog
@@ -676,7 +676,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify persons list page renders correctly.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Take a snapshot of the page
 
@@ -694,7 +694,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify persons list displays existing records.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Verify table content
 
@@ -713,7 +713,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** No person records in database (except admin)
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 
 **Expected:**
@@ -728,7 +728,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify create form displays correctly.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Add button
 
@@ -750,7 +750,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify successful person creation.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Add button
 4. Fill form:
@@ -776,7 +776,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify email is required.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Add button
 4. Fill form without email:
@@ -797,7 +797,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify email format validation.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Add button
 4. Fill form:
@@ -820,7 +820,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Person with email `admin@example.com` exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Add button
 4. Fill form:
@@ -843,7 +843,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Person record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Edit button for an existing entry
 
@@ -864,7 +864,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Person record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Edit button for an existing entry
 4. Modify lastName to `Updated`
@@ -885,7 +885,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Two person records exist with different emails
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Edit button for first person
 4. Change email to match second person's email
@@ -903,7 +903,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify cancel discards changes.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Edit button for an existing entry
 4. Modify fields
@@ -923,7 +923,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Person record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Delete button for an existing entry
 
@@ -942,7 +942,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Person record exists
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Delete button for an entry
 4. Confirm deletion
@@ -959,7 +959,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify cancel preserves record.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Click Delete button for an entry
 4. Click Cancel in confirmation dialog
@@ -978,7 +978,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Multiple person records exist
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Enter filter text matching a lastName
 4. Click Filter button
@@ -995,7 +995,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify filter with no matches shows appropriate message.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Enter filter text that matches no records: `ZZZZNONEXISTENT`
 4. Click Filter button
@@ -1014,7 +1014,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Precondition:** Filter is currently applied
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons` with active filter
 3. Click Clear button
 
@@ -1030,7 +1030,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 **Objective:** Verify filter persists during session.
 
 **Steps:**
-1. Login as `admin@example.com` / `Admin@01`
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
 3. Apply filter
 4. Navigate away to another page
@@ -1065,24 +1065,22 @@ This document defines the test cases for browser-based testing using Chrome DevT
 |---------|-----------|-----------|--------|-------|
 | TC-1.01 | Signup Page UI | UC-1.1 | [ ] | |
 | TC-1.02 | Signup Success | UC-1.2 | [ ] | |
-| TC-1.03 | Signup Username Required | UC-1.2 | [ ] | |
-| TC-1.04 | Signup Email Required | UC-1.2 | [ ] | |
-| TC-1.05 | Signup Password Min Length | UC-1.2 | [ ] | |
-| TC-1.06 | Signup Duplicate Username | UC-1.2 | [ ] | |
-| TC-1.07 | Signup Duplicate Email | UC-1.2 | [ ] | |
-| TC-1.08 | Signup Username Case | UC-1.2 | [ ] | |
-| TC-1.09 | Login Page UI | UC-1.3 | [ ] | |
-| TC-1.10 | Login Success | UC-1.4 | [ ] | |
-| TC-1.11 | Login Invalid Password | UC-1.4 | [ ] | |
-| TC-1.12 | Login Invalid Username | UC-1.4 | [ ] | |
-| TC-1.13 | Login Username Case | UC-1.4 | [ ] | |
-| TC-1.14 | Login Empty Credentials | UC-1.4 | [ ] | |
-| TC-1.15 | Logout Flow | UC-1.5 | [ ] | |
-| TC-1.16 | Protected Route Unauth | UC-1.6 | [ ] | |
-| TC-1.17 | Protected Route Auth | UC-1.4 | [ ] | |
-| TC-1.18 | Navigation Auth Pages | UC-1.1, UC-1.3 | [ ] | |
-| TC-1.19 | User Enumeration Prevention | UC-1.4 | [ ] | |
-| TC-1.20 | Form Input Sanitization | UC-1.2 | [ ] | |
+| TC-1.03 | Signup Email Required | UC-1.2 | [ ] | |
+| TC-1.04 | Signup Password Min Length | UC-1.2 | [ ] | |
+| TC-1.05 | Signup Duplicate Email | UC-1.2 | [ ] | |
+| TC-1.06 | Signup Email Case Insensitivity | UC-1.2 | [ ] | |
+| TC-1.07 | Login Page UI | UC-1.3 | [ ] | |
+| TC-1.08 | Login Success | UC-1.4 | [ ] | |
+| TC-1.09 | Login Invalid Password | UC-1.4 | [ ] | |
+| TC-1.10 | Login Invalid Email | UC-1.4 | [ ] | |
+| TC-1.11 | Login Email Case Insensitivity | UC-1.4 | [ ] | |
+| TC-1.12 | Login Empty Credentials | UC-1.4 | [ ] | |
+| TC-1.13 | Logout Flow | UC-1.5 | [ ] | |
+| TC-1.14 | Protected Route Unauth | UC-1.6 | [ ] | |
+| TC-1.15 | Protected Route Auth | UC-1.4 | [ ] | |
+| TC-1.16 | Navigation Auth Pages | UC-1.1, UC-1.3 | [ ] | |
+| TC-1.17 | User Enumeration Prevention | UC-1.4 | [ ] | |
+| TC-1.18 | Form Input Sanitization | UC-1.2 | [ ] | |
 
 ### TC-2: Gender Tests
 
@@ -1136,12 +1134,12 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 | Use Case | Test Cases |
 |----------|------------|
-| UC-1.1: Display Signup Page | TC-1.01, TC-1.18 |
-| UC-1.2: Register New User | TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06, TC-1.07, TC-1.08, TC-1.20 |
-| UC-1.3: Display Login Page | TC-1.09, TC-1.18 |
-| UC-1.4: Authenticate User | TC-1.10, TC-1.11, TC-1.12, TC-1.13, TC-1.14, TC-1.17, TC-1.19 |
-| UC-1.5: Logout User | TC-1.15 |
-| UC-1.6: Access Protected Route | TC-1.16 |
+| UC-1.1: Display Signup Page | TC-1.01, TC-1.16 |
+| UC-1.2: Register New User | TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06, TC-1.18 |
+| UC-1.3: Display Login Page | TC-1.07, TC-1.16 |
+| UC-1.4: Authenticate User | TC-1.08, TC-1.09, TC-1.10, TC-1.11, TC-1.12, TC-1.15, TC-1.17 |
+| UC-1.5: Logout User | TC-1.13 |
+| UC-1.6: Access Protected Route | TC-1.14 |
 | UC-2.1: View Gender List | TC-2.01, TC-2.02, TC-2.03, TC-2.16 |
 | UC-2.2: Create Gender | TC-2.04, TC-2.05, TC-2.06, TC-2.07, TC-2.08, TC-2.09 |
 | UC-2.3: Edit Gender | TC-2.10, TC-2.11, TC-2.12 |
