@@ -30,7 +30,7 @@ This document provides a comprehensive technical specification for HX Qute, a re
 - [USE-CASES.md](USE-CASES.md) - Detailed use case specifications
 - [TEST-CASES.md](TEST-CASES.md) - Test case documentation
 - [TEST-STRATEGY.md](TEST-STRATEGY.md) - Testing strategy
-- [LOGIN.md](LOGIN.md) - Authentication technical specification
+- [LOGIN-PHASED.md](LOGIN-PHASED.md) - Phased authentication implementation plan
 
 ---
 
@@ -51,7 +51,7 @@ This document provides a comprehensive technical specification for HX Qute, a re
 | ORM | `quarkus-hibernate-orm-panache` | Active Record pattern |
 | Database | `quarkus-jdbc-postgresql` | PostgreSQL driver |
 | Migrations | `quarkus-flyway` | Schema versioning |
-| Security | `quarkus-security-jpa` | Form-based auth with BCrypt |
+| Security | `quarkus-security-jpa` | JPA-based identity provider with BCrypt |
 | Validation | `quarkus-hibernate-validator` | Bean validation |
 | CDI | `quarkus-arc` | Dependency injection |
 | Testing | `quarkus-junit5` | JUnit 5 integration |
@@ -72,7 +72,7 @@ src/main/java/io/archton/scaffold/
 ├── entity/              # JPA entities (Panache public field style)
 │   ├── Gender.java
 │   ├── Person.java
-│   └── UserLogin.java
+│   └── UserLogin.java   # @UserDefinition for quarkus-security-jpa
 ├── repository/          # PanacheRepository implementations
 │   └── GenderRepository.java
 ├── router/              # REST resources with @CheckedTemplate
@@ -80,10 +80,8 @@ src/main/java/io/archton/scaffold/
 │   ├── GenderResource.java
 │   ├── PersonResource.java
 │   └── AuthResource.java
-├── security/            # Custom security providers
-│   └── CaseInsensitiveIdentityProvider.java
 ├── service/             # Business logic services
-│   └── PasswordService.java
+│   └── PasswordValidator.java
 └── error/               # Exception handling
     └── GlobalExceptionMapper.java
 
@@ -274,11 +272,6 @@ public class Person extends PanacheEntity {
     @Column(nullable = false)
     public boolean active = true;
 
-    // Bidirectional relationship with UserLogin
-    @OneToOne(mappedBy = "person", cascade = CascadeType.ALL,
-              orphanRemoval = true, fetch = FetchType.LAZY)
-    public UserLogin userLogin;
-
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
@@ -326,137 +319,140 @@ public class Person extends PanacheEntity {
 **Key Patterns**:
 - Email normalized to lowercase and trimmed on persist/update
 - Audit timestamps managed via `@PrePersist` / `@PreUpdate`
-- Bidirectional one-to-one with `UserLogin`
 - Optional relationship with `Gender`
 
 ### 3.4 Entity: UserLogin (Authentication)
 
-**Purpose**: Stores authentication credentials. Uses custom identity providers for email-based authentication.
+**Purpose**: Stores authentication credentials using Quarkus Security JPA annotations. This is the primary entity for form-based authentication with built-in BCrypt password hashing.
 
 **File**: `entity/UserLogin.java`
 
+**Design Philosophy**: Following YAGNI and Quarkus best practices, we use the built-in `quarkus-security-jpa` extension with its annotations rather than custom identity providers. This provides NIST SP 800-63B-4 compliant authentication with minimal custom code (~50 lines).
+
 ```java
+package io.archton.htmx.entity;
+
+import io.quarkus.elytron.security.common.BcryptUtil;
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.security.jpa.Password;
+import io.quarkus.security.jpa.PasswordType;
+import io.quarkus.security.jpa.Roles;
+import io.quarkus.security.jpa.UserDefinition;
+import io.quarkus.security.jpa.Username;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.time.Instant;
+
 @Entity
 @Table(name = "user_login")
-public class UserLogin extends PanacheEntityBase {
+@UserDefinition
+public class UserLogin extends PanacheEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    @Username
+    @NotBlank
+    @Email
+    @Size(max = 255)
+    @Column(nullable = false, unique = true)
+    public String email;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "person_id", nullable = false, unique = true)
-    public Person person;
+    @Password(PasswordType.MCF)
+    @NotBlank
+    @Column(nullable = false)
+    public String password;
 
-    /**
-     * Internal UUID identifier - auto-generated, not user-facing.
-     * Authentication uses Person.email via custom EmailIdentityProvider.
-     */
-    @NotNull
-    @Column(nullable = false, unique = true, columnDefinition = "UUID")
-    public UUID username;
-
-    @NotNull
-    @Column(name = "password_hash", nullable = false)
-    public String passwordHash;
-
+    @Roles
     @Column(nullable = false)
     public String role = "user";
 
-    // Login tracking
-    @Column(name = "last_login")
-    public Instant lastLogin;
+    // Optional profile fields
+    @Size(max = 100)
+    @Column(name = "first_name")
+    public String firstName;
 
-    // Account lockout (Phase 2 - schema ready)
-    @Column(name = "failed_attempts", nullable = false)
-    public int failedAttempts = 0;
+    @Size(max = 100)
+    @Column(name = "last_name")
+    public String lastName;
 
-    @Column(name = "locked_until")
-    public Instant lockedUntil;
-
-    // MFA fields (Phase 2 - schema ready)
-    @Column(name = "mfa_enabled", nullable = false)
-    public boolean mfaEnabled = false;
-
-    @Column(name = "mfa_secret")
-    public String mfaSecret;
-
-    // Audit fields
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     public Instant updatedAt;
 
-    @Size(max = 255)
-    @Column(name = "created_by", updatable = false)
-    public String createdBy;
-
-    @Size(max = 255)
-    @Column(name = "updated_by")
-    public String updatedBy;
+    @Column(nullable = false)
+    public boolean active = true;
 
     @PrePersist
     protected void onCreate() {
-        if (username == null) {
-            username = UUID.randomUUID();  // Auto-generate UUID
-        }
         createdAt = Instant.now();
         updatedAt = Instant.now();
+        normalizeEmail();
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+        normalizeEmail();
     }
 
-    // Business methods (Phase 2 - lockout enforcement)
-    public boolean isLocked() {
-        return lockedUntil != null && Instant.now().isBefore(lockedUntil);
-    }
-
-    public void recordFailedAttempt(int maxAttempts, int lockoutMinutes) {
-        failedAttempts++;
-        if (failedAttempts >= maxAttempts) {
-            int lockoutCount = failedAttempts / maxAttempts;
-            int multiplier = (int) Math.pow(2, lockoutCount - 1);
-            long lockoutSeconds = (long) lockoutMinutes * 60 * multiplier;
-            lockoutSeconds = Math.min(lockoutSeconds, 24 * 60 * 60);  // Cap at 24h
-            lockedUntil = Instant.now().plusSeconds(lockoutSeconds);
+    private void normalizeEmail() {
+        if (email != null) {
+            email = email.toLowerCase().trim();
         }
     }
 
-    public void recordSuccessfulLogin() {
-        failedAttempts = 0;
-        lockedUntil = null;
-        lastLogin = Instant.now();
-    }
-
-    // Finder methods
-    public static UserLogin findByUsername(UUID username) {
-        return find("username", username).firstResult();
-    }
-
-    public static UserLogin findByPersonId(Long personId) {
-        return find("person.id", personId).firstResult();
-    }
+    // --- Factory Methods ---
 
     /**
-     * Primary lookup method for authentication.
-     * Used by EmailIdentityProvider to find UserLogin by Person's email.
+     * Create a new user with hashed password.
+     * Password is hashed using BCrypt with cost factor 12.
      */
-    public static UserLogin findByPersonEmail(String email) {
-        return find("person.email", email.toLowerCase().trim()).firstResult();
+    public static UserLogin create(String email, String plainPassword, String role) {
+        UserLogin user = new UserLogin();
+        user.email = email.toLowerCase().trim();
+        user.password = BcryptUtil.bcryptHash(plainPassword, 12);
+        user.role = role;
+        return user;
+    }
+
+    // --- Finder Methods ---
+
+    public static UserLogin findByEmail(String email) {
+        return find("email", email.toLowerCase().trim()).firstResult();
+    }
+
+    public static boolean emailExists(String email) {
+        return count("email", email.toLowerCase().trim()) > 0;
+    }
+
+    // --- Display Methods ---
+
+    public String getDisplayName() {
+        if (firstName != null && lastName != null) {
+            return firstName + " " + lastName;
+        } else if (firstName != null) {
+            return firstName;
+        } else if (lastName != null) {
+            return lastName;
+        }
+        return email;
     }
 }
 ```
 
 **Key Patterns**:
-- **No JPA security annotations** - custom identity providers handle authentication
-- `UUID username` is internal, auto-generated - users never see or use it
-- Authentication via `Person.email` using `EmailIdentityProvider`
-- `findByPersonEmail()` is the primary lookup for authentication
-- Account lockout and MFA fields ready for Phase 2 implementation
+- **`@UserDefinition`** - Marks this entity as the security identity source for `quarkus-security-jpa`
+- **`@Username`** on `email` - Email is the login identifier (not a separate username field)
+- **`@Password(PasswordType.MCF)`** - Password stored in Modular Crypt Format (BCrypt)
+- **`@Roles`** - Single role field (expandable to comma-separated for multiple roles)
+- **Factory method** `create()` - Handles password hashing with BCrypt cost factor 12
+- **No custom identity providers needed** - Quarkus handles authentication automatically
+- Profile fields (`firstName`, `lastName`) included directly - no separate Person relationship needed for auth
+
+**NIST SP 800-63B-4 Compliance**:
+- BCrypt with cost factor 12 (approved algorithm)
+- No password truncation
+- No composition rules enforced (handled by PasswordValidator service)
 
 ---
 
@@ -757,7 +753,7 @@ public class GenderResource {
         // Check if gender is in use by Person records
         long personCount = Person.count("gender.id", id);
         if (personCount > 0) {
-            return Response.ok(Partials.gender_row_edit(gender, 
+            return Response.ok(Partials.gender_row_edit(gender,
                 "Cannot delete: Gender is in use by " + personCount + " person(s)."))
                 .build();
         }
@@ -1043,7 +1039,6 @@ public class PersonResource {
             throw new NotFoundException("Person not found");
         }
 
-        // Cascade deletes UserLogin if exists (via orphanRemoval)
         person.delete();
 
         // Return empty response - row removed via hx-swap="delete"
@@ -1077,12 +1072,14 @@ public class PersonResource {
 
 **File**: `router/AuthResource.java`
 
+This resource handles user registration and authentication pages. Note that login submission is handled by Quarkus form authentication (`/j_security_check`), not by this resource.
+
 ```java
 @Path("/")
 public class AuthResource {
 
     @Inject
-    PasswordService passwordService;
+    PasswordValidator passwordValidator;
 
     @Inject
     io.vertx.ext.web.RoutingContext routingContext;
@@ -1117,7 +1114,7 @@ public class AuthResource {
     public TemplateInstance loginPage(@QueryParam("error") String error) {
         String errorMessage = null;
         if ("true".equals(error)) {
-            errorMessage = "Invalid username or password.";
+            errorMessage = "Invalid email or password.";
         }
         return Templates.login("Login", "login", null, errorMessage);
     }
@@ -1138,7 +1135,9 @@ public class AuthResource {
     @Transactional
     public Response signup(
             @FormParam("email") String email,
-            @FormParam("password") String password) {
+            @FormParam("password") String password,
+            @FormParam("firstName") String firstName,
+            @FormParam("lastName") String lastName) {
 
         // Validation: email required
         if (email == null || email.trim().isEmpty()) {
@@ -1150,40 +1149,28 @@ public class AuthResource {
             return Response.seeOther(URI.create("/signup?error=password_required")).build();
         }
 
-        // Validation: password min length
-        if (password.length() < 8) {
-            return Response.seeOther(URI.create("/signup?error=password_short")).build();
-        }
-
-        // Validation: password max length (NIST SP 800-63B-4)
-        if (password.length() > 64) {
-            return Response.seeOther(URI.create("/signup?error=password_long")).build();
+        // Validation: password policy (NIST SP 800-63B-4)
+        List<String> passwordErrors = passwordValidator.validate(password);
+        if (!passwordErrors.isEmpty()) {
+            // Map to appropriate error code
+            if (password.length() < 15) {
+                return Response.seeOther(URI.create("/signup?error=password_short")).build();
+            }
+            if (password.length() > 128) {
+                return Response.seeOther(URI.create("/signup?error=password_long")).build();
+            }
         }
 
         // Check for duplicate email (case-insensitive)
-        if (Person.findByEmail(email.trim()) != null) {
+        if (UserLogin.emailExists(email.trim())) {
             return Response.seeOther(URI.create("/signup?error=email_exists")).build();
         }
 
-        // Create Person
-        Person person = new Person();
-        person.email = email.trim().toLowerCase();
-        person.createdBy = "system";
-        person.updatedBy = "system";
-        person.persist();
-
-        // Create UserLogin with hashed password (UUID username auto-generated)
-        UserLogin userLogin = new UserLogin();
-        userLogin.person = person;
-        // userLogin.username is auto-generated UUID in @PrePersist
-        userLogin.passwordHash = passwordService.hashPassword(password);
-        userLogin.role = "user";
-        userLogin.createdBy = "system";
-        userLogin.updatedBy = "system";
-        userLogin.persist();
-
-        // Link back (bidirectional)
-        person.userLogin = userLogin;
+        // Create UserLogin with hashed password
+        UserLogin user = UserLogin.create(email.trim(), password, "user");
+        user.firstName = firstName != null ? firstName.trim() : null;
+        user.lastName = lastName != null ? lastName.trim() : null;
+        user.persist();
 
         return Response.seeOther(URI.create("/login")).build();
     }
@@ -1213,19 +1200,23 @@ public class AuthResource {
     private String mapSignupError(String error) {
         if (error == null) return null;
         return switch (error) {
-            case "username_required" -> "Username is required.";
-            case "username_short" -> "Username must be at least 3 characters.";
             case "email_required" -> "Email is required.";
             case "password_required" -> "Password is required.";
-            case "password_short" -> "Password must be at least 8 characters.";
-            case "password_long" -> "Password must be 64 characters or less.";
-            case "username_exists" -> "Username already exists.";
+            case "password_short" -> "Password must be at least 15 characters.";
+            case "password_long" -> "Password must be 128 characters or less.";
             case "email_exists" -> "Email already registered.";
             default -> "An error occurred. Please try again.";
         };
     }
 }
 ```
+
+**Key Points**:
+- Login form posts to `/j_security_check` (handled by Quarkus form auth)
+- Form field names must be `j_username` and `j_password` for Quarkus form auth
+- The `j_username` field contains the email address
+- Signup creates `UserLogin` directly (no separate Person entity for auth)
+- Password hashing via `UserLogin.create()` factory method
 
 ---
 
@@ -1942,9 +1933,9 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
 
         <form action="/j_security_check" method="POST" class="uk-form-stacked">
             <div class="uk-margin">
-                <label class="uk-form-label" for="j_username">Username</label>
-                <input class="uk-input" type="text" id="j_username" name="j_username"
-                       placeholder="Enter username" required/>
+                <label class="uk-form-label" for="j_username">Email</label>
+                <input class="uk-input" type="email" id="j_username" name="j_username"
+                       placeholder="Enter email" required/>
             </div>
 
             <div class="uk-margin">
@@ -1967,7 +1958,7 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
 {/include}
 ```
 
-**Critical**: Form must POST to `/j_security_check` with fields named `j_username` and `j_password`.
+**Critical**: Form must POST to `/j_security_check` with fields named `j_username` and `j_password`. The `j_username` field contains the user's email address.
 
 ### 5.7 Signup Template
 
@@ -1994,12 +1985,6 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
 
         <form action="/signup" method="POST" class="uk-form-stacked">
             <div class="uk-margin">
-                <label class="uk-form-label" for="username">Username</label>
-                <input class="uk-input" type="text" id="username" name="username"
-                       placeholder="Enter username (min 3 characters)" required/>
-            </div>
-
-            <div class="uk-margin">
                 <label class="uk-form-label" for="email">Email</label>
                 <input class="uk-input" type="email" id="email" name="email"
                        placeholder="Enter email" required/>
@@ -2008,7 +1993,20 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
             <div class="uk-margin">
                 <label class="uk-form-label" for="password">Password</label>
                 <input class="uk-input" type="password" id="password" name="password"
-                       placeholder="Enter password (min 8 characters)" required/>
+                       placeholder="Enter password (min 15 characters)" required/>
+                <span class="uk-text-muted uk-text-small">Minimum 15 characters (NIST compliant)</span>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="firstName">First Name (optional)</label>
+                <input class="uk-input" type="text" id="firstName" name="firstName"
+                       placeholder="First name"/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="lastName">Last Name (optional)</label>
+                <input class="uk-input" type="text" id="lastName" name="lastName"
+                       placeholder="Last name"/>
             </div>
 
             <div class="uk-margin">
@@ -2026,9 +2024,11 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
 ```
 
 **Key Elements**:
-- Input id: `username`, `email`, `password` (for test case TC-1.01)
+- Input id: `email`, `password`, `firstName`, `lastName`
+- No username field - email is the login identifier
 - Button text: "Sign Up"
 - Link to login page with text "Login"
+- Password hint shows NIST-compliant 15 character minimum
 
 ---
 
@@ -2637,157 +2637,145 @@ function handleHtmxError(event) {
 
 ## 7. Security Architecture
 
-### 7.1 Email-Based Authentication
+### 7.1 Quarkus Security JPA (Built-in Authentication)
 
-This application uses **custom identity providers** for email-based authentication.
-No JPA security annotations (`@UserDefinition`, `@Username`, `@Password`, `@Roles`) are used.
+This application uses **`quarkus-security-jpa`** for form-based authentication. This is the simplest and most maintainable approach, leveraging Quarkus's built-in JPA identity provider rather than custom identity providers.
 
 **Dependencies** (`pom.xml`):
 ```xml
-<!-- Core security (SecurityIdentity, IdentityProvider) -->
+<!-- JPA-based security with built-in BCrypt support -->
 <dependency>
     <groupId>io.quarkus</groupId>
-    <artifactId>quarkus-security</artifactId>
-</dependency>
-<!-- BcryptUtil for password hashing -->
-<dependency>
-    <groupId>io.quarkus</groupId>
-    <artifactId>quarkus-elytron-security-common</artifactId>
+    <artifactId>quarkus-security-jpa</artifactId>
 </dependency>
 ```
 
 **Configuration** (`application.properties`):
 ```properties
-# Form-based Authentication
+# =============================================================================
+# Form-Based Authentication Configuration
+# =============================================================================
+
+# --- Form Authentication ---
 quarkus.http.auth.form.enabled=true
 quarkus.http.auth.form.login-page=/login
-quarkus.http.auth.form.error-page=/login?error=true
 quarkus.http.auth.form.landing-page=/
-quarkus.http.auth.form.post-location=/j_security_check
-quarkus.http.auth.form.cookie-name=quarkus-credential
+quarkus.http.auth.form.error-page=/login?error=true
 quarkus.http.auth.form.timeout=PT30M
+quarkus.http.auth.form.cookie-name=quarkus-credential
+quarkus.http.auth.form.http-only-cookie=true
 
-# HTTP Permissions
-quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/genders,/genders/*
+# --- Route Protection ---
+quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/profile/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
-quarkus.http.auth.permission.public.paths=/,/login,/logout,/signup,/css/*,/images/*,/img/*,/style.css,/j_security_check
+
+quarkus.http.auth.permission.admin.paths=/genders,/genders/*,/admin/*
+quarkus.http.auth.permission.admin.policy=admin
+quarkus.http.auth.policy.admin.roles-allowed=admin
+
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/img/*,/style.css,/webjars/*,/j_security_check
 quarkus.http.auth.permission.public.policy=permit
+
+# --- Password Policy (NIST SP 800-63B-4) ---
+app.security.password.min-length=15
+app.security.password.max-length=128
+
+# --- Session Security ---
+quarkus.http.auth.form.new-cookie-interval=PT1M
+quarkus.http.same-site-cookie.quarkus-credential=strict
 ```
 
-### 7.2 Custom Identity Providers (Email-Based Login)
+### 7.2 How quarkus-security-jpa Works
 
-**File**: `security/EmailIdentityProvider.java`
+The `quarkus-security-jpa` extension automatically provides an identity provider when it detects a `@UserDefinition` annotated entity:
 
-Handles initial login (email + password verification):
+1. **Login form** posts to `/j_security_check` with `j_username` and `j_password`
+2. **Quarkus** intercepts the request and uses the JPA identity provider
+3. **Identity provider** queries `UserLogin` entity by the `@Username` field (email)
+4. **Password verification** uses BCrypt to compare `j_password` against `@Password` field
+5. **Roles** are loaded from the `@Roles` field
+6. **Session cookie** is created on successful authentication
+
+**No custom identity provider code is needed!**
+
+### 7.3 Password Validation Service
+
+NIST SP 800-63B-4 compliant password validation:
+
+**File**: `service/PasswordValidator.java`
 
 ```java
+package io.archton.htmx.service;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.util.ArrayList;
+import java.util.List;
+
 @ApplicationScoped
-@Priority(1)
-public class EmailIdentityProvider
-        implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
+public class PasswordValidator {
 
-    @Override
-    public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
-        return UsernamePasswordAuthenticationRequest.class;
-    }
+    @ConfigProperty(name = "app.security.password.min-length", defaultValue = "15")
+    int minLength;
 
-    @Override
-    public Uni<SecurityIdentity> authenticate(
-            UsernamePasswordAuthenticationRequest request,
-            AuthenticationRequestContext context) {
-        return context.runBlocking(() -> authenticateBlocking(request));
-    }
+    @ConfigProperty(name = "app.security.password.max-length", defaultValue = "128")
+    int maxLength;
 
-    @Transactional
-    protected SecurityIdentity authenticateBlocking(
-            UsernamePasswordAuthenticationRequest request) {
+    /**
+     * Validate password against NIST SP 800-63B-4 requirements.
+     *
+     * @param password the plain text password to validate
+     * @return list of validation errors (empty if valid)
+     */
+    public List<String> validate(String password) {
+        List<String> errors = new ArrayList<>();
 
-        // The form's "username" field contains the email
-        String email = request.getUsername().toLowerCase().trim();
-
-        // Look up UserLogin via Person.email relationship
-        UserLogin userLogin = UserLogin.findByPersonEmail(email);
-        if (userLogin == null) {
-            throw new AuthenticationFailedException("Invalid email or password");
+        if (password == null || password.isEmpty()) {
+            errors.add("Password is required");
+            return errors;
         }
 
-        // Verify password with BCrypt
-        String password = new String(request.getPassword().getPassword());
-        if (!BcryptUtil.matches(password, userLogin.passwordHash)) {
-            throw new AuthenticationFailedException("Invalid email or password");
+        // NIST 800-63B-4: Minimum 15 characters when password-only auth
+        if (password.length() < minLength) {
+            errors.add("Password must be at least " + minLength + " characters");
         }
 
-        // Build security identity - use email as principal (not UUID)
-        return QuarkusSecurityIdentity.builder()
-                .setPrincipal(new QuarkusPrincipal(userLogin.person.email))
-                .addRole(userLogin.role)
-                .build();
+        // NIST 800-63B-4: Accept at least 64 characters (we allow 128)
+        if (password.length() > maxLength) {
+            errors.add("Password must be " + maxLength + " characters or less");
+        }
+
+        // NIST 800-63B-4: No truncation - ensure full password is used
+        // (This is enforced by not truncating in storage)
+
+        // NIST 800-63B-4: No composition rules required
+        // (Intentionally NOT checking for special chars, uppercase, etc.)
+
+        return errors;
+    }
+
+    /**
+     * Check if password is valid.
+     */
+    public boolean isValid(String password) {
+        return validate(password).isEmpty();
     }
 }
 ```
 
-**File**: `security/EmailTrustedIdentityProvider.java`
+### 7.4 Security Requirements Summary (NIST SP 800-63B-4)
 
-Handles session restoration (re-authenticating from session cookie):
+| Requirement | NIST 800-63B-4 | Implementation |
+|-------------|----------------|----------------|
+| Minimum password length | 15 chars (password-only) | Configurable, default 15 |
+| Maximum password length | Accept 64+ chars | 128 chars |
+| Password truncation | Prohibited | Full password stored |
+| Composition rules | Not required | None enforced |
+| Password hashing | Approved algorithm | BCrypt, cost 12 |
+| Session timeout | Risk-based | 30 min idle |
+| Secure cookies | HttpOnly, SameSite | Configured |
 
-```java
-@ApplicationScoped
-@Priority(1)
-public class EmailTrustedIdentityProvider
-        implements IdentityProvider<TrustedAuthenticationRequest> {
-
-    @Override
-    public Class<TrustedAuthenticationRequest> getRequestType() {
-        return TrustedAuthenticationRequest.class;
-    }
-
-    @Override
-    public Uni<SecurityIdentity> authenticate(
-            TrustedAuthenticationRequest request,
-            AuthenticationRequestContext context) {
-        return context.runBlocking(() -> authenticateBlocking(request));
-    }
-
-    @Transactional
-    protected SecurityIdentity authenticateBlocking(TrustedAuthenticationRequest request) {
-        // Principal is the email (set during initial login)
-        String email = request.getPrincipal().toLowerCase().trim();
-
-        UserLogin userLogin = UserLogin.findByPersonEmail(email);
-        if (userLogin == null) {
-            throw new AuthenticationFailedException("User not found");
-        }
-
-        // Rebuild security identity (no password check - session is trusted)
-        return QuarkusSecurityIdentity.builder()
-                .setPrincipal(new QuarkusPrincipal(userLogin.person.email))
-                .addRole(userLogin.role)
-                .build();
-    }
-}
-```
-
-### 7.3 Password Hashing Service
-
-**File**: `service/PasswordService.java`
-
-```java
-@ApplicationScoped
-public class PasswordService {
-
-    private static final int BCRYPT_COST = 12;
-
-    public String hashPassword(String plainPassword) {
-        return BcryptUtil.bcryptHash(plainPassword, BCRYPT_COST);
-    }
-
-    public boolean verifyPassword(String plainPassword, String hashedPassword) {
-        return BcryptUtil.matches(plainPassword, hashedPassword);
-    }
-}
-```
-
-### 7.4 Resource-Level Security
+### 7.5 Resource-Level Security
 
 ```java
 @Path("/genders")
@@ -2798,6 +2786,19 @@ public class GenderResource { }
 @RolesAllowed({"user", "admin"})  // All authenticated users
 public class PersonResource { }
 ```
+
+### 7.6 What Phase 1 Does NOT Include
+
+| Feature | Reason | Future Phase |
+|---------|--------|--------------|
+| Account lockout | Defer to Phase 2/3 | 2 |
+| MFA/2FA | Defer to Phase 2 (WebAuthn) | 2 |
+| Password breach checking (HIBP) | Enhancement, not MVP | 2 |
+| Audit logging | Enhancement | 2 |
+| Password reset | Enhancement | 2 |
+| Email verification | Enhancement | 2 |
+
+See [LOGIN-PHASED.md](LOGIN-PHASED.md) for details on Phase 2 (WebAuthn) and Phase 3 (OIDC) implementations.
 
 ---
 
@@ -2923,19 +2924,52 @@ CREATE TABLE gender (
 CREATE INDEX idx_gender_code ON gender(code);
 ```
 
-### 9.2 Default Admin User
+### 9.2 UserLogin Table Migration
+
+**Example**: `V1.2.0__Create_user_login_table.sql`
+
+```sql
+CREATE TABLE user_login (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    active BOOLEAN DEFAULT TRUE,
+
+    CONSTRAINT uq_user_login_email UNIQUE (email)
+);
+
+CREATE INDEX idx_user_login_email ON user_login(email);
+```
+
+**Notes:**
+- Single table design - profile fields included directly
+- `email` is the login identifier (no separate username)
+- `password` stored as BCrypt hash in MCF format
+- No MFA fields - deferred to Phase 2
+
+### 9.3 Default Admin User
 
 Create via migration `V1.2.1__Insert_admin_user.sql`:
 
 ```sql
--- Insert admin Person
-INSERT INTO person (email, first_name, last_name, created_at, updated_at, created_by, updated_by, active)
-VALUES ('admin@example.com', 'Admin', 'User', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'system', 'system', true);
-
--- Insert admin UserLogin (password: Admin@01, BCrypt hash)
-INSERT INTO user_login (person_id, username, password_hash, role, created_at, updated_at, created_by, updated_by, mfa_enabled, failed_attempts)
-SELECT id, 'admin', '$2a$12$[hash]', 'admin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'system', 'system', false, 0
-FROM person WHERE email = 'admin@example.com';
+-- Insert admin UserLogin (password: use a secure password, BCrypt hash with cost 12)
+-- Generate hash with: BcryptUtil.bcryptHash("YourSecurePassword", 12)
+INSERT INTO user_login (email, password, role, first_name, last_name, created_at, updated_at, active)
+VALUES (
+    'admin@example.com',
+    '$2a$12$[generated-bcrypt-hash]',
+    'admin',
+    'Admin',
+    'User',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    true
+);
 ```
 
 ---
@@ -2955,20 +2989,37 @@ quarkus.datasource.db-kind=postgresql
 quarkus.flyway.migrate-at-start=true
 quarkus.hibernate-orm.schema-management.strategy=none
 
-# Form-based Authentication
+# =============================================================================
+# Form-Based Authentication Configuration
+# =============================================================================
+
+# --- Form Authentication ---
 quarkus.http.auth.form.enabled=true
 quarkus.http.auth.form.login-page=/login
-quarkus.http.auth.form.error-page=/login?error=true
 quarkus.http.auth.form.landing-page=/
-quarkus.http.auth.form.post-location=/j_security_check
-quarkus.http.auth.form.cookie-name=quarkus-credential
+quarkus.http.auth.form.error-page=/login?error=true
 quarkus.http.auth.form.timeout=PT30M
+quarkus.http.auth.form.cookie-name=quarkus-credential
+quarkus.http.auth.form.http-only-cookie=true
 
-# HTTP Permissions
-quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/genders,/genders/*
+# --- Route Protection ---
+quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/profile/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
-quarkus.http.auth.permission.public.paths=/,/login,/logout,/signup,/css/*,/images/*,/img/*,/style.css,/j_security_check
+
+quarkus.http.auth.permission.admin.paths=/genders,/genders/*,/admin/*
+quarkus.http.auth.permission.admin.policy=admin
+quarkus.http.auth.policy.admin.roles-allowed=admin
+
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/img/*,/style.css,/webjars/*,/j_security_check
 quarkus.http.auth.permission.public.policy=permit
+
+# --- Password Policy (NIST SP 800-63B-4) ---
+app.security.password.min-length=15
+app.security.password.max-length=128
+
+# --- Session Security ---
+quarkus.http.auth.form.new-cookie-interval=PT1M
+quarkus.http.same-site-cookie.quarkus-credential=strict
 
 # Console styling
 quarkus.log.console.darken=1
@@ -3016,11 +3067,10 @@ private String getCurrentEmail() {
         : securityIdentity.getPrincipal().getName();  // Principal is email
 }
 
-private Person getCurrentPerson() {
+private UserLogin getCurrentUser() {
     String email = getCurrentEmail();
     if (email == null) return null;
-    UserLogin userLogin = UserLogin.findByPersonEmail(email);
-    return userLogin != null ? userLogin.person : null;
+    return UserLogin.findByEmail(email);
 }
 ```
 
@@ -3062,9 +3112,9 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | Use Case | Components | Templates | Routes |
 |----------|------------|-----------|--------|
 | **UC-1.1: Display Signup Page** | `AuthResource.signupPage()` | `AuthResource/signup.html` | GET `/signup` |
-| **UC-1.2: Register New User** | `AuthResource.signup()`, `Person` entity, `UserLogin` entity, `PasswordService` | `AuthResource/signup.html` | POST `/signup` |
+| **UC-1.2: Register New User** | `AuthResource.signup()`, `UserLogin.create()`, `PasswordValidator` | `AuthResource/signup.html` | POST `/signup` |
 | **UC-1.3: Display Login Page** | `AuthResource.loginPage()` | `AuthResource/login.html` | GET `/login` |
-| **UC-1.4: Authenticate User** | `CaseInsensitiveIdentityProvider`, Quarkus form auth | `AuthResource/login.html` | POST `/j_security_check` |
+| **UC-1.4: Authenticate User** | `quarkus-security-jpa` (built-in), `@UserDefinition` entity | `AuthResource/login.html` | POST `/j_security_check` |
 | **UC-1.5: Logout User** | `AuthResource.logoutPage()`, session destruction | `AuthResource/logout.html` | GET `/logout` |
 | **UC-1.6: Access Protected Route** | `quarkus.http.auth.permission.*` configuration | N/A | N/A |
 
@@ -3084,7 +3134,7 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | **UC-3.1: View Persons List** | `PersonResource.list()`, `Person.listAllOrdered()` | `PersonResource/persons.html`, `partials/persons_table.html`, `partials/person_row.html` | GET `/persons` |
 | **UC-3.2: Create Person** | `PersonResource.createForm()`, `PersonResource.create()` | `partials/person_create_form.html`, `partials/person_create_button.html`, `partials/person_success.html` | GET/POST `/persons/create`, GET `/persons/create/cancel` |
 | **UC-3.3: Edit Person** | `PersonResource.getRow()`, `PersonResource.editForm()`, `PersonResource.update()` | `partials/person_row.html`, `partials/person_row_edit.html` | GET `/persons/{id}`, GET `/persons/{id}/edit`, POST `/persons/{id}/update` |
-| **UC-3.4: Delete Person** | `PersonResource.delete()`, cascade to UserLogin, `hx-swap="delete"` | N/A | DELETE `/persons/{id}` |
+| **UC-3.4: Delete Person** | `PersonResource.delete()`, `hx-swap="delete"` | N/A | DELETE `/persons/{id}` |
 | **UC-3.5: Filter Persons** | `PersonResource.list()` with `@QueryParam`, `Person.findByNameContaining()` | `PersonResource/persons.html`, `partials/persons_table.html` | GET `/persons?filter=text` |
 
 ### 13.4 Cross-Cutting Concerns
@@ -3094,8 +3144,8 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | **Authentication** | `@RolesAllowed`, `quarkus.http.auth.permission.*` | UC-2.x, UC-3.x |
 | **Authorization** | `@RolesAllowed("admin")` for Gender | UC-2.x |
 | **Validation** | Server-side checks, HTML `required` | UC-1.2, UC-2.2, UC-2.3, UC-3.2, UC-3.3 |
-| **Audit Fields** | `createdBy`, `updatedBy`, `createdAt`, `updatedAt` | All entities |
-| **Password Security** | `PasswordService`, BCrypt cost 12 | UC-1.2, UC-1.4 |
+| **Audit Fields** | `createdAt`, `updatedAt` | All entities |
+| **Password Security** | `PasswordValidator`, BCrypt cost 12 | UC-1.2, UC-1.4 |
 
 ---
 
@@ -3128,7 +3178,7 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 
 ---
 
-*Document Version: 2.4*
+*Document Version: 3.0*
 *Last Updated: December 2025*
 
 ---
@@ -3137,9 +3187,4 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | December 2024 | Developer | Initial release (from HX Finance App) |
-| 2.0 | December 2024 | Senior Developer | Complete rewrite for HX Qute: removed Transaction/Category/Charts, added Gender/Person/Auth aligned with USE-CASES.md, updated package to io.archton.scaffold, CDN-based assets, Phase 1 scope |
-| 2.1 | December 2025 | Senior Developer | Added: password max length validation (NIST), session-based filter persistence, signup.html template, UIKit 3.25, standardized error punctuation |
-| 2.2 | December 2025 | Senior Developer | Replaced modal forms with inline partial templates following HTMX best practices: click-to-edit row pattern, inline create forms, OOB swaps for table refresh, removed JavaScript dependencies for modal handling |
-| 2.3 | December 2025 | Senior Developer | Added HTMX best practices: Section 6.10 (hx-boost for progressive enhancement), Section 6.11 (hx-sync for request synchronization), Section 6.12 (attribute inheritance patterns) |
-| 2.4 | December 2025 | Senior Developer | Added Section 6.13 (loading indicators with hx-indicator), Section 6.14 (response status code standards, HX-Redirect, HX-Retarget patterns) |
+| 3.0 | December 2025 | Senior Developer | **Major refactor**: Aligned with LOGIN-PHASED.md Phase 1 - Simplified to single `UserLogin` entity with `@UserDefinition` annotations, removed custom identity providers, email-based auth using built-in `quarkus-security-jpa`, NIST SP 800-63B-4 compliant `PasswordValidator` service, 15-char minimum password |
