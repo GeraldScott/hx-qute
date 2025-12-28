@@ -9,7 +9,7 @@
 ## Current Status
 
 **Current Phase:** Phase 1 - Authentication
-**Next Use Case:** UC-1.2 - Register New User
+**Next Use Case:** UC-1.3 - Display Login Page
 **Blockers:** None
 
 ---
@@ -19,8 +19,8 @@
 | Phase | Use Cases | Completed | Remaining |
 |-------|-----------|-----------|-----------|
 | Phase 0 - Foundation | 4 | 4 | 0 |
-| Phase 1 - Authentication | 6 | 1 | 5 |
-| **Total** | **10** | **5** | **5** |
+| Phase 1 - Authentication | 6 | 2 | 4 |
+| **Total** | **10** | **6** | **4** |
 
 ---
 
@@ -182,20 +182,20 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 ### UC-1.2: Register New User
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-1.1 - User Registration
 
 **Description:** Process signup form submission with validation and user creation.
 
 **Implementation Tasks:**
-- [ ] Implement `POST /signup` endpoint in AuthResource
-- [ ] Inject `PasswordValidator` service
-- [ ] Validate email required
-- [ ] Validate password using PasswordValidator
-- [ ] Check for duplicate email (case-insensitive)
-- [ ] Create UserLogin using factory method
-- [ ] Redirect to `/login` on success
-- [ ] Redirect with error codes on failure
+- [x] Implement `POST /signup` endpoint in AuthResource
+- [x] Inject `PasswordValidator` service
+- [x] Validate email required
+- [x] Validate password using PasswordValidator
+- [x] Check for duplicate email (case-insensitive)
+- [x] Create UserLogin using factory method
+- [x] Redirect to `/login` on success
+- [x] Redirect with error codes on failure
 
 **Validation Rules:**
 | Field | Rule | Error Message |
@@ -213,9 +213,9 @@ This phase implements Epic 1: User Authentication & Account Management.
 | POST | `/signup` | Process registration |
 
 **Test Results:**
-- Test ID: TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06, TC-1.18
-- Status: 🔲 Not Tested
-- Notes:
+- Test ID: TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06
+- Status: ✅ Passed
+- Notes: All 5 tests passed on 2025-12-28. TC-1.02 successful registration with redirect to /login. TC-1.03 email required validation works (both HTML5 and server-side). TC-1.04 password minimum 15 chars enforced. TC-1.05 duplicate email prevention working. TC-1.06 case-insensitive email matching verified.
 
 ---
 
