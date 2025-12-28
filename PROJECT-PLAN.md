@@ -8,8 +8,8 @@
 
 ## Current Status
 
-**Current Phase:** Phase 1 - Authentication
-**Next Use Case:** UC-1.5 - Logout User
+**Current Phase:** Phase 1 - Authentication ✅ COMPLETE
+**Next Use Case:** Phase 2 - Gender Management (UC-2.1)
 **Blockers:** None
 
 ---
@@ -19,8 +19,8 @@
 | Phase | Use Cases | Completed | Remaining |
 |-------|-----------|-----------|-----------|
 | Phase 0 - Foundation | 4 | 4 | 0 |
-| Phase 1 - Authentication | 6 | 4 | 2 |
-| **Total** | **10** | **8** | **2** |
+| Phase 1 - Authentication | 6 | 6 | 0 |
+| **Total** | **10** | **10** | **0** |
 
 ---
 
@@ -289,20 +289,20 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 ### UC-1.5: Logout User
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-1.3 - User Logout
 
 **Description:** Implement logout functionality with session termination.
 
 **Implementation Tasks:**
-- [ ] Add `logout()` template method to AuthResource.Templates
-- [ ] Implement `GET /logout` endpoint
-- [ ] Inject `RoutingContext` for session access
-- [ ] Destroy user session
-- [ ] Clear authentication cookie (`quarkus-credential`)
-- [ ] Create `templates/AuthResource/logout.html`
-- [ ] Display logout confirmation message
-- [ ] Include link to home page and login page
+- [x] Add `logout()` template method to AuthResource.Templates
+- [x] Implement `GET /logout` endpoint
+- [x] Inject `RoutingContext` for session access
+- [x] Destroy user session
+- [x] Clear authentication cookie (`quarkus-credential`)
+- [x] Create `templates/AuthResource/logout.html`
+- [x] Display logout confirmation message
+- [x] Include link to home page and login page
 
 **Endpoints:**
 | Method | Path | Description |
@@ -311,29 +311,29 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 **Test Results:**
 - Test ID: TC-1.13
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: All assertions passed on 2025-12-28. Logout page displays "Logged Out" title, confirmation message "You have been successfully logged out.", "GO TO HOME" link to /, and "LOGIN AGAIN" link to /login. Note: Session termination testing requires protected routes (UC-1.6) which is not yet implemented.
 
 ---
 
 ### UC-1.6: Access Protected Route (Unauthenticated)
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-1.2 - User Login
 
 **Description:** Configure route protection to redirect unauthenticated users to login.
 
 **Implementation Tasks:**
-- [ ] Configure route protection in application.properties:
+- [x] Configure route protection in application.properties:
   - `quarkus.http.auth.permission.authenticated.paths=/dashboard/*,/api/*,/persons/*,/profile/*`
   - `quarkus.http.auth.permission.authenticated.policy=authenticated`
   - `quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*`
   - `quarkus.http.auth.permission.admin.policy=admin`
   - `quarkus.http.auth.policy.admin.roles-allowed=admin`
-  - `quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*`
+  - `quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*,/img/*,/style.css`
   - `quarkus.http.auth.permission.public.policy=permit`
-- [ ] Update base template navigation to show Login/Logout based on authentication state
-- [ ] Inject `SecurityIdentity` in resources that need user info
+- [x] Update base template navigation to show Login/Logout based on authentication state
+- [x] Inject `SecurityIdentity` in resources that need user info
 
 **Route Protection Summary:**
 | Path Pattern | Policy | Roles |
@@ -344,8 +344,8 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 **Test Results:**
 - Test ID: TC-1.14, TC-1.16
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: All tests passed on 2025-12-28. TC-1.14 verified unauthenticated access to /persons and /genders redirects to /login. TC-1.16 verified navigation links work correctly between login and signup pages.
 
 ---
 

@@ -4,6 +4,7 @@ import io.archton.scaffold.entity.Gender;
 import io.archton.scaffold.repository.GenderRepository;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -18,6 +19,9 @@ public class GenderResource {
 
     @Inject
     GenderRepository genderRepository;
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     @CheckedTemplate
     public static class Templates {
@@ -34,7 +38,8 @@ public class GenderResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance get(@QueryParam("name") String name) {
         List<Gender> genders = genderRepository.listAll();
-        return Templates.gender("HX-Qute Gender", "gender", null, genders);
+        String userName = securityIdentity.isAnonymous() ? null : securityIdentity.getPrincipal().getName();
+        return Templates.gender("HX-Qute Gender", "gender", userName, genders);
     }
 
 }

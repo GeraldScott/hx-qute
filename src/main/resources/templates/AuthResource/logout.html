@@ -1,0 +1,22 @@
+{@String title}
+{@String currentPage}
+{@String userName}
+
+{#include base}
+
+<div class="uk-flex uk-flex-center uk-flex-middle" style="min-height: 60vh;">
+    <div class="uk-card uk-card-default uk-card-body uk-width-1-2@m uk-text-center">
+        <h2 class="uk-card-title">Logged Out</h2>
+
+        <div class="uk-alert uk-alert-success" uk-alert>
+            <p>You have been successfully logged out.</p>
+        </div>
+
+        <div class="uk-margin">
+            <a href="/" class="uk-button uk-button-primary">Go to Home</a>
+            <a href="/login" class="uk-button uk-button-default uk-margin-left">Login Again</a>
+        </div>
+    </div>
+</div>
+
+{/include}

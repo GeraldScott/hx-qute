@@ -75,12 +75,21 @@
                             </li>
                         </ul>
                     </li>
+                    {#if userName}
+                    <li>
+                        <a href="/logout">
+                            <span uk-icon="icon: sign-out; ratio: 1.2"></span>
+                            <span class="uk-margin-small-left">Logout ({userName})</span>
+                        </a>
+                    </li>
+                    {#else}
                     <li>
                         <a href="/login">
                             <span uk-icon="icon: sign-in; ratio: 1.2"></span>
-                            <span class="uk-margin-small-left">{userName?? ?: 'Login'}</span>
+                            <span class="uk-margin-small-left">Login</span>
                         </a>
                     </li>
+                    {/if}
                 </ul>
             </aside>
         </div>
@@ -135,12 +144,21 @@
                         </li>
                     </ul>
                 </li>
+                {#if userName}
+                <li>
+                    <a href="/logout">
+                        <span uk-icon="icon: sign-out; ratio: 1.2"></span>
+                        <span class="uk-margin-small-left">Logout ({userName})</span>
+                    </a>
+                </li>
+                {#else}
                 <li>
                     <a href="/login">
                         <span uk-icon="icon: sign-in; ratio: 1.2"></span>
-                        <span class="uk-margin-small-left">{userName?? ?: 'Login'}</span>
+                        <span class="uk-margin-small-left">Login</span>
                     </a>
                 </li>
+                {/if}
             </ul>
         </div>
     </div>

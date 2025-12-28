@@ -14,8 +14,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
+import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 
 @Path("/")
@@ -23,6 +25,9 @@ public class AuthResource {
 
     @Inject
     PasswordValidator passwordValidator;
+
+    @Inject
+    RoutingContext routingContext;
 
     // Simple email regex pattern for validation
     private static final String EMAIL_PATTERN = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
@@ -41,6 +46,12 @@ public class AuthResource {
             String currentPage,
             String userName,
             String error
+        );
+
+        public static native TemplateInstance logout(
+            String title,
+            String currentPage,
+            String userName
         );
     }
 
@@ -64,6 +75,29 @@ public class AuthResource {
             errorMessage = "Invalid email or password.";
         }
         return Templates.login("Login", "login", null, errorMessage);
+    }
+
+
+    // LOGOUT PAGE - GET
+    @GET
+    @Path("/logout")
+    @Produces(MediaType.TEXT_HTML)
+    public Response logoutPage() {
+        // Destroy session
+        if (routingContext.session() != null) {
+            routingContext.session().destroy();
+        }
+
+        // Clear authentication cookie
+        NewCookie clearCookie = new NewCookie.Builder("quarkus-credential")
+                .value("")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return Response.ok(Templates.logout("Logged Out", "logout", null))
+                .cookie(clearCookie)
+                .build();
     }
 
     // SIGNUP - POST
