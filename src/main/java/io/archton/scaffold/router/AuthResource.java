@@ -35,6 +35,13 @@ public class AuthResource {
             String userName,
             String error
         );
+
+        public static native TemplateInstance login(
+            String title,
+            String currentPage,
+            String userName,
+            String error
+        );
     }
 
     // SIGNUP PAGE - GET
@@ -44,6 +51,19 @@ public class AuthResource {
     public TemplateInstance signupPage(@QueryParam("error") String error) {
         String errorMessage = mapSignupError(error);
         return Templates.signup("Sign Up", "signup", null, errorMessage);
+    }
+
+
+    // LOGIN PAGE - GET
+    @GET
+    @Path("/login")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance loginPage(@QueryParam("error") String error) {
+        String errorMessage = null;
+        if ("true".equals(error)) {
+            errorMessage = "Invalid email or password.";
+        }
+        return Templates.login("Login", "login", null, errorMessage);
     }
 
     // SIGNUP - POST

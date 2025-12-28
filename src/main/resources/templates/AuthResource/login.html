@@ -1,0 +1,44 @@
+{@String title}
+{@String currentPage}
+{@String userName}
+{@String error}
+
+{#include base}
+
+<div class="uk-flex uk-flex-center uk-flex-middle" style="min-height: 60vh;">
+    <div class="uk-card uk-card-default uk-card-body uk-width-1-2@m">
+        <h2 class="uk-card-title">Login</h2>
+
+        {#if error}
+        <div class="uk-alert uk-alert-danger" uk-alert>
+            <a class="uk-alert-close" uk-close></a>
+            <p>{error}</p>
+        </div>
+        {/if}
+
+        <form action="/j_security_check" method="POST" class="uk-form-stacked" 
+              onsubmit="document.getElementById('j_username').value = document.getElementById('j_username').value.toLowerCase().trim();">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="j_username">Email</label>
+                <input class="uk-input" type="email" id="j_username" name="j_username"
+                       placeholder="Enter email" required/>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="j_password">Password</label>
+                <input class="uk-input" type="password" id="j_password" name="j_password"
+                       placeholder="Enter password" required/>
+            </div>
+
+            <div class="uk-margin">
+                <button type="submit" class="uk-button uk-button-primary">Login</button>
+            </div>
+        </form>
+
+        <p class="uk-text-small">
+            Don't have an account? <a href="/signup">Sign up</a>
+        </p>
+    </div>
+</div>
+
+{/include}

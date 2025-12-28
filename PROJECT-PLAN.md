@@ -9,7 +9,7 @@
 ## Current Status
 
 **Current Phase:** Phase 1 - Authentication
-**Next Use Case:** UC-1.3 - Display Login Page
+**Next Use Case:** UC-1.5 - Logout User
 **Blockers:** None
 
 ---
@@ -19,8 +19,8 @@
 | Phase | Use Cases | Completed | Remaining |
 |-------|-----------|-----------|-----------|
 | Phase 0 - Foundation | 4 | 4 | 0 |
-| Phase 1 - Authentication | 6 | 2 | 4 |
-| **Total** | **10** | **6** | **4** |
+| Phase 1 - Authentication | 6 | 4 | 2 |
+| **Total** | **10** | **8** | **2** |
 
 ---
 
@@ -221,22 +221,22 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 ### UC-1.3: Display Login Page
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-1.2 - User Login
 
 **Description:** Display login form with email and password fields.
 
 **Implementation Tasks:**
-- [ ] Add `login()` template method to AuthResource.Templates
-- [ ] Implement `GET /login` endpoint
-- [ ] Handle `?error=true` query parameter for error display
-- [ ] Create `templates/AuthResource/login.html`
-- [ ] Form action must be `/j_security_check` (Quarkus form auth)
-- [ ] Include email input (id: `j_username`, name: `j_username`)
-- [ ] Include password input (id: `j_password`, name: `j_password`)
-- [ ] Include "Login" submit button
-- [ ] Include link to signup page
-- [ ] Display error message when `?error=true`
+- [x] Add `login()` template method to AuthResource.Templates
+- [x] Implement `GET /login` endpoint
+- [x] Handle `?error=true` query parameter for error display
+- [x] Create `templates/AuthResource/login.html`
+- [x] Form action must be `/j_security_check` (Quarkus form auth)
+- [x] Include email input (id: `j_username`, name: `j_username`)
+- [x] Include password input (id: `j_password`, name: `j_password`)
+- [x] Include "Login" submit button
+- [x] Include link to signup page
+- [x] Display error message when `?error=true`
 
 **Critical:** Form must POST to `/j_security_check` with `j_username` and `j_password` fields.
 
@@ -247,21 +247,21 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 **Test Results:**
 - Test ID: TC-1.07
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: All 5 UI elements verified on 2025-12-28. Page title "Login", email input (id=j_username), password input (id=j_password), "Login" button, and link to signup page all present. Form correctly posts to /j_security_check.
 
 ---
 
 ### UC-1.4: Authenticate User
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-1.2 - User Login
 
 **Description:** Configure Quarkus form authentication to handle login submission.
 
 **Implementation Tasks:**
-- [ ] Add `quarkus-security-jpa` dependency to pom.xml (if not present)
-- [ ] Configure form authentication in application.properties:
+- [x] Add `quarkus-security-jpa` dependency to pom.xml (if not present)
+- [x] Configure form authentication in application.properties:
   - `quarkus.http.auth.form.enabled=true`
   - `quarkus.http.auth.form.login-page=/login`
   - `quarkus.http.auth.form.landing-page=/`
@@ -269,7 +269,7 @@ This phase implements Epic 1: User Authentication & Account Management.
   - `quarkus.http.auth.form.timeout=PT30M`
   - `quarkus.http.auth.form.cookie-name=quarkus-credential`
   - `quarkus.http.auth.form.http-only-cookie=true`
-- [ ] Configure session security:
+- [x] Configure session security:
   - `quarkus.http.auth.form.new-cookie-interval=PT1M`
   - `quarkus.http.same-site-cookie.quarkus-credential=strict`
 
@@ -281,9 +281,9 @@ This phase implements Epic 1: User Authentication & Account Management.
 5. On failure: redirect to error page
 
 **Test Results:**
-- Test ID: TC-1.08, TC-1.09, TC-1.10, TC-1.11, TC-1.12, TC-1.15, TC-1.17
-- Status: 🔲 Not Tested
-- Notes:
+- Test ID: TC-1.08, TC-1.09, TC-1.10, TC-1.11, TC-1.12, TC-1.17
+- Status: ✅ Passed
+- Notes: All 6 tests passed on 2025-12-28. TC-1.08 successful login with admin credentials. TC-1.09/TC-1.10 invalid credentials show generic error. TC-1.11 case-insensitive email via client-side JS normalization. TC-1.12 HTML5 validation prevents empty submission. TC-1.17 user enumeration prevention verified (identical error messages).
 
 ---
 
