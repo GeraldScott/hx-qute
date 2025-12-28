@@ -1,11 +1,7 @@
-{@String title}
-{@String currentPage}
-{@String userName}
-{@String error}
-
+{@String title} {@String currentPage} {@String userName} {@String error}
 {#include base}
 
-<div class="uk-flex uk-flex-center uk-flex-middle" style="min-height: 60vh;">
+<div class="uk-flex uk-flex-center uk-flex-middle" style="min-height: 60vh">
     <div class="uk-card uk-card-default uk-card-body uk-width-1-2@m">
         <h2 class="uk-card-title">Sign Up</h2>
 
@@ -16,22 +12,36 @@
         </div>
         {/if}
 
-        <form action="/signup" method="POST" class="uk-form-stacked">
+        <form action="/signup" method="POST" class="uk-form-stacked"
+              onsubmit="document.getElementById('email').value = document.getElementById('email').value.toLowerCase().trim();">
             <div class="uk-margin">
                 <label class="uk-form-label" for="email">Email</label>
-                <input class="uk-input" type="email" id="email" name="email"
-                       placeholder="Enter email" required/>
+                <input
+                    class="uk-input"
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter email"
+                    required
+                />
             </div>
 
             <div class="uk-margin">
                 <label class="uk-form-label" for="password">Password</label>
-                <input class="uk-input" type="password" id="password" name="password"
-                       placeholder="Enter password (min 15 characters)" required/>
-                <span class="uk-text-muted uk-text-small">Minimum 15 characters (NIST compliant)</span>
+                <input
+                    class="uk-input"
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter password (any characters, minimum 15)"
+                    required
+                />
             </div>
 
             <div class="uk-margin">
-                <button type="submit" class="uk-button uk-button-primary">Sign Up</button>
+                <button type="submit" class="uk-button uk-button-primary">
+                    Sign Up
+                </button>
             </div>
         </form>
 

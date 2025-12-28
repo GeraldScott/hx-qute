@@ -359,6 +359,27 @@ This document defines the test cases for browser-based testing using Chrome DevT
 
 ---
 
+### TC-1.19: Signup Email Client-Side Normalization
+**Parent Use Case:** [UC-1.2: Register New User](USE-CASES.md#uc-12-register-new-user)
+
+**Objective:** Verify signup form normalizes email (lowercase + trim) before submission via onsubmit handler.
+
+**Steps:**
+1. Navigate to `/signup`
+2. Take a snapshot to verify form has onsubmit handler
+3. Fill form:
+   - email: `  TESTCLIENT@EXAMPLE.COM  ` (spaces and uppercase)
+   - password: `TestPassword12345`
+4. Use evaluate_script to check email field value before and after form validation triggers
+5. Click "Sign Up" button
+
+**Expected:**
+- [ ] Form element has onsubmit attribute with normalization logic
+- [ ] Email value is transformed to `testclient@example.com` (lowercase, trimmed) on submit
+- [ ] Registration succeeds with normalized email
+
+---
+
 ## TC-2: Gender Master Data Tests
 
 ### TC-2.01: Gender Page UI Elements
@@ -1081,6 +1102,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 | TC-1.16 | Navigation Auth Pages | UC-1.1, UC-1.3 | [ ] | |
 | TC-1.17 | User Enumeration Prevention | UC-1.4 | [ ] | |
 | TC-1.18 | Form Input Sanitization | UC-1.2 | [ ] | |
+| TC-1.19 | Signup Email Client-Side Norm | UC-1.2 | [ ] | |
 
 ### TC-2: Gender Tests
 
@@ -1135,7 +1157,7 @@ This document defines the test cases for browser-based testing using Chrome DevT
 | Use Case | Test Cases |
 |----------|------------|
 | UC-1.1: Display Signup Page | TC-1.01, TC-1.16 |
-| UC-1.2: Register New User | TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06, TC-1.18 |
+| UC-1.2: Register New User | TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06, TC-1.18, TC-1.19 |
 | UC-1.3: Display Login Page | TC-1.07, TC-1.16 |
 | UC-1.4: Authenticate User | TC-1.08, TC-1.09, TC-1.10, TC-1.11, TC-1.12, TC-1.15, TC-1.17 |
 | UC-1.5: Logout User | TC-1.13 |
