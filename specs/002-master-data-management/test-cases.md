@@ -136,12 +136,12 @@
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
-   - code: `abc` (lowercase)
-   - description: `Test Gender`
+   - code: `n` (lowercase)
+   - description: `Non-binary`
 5. Click Save button
 
 **Expected:**
-- [ ] Code stored as `ABC` (uppercase)
+- [ ] Code stored as `N` (uppercase)
 - [ ] Entry displays with uppercase code
 
 ---
@@ -193,19 +193,19 @@
 ### TC-002-02-006: Gender Create Code Max Length
 **Parent Use Case:** [UC-002-02-02: Submit Create Form](use-cases.md#uc-002-02-02-submit-create-form)
 
-**Objective:** Verify code maximum length validation.
+**Objective:** Verify code maximum length validation (1 character).
 
 **Steps:**
 1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/genders`
 3. Click Add button
 4. Fill form:
-   - code: `ABCDEFGH` (8 characters, exceeds 7)
+   - code: `AB` (2 characters, exceeds 1)
    - description: `Test`
 5. Click Save button
 
 **Expected:**
-- [ ] Error message about code length displayed
+- [ ] Error message "Code must be 1 character." displayed
 - [ ] User remains on create form
 
 ---

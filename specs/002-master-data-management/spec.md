@@ -8,26 +8,25 @@ This document describes the technical implementation requirements for the Master
 
 ### 1.1 Gender Table
 
-**Migration**: `V1.0.0__Create_gender_table.sql` (update required)
+**Migration**: `V1.0.0__Create_gender_table.sql` (existing) + `V1.0.2__Add_gender_audit_fields.sql` (new)
 
 ```sql
+-- V1.0.0__Create_gender_table.sql (existing)
 CREATE TABLE gender (
     id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(7) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    CONSTRAINT uq_gender_code UNIQUE (code),
-    CONSTRAINT uq_gender_description UNIQUE (description)
+    code VARCHAR(1) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL UNIQUE
 );
 
-CREATE INDEX idx_gender_code ON gender(code);
+-- V1.0.2__Add_gender_audit_fields.sql (new migration)
+ALTER TABLE gender ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE gender ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE gender ADD COLUMN created_by VARCHAR(255);
+ALTER TABLE gender ADD COLUMN updated_by VARCHAR(255);
 ```
 
 **Key Constraints:**
-- `code`: Max 7 characters, unique, uppercase, not null
+- `code`: Max 1 character, unique, uppercase, not null
 - `description`: Max 255 characters, unique, not null
 - Audit fields track creation and modification metadata
 
@@ -38,6 +37,8 @@ CREATE INDEX idx_gender_code ON gender(code);
 ### 2.1 Gender Entity
 
 **File**: `src/main/java/io/archton/scaffold/entity/Gender.java`
+
+**Pattern**: Active Record using PanacheEntity (no separate repository class)
 
 ```java
 package io.archton.scaffold.entity;
@@ -54,7 +55,7 @@ import java.util.List;
 })
 public class Gender extends PanacheEntity {
 
-    @Column(name = "code", nullable = false, unique = true, length = 7)
+    @Column(name = "code", nullable = false, unique = true, length = 1)
     public String code;
 
     @Column(name = "description", nullable = false, unique = true, length = 255)
@@ -72,7 +73,7 @@ public class Gender extends PanacheEntity {
     @Column(name = "updated_by")
     public String updatedBy;
 
-    // Static finder methods
+    // Static finder methods (Active Record pattern)
     public static Gender findByCode(String code) {
         return find("code", code).firstResult();
     }
@@ -83,11 +84,6 @@ public class Gender extends PanacheEntity {
 
     public static List<Gender> listAllOrdered() {
         return list("ORDER BY code ASC");
-    }
-
-    public static List<Gender> findByCodeOrDescriptionContaining(String searchText) {
-        String pattern = "%" + searchText.toLowerCase() + "%";
-        return list("LOWER(code) LIKE ?1 OR LOWER(description) LIKE ?1 ORDER BY code ASC", pattern);
     }
 
     // Lifecycle callbacks
@@ -103,6 +99,8 @@ public class Gender extends PanacheEntity {
     }
 }
 ```
+
+**Note**: Delete `repository/GenderRepository.java` if it exists - use Active Record pattern instead.
 
 ---
 
@@ -163,7 +161,6 @@ public class Gender extends PanacheEntity {
 ```
 {#include base}
 - Page title: "Gender Management"
-- Filter form (hx-get="/genders" hx-target="#gender-table-container")
 - Create form container: #gender-create-container
 - Table container: #gender-table-container
 {/include}
@@ -187,7 +184,6 @@ public class Gender extends PanacheEntity {
 
 **gender_table.html**:
 - `genders`: List<Gender>
-- `filterText`: String (nullable)
 
 **gender_row.html**:
 - `gender`: Gender
@@ -254,7 +250,7 @@ public class Gender extends PanacheEntity {
     <form hx-post="/genders/create"
           hx-target="#gender-create-container"
           hx-swap="innerHTML">
-        <input name="code" placeholder="Code *" maxlength="7"/>
+        <input name="code" placeholder="Code *" maxlength="1"/>
         <input name="description" placeholder="Description *"/>
         <button type="submit">Save</button>
         <button type="button"
@@ -291,7 +287,7 @@ public class Gender extends PanacheEntity {
 | Field | Rule | Error Message |
 |-------|------|---------------|
 | code | Required | "Code is required." |
-| code | Max 7 chars | "Code must be 7 characters or less." |
+| code | Max 1 char | "Code must be 1 character." |
 | code | Unique | "Code already exists." |
 | description | Required | "Description is required." |
 | description | Unique | "Description already exists." |

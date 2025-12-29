@@ -48,7 +48,7 @@ This feature provides CRUD operations for master data entities used throughout t
 
 **Main Flow:**
 1. System displays inline create form above table
-2. Form includes fields: code (max 7 chars), description
+2. Form includes fields: code (max 1 char), description
 3. Form includes Save and Cancel buttons
 
 **Postcondition:** Create form is displayed
@@ -67,7 +67,7 @@ This feature provides CRUD operations for master data entities used throughout t
 1. System coerces code to uppercase
 2. System validates code is not empty
 3. System validates description is not empty
-4. System validates code is max 7 characters
+4. System validates code is max 1 character
 5. System validates uniqueness of code
 6. System validates uniqueness of description
 7. System sets audit fields (createdBy, createdAt, updatedBy, updatedAt)
@@ -81,7 +81,7 @@ This feature provides CRUD operations for master data entities used throughout t
 |----|-----------|--------|
 | 2a | Code empty | Display "Code is required." error |
 | 3a | Description empty | Display "Description is required." error |
-| 4a | Code > 7 characters | Display "Code must be 7 characters or less." error |
+| 4a | Code > 1 character | Display "Code must be 1 character." error |
 | 5a | Code already exists | Display "Code already exists." error |
 | 6a | Description already exists | Display "Description already exists." error |
 

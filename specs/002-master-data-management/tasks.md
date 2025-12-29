@@ -31,17 +31,19 @@
 
 **Implementation Tasks:**
 - [ ] Update `entity/Gender.java` to extend PanacheEntity with audit fields
-- [ ] Create/update migration `V1.0.0__Create_gender_table.sql` with audit columns
+- [ ] Create migration `V1.0.2__Add_gender_audit_fields.sql` for audit columns
 - [ ] Add static finder methods (`findByCode`, `findByDescription`, `listAllOrdered`)
 - [ ] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks
+- [ ] Delete `repository/GenderRepository.java` (use Active Record pattern)
 - [ ] Update `router/GenderResource.java` with `@RolesAllowed("admin")`
+- [ ] Remove repository injection, use Gender entity static methods
 - [ ] Add `Templates` class with `gender()` method
 - [ ] Add `Partials` class with `basePath = "partials"`
 - [ ] Implement `GET /genders` endpoint with HTMX detection
-- [ ] Create `templates/GenderResource/gender.html` (full page)
+- [ ] Update `templates/GenderResource/gender.html` (full page)
 - [ ] Create `templates/partials/gender_table.html` (table partial)
 - [ ] Create `templates/partials/gender_row.html` (row display mode)
-- [ ] Update `templates/base.html` sidebar with Maintenance > Gender menu item
+- [ ] Verify `templates/base.html` sidebar has Maintenance > Gender menu item
 
 **Endpoints:**
 | Method | Path | Description |
@@ -95,7 +97,7 @@
 - [ ] Implement `POST /genders/create` endpoint
 - [ ] Validate code is not empty
 - [ ] Validate description is not empty
-- [ ] Validate code max length (7 chars)
+- [ ] Validate code max length (1 char)
 - [ ] Validate code uniqueness
 - [ ] Validate description uniqueness
 - [ ] Coerce code to uppercase
@@ -107,7 +109,7 @@
 | Field | Rule | Error Message |
 |-------|------|---------------|
 | code | Required | "Code is required." |
-| code | Max 7 chars | "Code must be 7 characters or less." |
+| code | Max 1 char | "Code must be 1 character." |
 | code | Unique | "Code already exists." |
 | description | Required | "Description is required." |
 | description | Unique | "Description already exists." |
