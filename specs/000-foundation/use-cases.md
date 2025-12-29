@@ -6,116 +6,104 @@ This feature establishes the authentication infrastructure required for Identity
 
 | Actor | Description |
 |-------|-------------|
-| Developer | Senior developer implementing the system |
-| System | The application runtime and database |
+| System Administrator | Responsible for system setup and configuration |
+| System | The application runtime |
 
 ---
 
 # US-000-01: Establish Authentication Infrastructure
 
-## UC-000-01-01: Create UserLogin Database Table
+## UC-000-01-01: Initialize User Account Storage
 
 | Attribute | Value |
 |-----------|-------|
-| Actor | Developer |
-| Precondition | PostgreSQL database is accessible |
-| Trigger | Developer runs Flyway migrations |
+| Actor | System Administrator |
+| Precondition | Database server is running and accessible |
+| Trigger | System Administrator starts the application for the first time |
 
 **Main Flow:**
-1. System executes Flyway migration V1.2.0
-2. System creates `user_login` table with columns:
-   - id (BIGSERIAL PRIMARY KEY)
-   - email (VARCHAR(255) NOT NULL)
-   - password (VARCHAR(255) NOT NULL)
-   - role (VARCHAR(50) NOT NULL DEFAULT 'user')
-   - first_name (VARCHAR(100))
-   - last_name (VARCHAR(100))
-   - created_at (TIMESTAMP WITH TIME ZONE)
-   - updated_at (TIMESTAMP WITH TIME ZONE)
-   - active (BOOLEAN DEFAULT TRUE)
-3. System adds unique constraint on email column
-4. System creates index on email column for efficient lookups
+1. System Administrator starts the application
+2. System automatically creates the user account storage
+3. System confirms storage is ready for user registrations
 
-**Postcondition:** `user_login` table exists with proper schema and constraints
+**Postcondition:** System is ready to store user accounts with email, password, and role information
 
 ---
 
-## UC-000-01-02: Create UserLogin Entity
+## UC-000-01-02: Verify Secure Password Storage
 
 | Attribute | Value |
 |-----------|-------|
-| Actor | Developer |
-| Precondition | UC-000-01-01 complete (database table exists) |
-| Trigger | Developer creates entity class |
+| Actor | System Administrator |
+| Precondition | User account storage exists |
+| Trigger | System Administrator verifies security configuration |
 
 **Main Flow:**
-1. Developer creates `UserLogin.java` extending `PanacheEntityBase`
-2. Developer adds `@UserDefinition` annotation for Quarkus Security JPA
-3. Developer annotates email field with `@Username`
-4. Developer annotates password field with `@Password(PasswordType.MCF)`
-5. Developer annotates role field with `@Roles`
-6. Developer implements `@PrePersist` hook to:
-   - Set createdAt and updatedAt timestamps
-   - Normalize email to lowercase and trim whitespace
-7. Developer implements `@PreUpdate` hook to:
-   - Update updatedAt timestamp
-   - Normalize email to lowercase and trim whitespace
-8. Developer adds `create()` factory method with BCrypt hashing (cost factor 12)
-9. Developer adds `findByEmail()` finder method with case-insensitive lookup
-10. Developer adds `emailExists()` helper method
-11. Developer adds `getDisplayName()` display method
+1. System Administrator reviews security configuration
+2. System confirms passwords are stored using industry-standard encryption (BCrypt)
+3. System confirms email addresses are normalized for consistent login
 
-**Postcondition:** UserLogin entity is available for authentication with all required methods
+**Security Guarantees:**
+- Passwords are never stored in plain text
+- Email addresses are case-insensitive for login
+- User accounts include audit timestamps
+
+**Postcondition:** System Administrator has confidence that user credentials are securely stored
 
 ---
 
-## UC-000-01-03: Create PasswordValidator Service
+## UC-000-01-03: Enforce Password Policy
 
 | Attribute | Value |
 |-----------|-------|
-| Actor | Developer |
+| Actor | System Administrator |
 | Precondition | None |
-| Trigger | Developer creates validation service |
+| Trigger | System Administrator reviews password requirements |
 
 **Main Flow:**
-1. Developer creates `PasswordValidator.java` as `@ApplicationScoped` service
-2. Developer injects configurable properties:
-   - `app.security.password.min-length` (default: 15)
-   - `app.security.password.max-length` (default: 128)
-3. Developer implements `validate()` method that returns list of errors:
-   - Returns "Password is required" if null or empty
-   - Returns "Password must be at least {minLength} characters" if too short
-   - Returns "Password must be {maxLength} characters or less" if too long
-4. Developer implements `isValid()` convenience method
+1. System Administrator reviews the password policy
+2. System enforces minimum password length of 15 characters
+3. System accepts passwords up to 128 characters
+4. System does not require special characters or mixed case (per NIST guidelines)
 
-**Password Policy (NIST SP 800-63B-4):**
-- Minimum 15 characters for password-only authentication
-- Maximum 128 characters accepted
-- No composition rules required (no special chars, uppercase, etc.)
-- No password truncation
+**Password Policy (NIST SP 800-63B-4 Compliant):**
 
-**Postcondition:** PasswordValidator service is available for password validation
+| Requirement | Value |
+|-------------|-------|
+| Minimum length | 15 characters |
+| Maximum length | 128 characters |
+| Special characters | Not required |
+| Uppercase/lowercase | Not required |
+| Password expiration | Not enforced |
+
+**Postcondition:** Password policy is documented and enforced for all new registrations
 
 ---
 
-## UC-000-01-04: Seed Admin User
+## UC-000-01-04: Access System with Default Administrator
 
 | Attribute | Value |
 |-----------|-------|
-| Actor | Developer |
-| Precondition | UC-000-01-01 complete (database table exists) |
-| Trigger | Developer runs Flyway migrations |
+| Actor | System Administrator |
+| Precondition | Application has been started for the first time |
+| Trigger | System Administrator needs initial system access |
 
 **Main Flow:**
-1. System executes Flyway migration V1.2.1
-2. System inserts admin user with:
-   - email: `admin@example.com`
-   - password: BCrypt hash of `AdminPassword123` (cost factor 12)
-   - role: `admin`
-   - first_name: `Admin`
-   - last_name: `User`
-   - active: true
+1. System Administrator navigates to the login page
+2. System Administrator enters default credentials:
+   - Email: `admin@example.com`
+   - Password: `AdminPassword123`
+3. System authenticates the administrator
+4. System Administrator gains access to administrative functions
 
-**Postcondition:** Admin user exists for testing and initial system access
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 4a | First login | System Administrator should change the default password |
+
+**Security Note:** The default administrator account is provided for initial setup only. The password should be changed immediately in a production environment.
+
+**Postcondition:** System Administrator has access to the system and can manage users
 
 ---
