@@ -1,0 +1,129 @@
+# Technical Specification: Feature NNN - [Feature Name]
+
+This document describes the technical implementation requirements for [Feature Name].
+
+---
+
+## 1. Database Schema
+
+### 1.1 [Entity] Table
+
+**Migration**: `VXXX__Create_[entity]_table.sql`
+
+```sql
+CREATE TABLE [entity] (
+    id BIGSERIAL PRIMARY KEY,
+    [columns],
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
+);
+
+CREATE INDEX idx_[entity]_[field] ON [entity]([field]);
+```
+
+---
+
+## 2. Entity Design
+
+### 2.1 [Entity] Entity
+
+**File**: `src/main/java/io/archton/scaffold/entity/[Entity].java`
+
+```java
+@Entity
+@Table(name = "[entity]")
+public class [Entity] extends PanacheEntity {
+    // Public fields
+
+    // Static finder methods
+
+    // Lifecycle callbacks
+}
+```
+
+---
+
+## 3. Resource Layer
+
+### 3.1 [Entity]Resource
+
+**File**: `src/main/java/io/archton/scaffold/router/[Entity]Resource.java`
+
+**Security**: `@RolesAllowed("[roles]")`
+
+### 3.2 Endpoints
+
+| Method | Path | Handler | Description |
+|--------|------|---------|-------------|
+| GET | `/[entities]` | `list()` | List all |
+| GET | `/[entities]/create` | `createForm()` | Create form |
+| POST | `/[entities]/create` | `create()` | Submit create |
+| GET | `/[entities]/{id}/edit` | `editForm()` | Edit form |
+| POST | `/[entities]/{id}/update` | `update()` | Submit edit |
+| DELETE | `/[entities]/{id}` | `delete()` | Delete |
+
+---
+
+## 4. Template Structure
+
+### 4.1 Full Page Template
+
+**File**: `templates/[Entity]Resource/[entities].html`
+
+### 4.2 Partial Templates
+
+| File | Description |
+|------|-------------|
+| `[entities]_table.html` | Table partial |
+| `[entity]_row.html` | Row (display) |
+| `[entity]_row_edit.html` | Row (edit) |
+| `[entity]_create_form.html` | Create form |
+| `[entity]_create_button.html` | Add button |
+| `[entity]_success.html` | Success + OOB |
+| `[entity]_error.html` | Error message |
+
+---
+
+## 5. HTMX Patterns
+
+[Document key HTMX patterns: inline editing, OOB swaps, etc.]
+
+---
+
+## 6. Validation Rules
+
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| [field] | [rule] | "[message]" |
+
+---
+
+## 7. Security Configuration
+
+### 7.1 Route Protection
+
+```properties
+quarkus.http.auth.permission.[name].paths=/[entities],/[entities]/*
+quarkus.http.auth.permission.[name].policy=[policy]
+```
+
+---
+
+## 8. Traceability
+
+| Use Case | Implementation Component |
+|----------|-------------------------|
+| UC-NNN-01-01 | [Components] |
+
+---
+
+## 9. Dependencies
+
+[List required extensions and entity dependencies]
+
+---
+
+*Document Version: 1.0*
+*Last Updated: [Date]*

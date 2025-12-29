@@ -64,7 +64,49 @@ Test cases follow the same pattern as use cases: `TC-FFF-SS-NNN` (note the three
 
 ## Development Workflow
 
-### Feature-based workflow
+### Spec-Driven Workflow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        docs/USER-STORIES.md                         │
+│                    (Source of truth for features)                   │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    specs/NNN-feature-name/                          │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. use-cases.md     ─────────────────────────────────────────────► │
+│     (UC-FFF-SS-NN)           Maps to User Stories                   │
+│                                     │                               │
+│  2. spec.md          ◄──────────────┘                               │
+│     (Technical design)       References ARCHITECTURE.md             │
+│                                     │                               │
+│  3. tasks.md         ◄──────────────┘                               │
+│     (Implementation plan)    Tracks progress per UC                 │
+│                                     │                               │
+│  4. test-cases.md    ◄──────────────┘                               │
+│     (TC-FFF-SS-NNN)          Maps to Use Cases                      │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Implementation                                │
+│    (src/main/java, src/main/resources/templates, db/migration)      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Validation Rules
+
+Before starting implementation, verify:
+
+1. **User Story Exists**: Every `UC-FFF-SS-NN` links back to a valid `US-FFF-SS` in `docs/USER-STORIES.md`
+2. **Use Case Numbering**: The `FFF-SS` portion of UC must match the parent US
+3. **Test Case Mapping**: Every `TC-FFF-SS-NNN` links back to a valid `UC-FFF-SS-NN` in `use-cases.md`
+4. **Complete Spec Files**: All 4 spec files exist: `use-cases.md`, `spec.md`, `tasks.md`, `test-cases.md`
+5. **Project Plan Reference**: `specs/PROJECT-PLAN.md` references the `tasks.md` for this feature
+
+### Feature-based Workflow
 
 The project implementation is controlled by @specs/PROJECT-PLAN.md
 
@@ -74,14 +116,40 @@ It will be implemented in a phased approach, one feature at a time:
 - Implement the use case as per the technical specification and keep track of progress in `NNN-feature-name/tasks.md`
 - Issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
 
+### Creating New Features
+
 For the development and implementation of new features, use the spec workflow in `specs/`:
-1. Create a new folder `NNN-feature-name/` (e.g., `001-identity-and-access-management/`)
-2. Fill in `use-cases.md` to describe the feature requirements from the user perspective where each use case relates back to a User Story in `docs/USER-STORIES.md` for traceability
-3. Describe the technical specification of the feature in `spec.md`, including data models, routing, navbar, security, and so on where the specification relates back to `docs/ARCHITECTURE.md`
-4. Generate the test cases for verification of use cases in `test-cases.md` to guide the browser-based testing by chrome-devtools MCP as well as the CI/CD tests in `src/test` 
-5. Generate the task breakdown and todo list in `tasks.md`
-6. Implement the feature by working through tasks, checking each task as completed
-7. After completing each use case, find the corresponding test file in `test-cases.md` and run the test using chrome-devtools MCP in a sub-agent. After each test has completed, the sub-agent must update the relevant use case in `tasks.md` with the test results.
+
+1. **Create folder**: `NNN-feature-name/` (e.g., `002-master-data-management/`)
+   - Use templates from `specs/TEMPLATE/` as starting points
+
+2. **Define use-cases.md**: Describe feature requirements from user perspective
+   - Each use case relates back to a User Story in `docs/USER-STORIES.md`
+   - Follow `UC-FFF-SS-NN` naming where `FFF-SS` matches the parent `US-FFF-SS`
+
+3. **Create spec.md**: Technical specification including:
+   - Database schema and migrations
+   - Entity design (PanacheEntity pattern)
+   - Resource endpoints and HTMX patterns
+   - Template structure
+   - Security configuration
+   - References `docs/ARCHITECTURE.md` for patterns
+
+4. **Generate tasks.md**: Implementation task breakdown
+   - One section per use case
+   - Checkboxes for individual tasks
+   - Test results placeholder
+
+5. **Generate test-cases.md**: Verification of use cases
+   - Follow `TC-FFF-SS-NNN` naming matching the parent UC
+   - Guide browser-based testing via chrome-devtools MCP
+   - Define CI/CD tests in `src/test`
+
+6. **Update PROJECT-PLAN.md**: Add reference to new feature's `tasks.md`
+
+7. **Implement feature**: Work through tasks, checking each as completed
+
+8. **Run tests**: Use chrome-devtools MCP in a sub-agent. Update `tasks.md` with results.
 
 **IMPORTANT**: After completing the tests for each use case, STOP and ask for user feedback before proceeding.
 

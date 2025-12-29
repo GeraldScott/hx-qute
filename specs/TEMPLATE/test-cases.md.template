@@ -1,0 +1,69 @@
+# Test Cases for Feature NNN: [Feature Name]
+
+## Prerequisites
+
+- Application running at `http://localhost:9080`
+- Fresh database state (or known test data)
+- Test user credentials available
+
+## Test Data
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@example.com | AdminPassword123 | admin |
+
+---
+
+# US-NNN-01: [User Story Title]
+
+### TC-NNN-01-001: [Test Case Title]
+**Parent Use Case:** [UC-NNN-01-01: Use Case Title](use-cases.md#uc-nnn-01-01-use-case-title)
+
+**Objective:** [What this test verifies]
+
+**Precondition:** [Optional: Required state before test]
+
+**Steps:**
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+**Expected:**
+- [ ] [Expected result 1]
+- [ ] [Expected result 2]
+- [ ] [Expected result 3]
+
+---
+
+### TC-NNN-01-002: [Test Case Title]
+**Parent Use Case:** [UC-NNN-01-01: Use Case Title](use-cases.md#uc-nnn-01-01-use-case-title)
+
+[Repeat pattern for each test case]
+
+---
+
+# US-NNN-02: [User Story Title]
+
+### TC-NNN-02-001: [Test Case Title]
+**Parent Use Case:** [UC-NNN-02-01: Use Case Title](use-cases.md#uc-nnn-02-01-use-case-title)
+
+[Continue for all test cases]
+
+---
+
+## Test Summary
+
+| Test ID | Test Name | Parent UC | Status | Notes |
+|---------|-----------|-----------|--------|-------|
+| TC-NNN-01-001 | [Name] | UC-NNN-01-01 | [ ] | |
+| TC-NNN-01-002 | [Name] | UC-NNN-01-01 | [ ] | |
+| TC-NNN-02-001 | [Name] | UC-NNN-02-01 | [ ] | |
+
+---
+
+## Traceability Matrix
+
+| User Story | Use Cases | Test Cases |
+|------------|-----------|------------|
+| US-NNN-01: [Title] | UC-NNN-01-01 | TC-NNN-01-001, TC-NNN-01-002 |
+| US-NNN-02: [Title] | UC-NNN-02-01, UC-NNN-02-02 | TC-NNN-02-001, TC-NNN-02-002 |

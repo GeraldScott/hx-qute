@@ -1,0 +1,61 @@
+# Use Cases for Feature NNN: [Feature Name]
+
+[Brief description of what this feature provides]
+
+## Actors
+
+| Actor | Description |
+|-------|-------------|
+| User | Authenticated user with "user" role |
+| Administrator | Authenticated user with "admin" role |
+
+---
+
+# US-NNN-01: [First User Story Title]
+
+## UC-NNN-01-01: [Use Case Title]
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | [Actor(s)] |
+| Precondition | [What must be true before this use case] |
+| Trigger | [What initiates this use case] |
+
+**Main Flow:**
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 1a | [Condition] | [Action] |
+
+**Postcondition:** [What is true after successful completion]
+
+---
+
+# US-NNN-02: [Second User Story Title]
+
+## UC-NNN-02-01: [Use Case Title]
+
+[Repeat pattern for each use case]
+
+---
+
+## Use Case Summary
+
+| ID | Use Case | Parent Story | Actor(s) |
+|----|----------|--------------|----------|
+| UC-NNN-01-01 | [Name] | US-NNN-01 | [Actors] |
+| UC-NNN-02-01 | [Name] | US-NNN-02 | [Actors] |
+
+---
+
+## Traceability Matrix
+
+| User Story | Use Cases |
+|------------|-----------|
+| US-NNN-01: [Title] | UC-NNN-01-01 |
+| US-NNN-02: [Title] | UC-NNN-02-01, UC-NNN-02-02 |

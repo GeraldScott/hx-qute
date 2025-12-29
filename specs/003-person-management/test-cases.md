@@ -15,7 +15,7 @@
 
 ---
 
-# US-003-01: Person Management
+# US-003-01: View Persons List
 
 ### TC-003-01-001: Persons Page UI Elements
 **Parent Use Case:** [UC-003-01-01: View Persons List](use-cases.md#uc-003-01-01-view-persons-list)
@@ -57,7 +57,7 @@
 
 **Objective:** Verify empty state message when no records exist.
 
-**Precondition:** No person records in database (except admin)
+**Precondition:** No person records in database
 
 **Steps:**
 1. Login as `admin@example.com` / `AdminPassword123`
@@ -69,8 +69,25 @@
 
 ---
 
-### TC-003-01-004: Person Create Form Display
-**Parent Use Case:** [UC-003-01-02: Create Person](use-cases.md#uc-003-01-02-create-person)
+### TC-003-01-004: Persons Access Requires Authentication
+**Parent Use Case:** [UC-003-01-01: View Persons List](use-cases.md#uc-003-01-01-view-persons-list)
+
+**Objective:** Verify unauthenticated users cannot access persons page.
+
+**Steps:**
+1. Ensure not logged in
+2. Navigate to `/persons`
+
+**Expected:**
+- [ ] Redirected to `/login` page
+- [ ] Cannot access persons list without authentication
+
+---
+
+# US-003-02: Create New Person
+
+### TC-003-02-001: Person Create Form Display
+**Parent Use Case:** [UC-003-02-01: Display Create Form](use-cases.md#uc-003-02-01-display-create-form)
 
 **Objective:** Verify create form displays correctly.
 
@@ -91,8 +108,8 @@
 
 ---
 
-### TC-003-01-005: Person Create Success
-**Parent Use Case:** [UC-003-01-02: Create Person](use-cases.md#uc-003-01-02-create-person)
+### TC-003-02-002: Person Create Success
+**Parent Use Case:** [UC-003-02-02: Submit Create Form](use-cases.md#uc-003-02-02-submit-create-form)
 
 **Objective:** Verify successful person creation.
 
@@ -117,8 +134,8 @@
 
 ---
 
-### TC-003-01-006: Person Create Email Required
-**Parent Use Case:** [UC-003-01-02: Create Person](use-cases.md#uc-003-01-02-create-person)
+### TC-003-02-003: Person Create Email Required
+**Parent Use Case:** [UC-003-02-02: Submit Create Form](use-cases.md#uc-003-02-02-submit-create-form)
 
 **Objective:** Verify email is required.
 
@@ -138,8 +155,8 @@
 
 ---
 
-### TC-003-01-007: Person Create Email Format Validation
-**Parent Use Case:** [UC-003-01-02: Create Person](use-cases.md#uc-003-01-02-create-person)
+### TC-003-02-004: Person Create Email Format Validation
+**Parent Use Case:** [UC-003-02-02: Submit Create Form](use-cases.md#uc-003-02-02-submit-create-form)
 
 **Objective:** Verify email format validation.
 
@@ -159,12 +176,12 @@
 
 ---
 
-### TC-003-01-008: Person Create Duplicate Email Prevention
-**Parent Use Case:** [UC-003-01-02: Create Person](use-cases.md#uc-003-01-02-create-person)
+### TC-003-02-005: Person Create Duplicate Email Prevention
+**Parent Use Case:** [UC-003-02-02: Submit Create Form](use-cases.md#uc-003-02-02-submit-create-form)
 
 **Objective:** Verify duplicate email is rejected.
 
-**Precondition:** Person with email `admin@example.com` exists
+**Precondition:** Person with email `existing@example.com` exists
 
 **Steps:**
 1. Login as `admin@example.com` / `AdminPassword123`
@@ -172,8 +189,8 @@
 3. Click Add button
 4. Fill form:
    - firstName: `Another`
-   - lastName: `Admin`
-   - email: `admin@example.com`
+   - lastName: `Person`
+   - email: `existing@example.com`
 5. Click Save button
 
 **Expected:**
@@ -182,8 +199,10 @@
 
 ---
 
-### TC-003-01-009: Person Edit Form Display
-**Parent Use Case:** [UC-003-01-03: Edit Person](use-cases.md#uc-003-01-03-edit-person)
+# US-003-03: Edit Existing Person
+
+### TC-003-03-001: Person Edit Form Display
+**Parent Use Case:** [UC-003-03-01: Display Edit Form](use-cases.md#uc-003-03-01-display-edit-form)
 
 **Objective:** Verify edit form displays with pre-populated data.
 
@@ -203,8 +222,8 @@
 
 ---
 
-### TC-003-01-010: Person Edit Success
-**Parent Use Case:** [UC-003-01-03: Edit Person](use-cases.md#uc-003-01-03-edit-person)
+### TC-003-03-002: Person Edit Success
+**Parent Use Case:** [UC-003-03-02: Submit Edit Form](use-cases.md#uc-003-03-02-submit-edit-form)
 
 **Objective:** Verify successful person update.
 
@@ -224,8 +243,8 @@
 
 ---
 
-### TC-003-01-011: Person Edit Email Uniqueness
-**Parent Use Case:** [UC-003-01-03: Edit Person](use-cases.md#uc-003-01-03-edit-person)
+### TC-003-03-003: Person Edit Email Uniqueness
+**Parent Use Case:** [UC-003-03-02: Submit Edit Form](use-cases.md#uc-003-03-02-submit-edit-form)
 
 **Objective:** Verify email uniqueness on edit.
 
@@ -244,8 +263,8 @@
 
 ---
 
-### TC-003-01-012: Person Edit Cancel
-**Parent Use Case:** [UC-003-01-03: Edit Person](use-cases.md#uc-003-01-03-edit-person)
+### TC-003-03-004: Person Edit Cancel
+**Parent Use Case:** [UC-003-03-03: Cancel Edit](use-cases.md#uc-003-03-03-cancel-edit)
 
 **Objective:** Verify cancel discards changes.
 
@@ -262,8 +281,10 @@
 
 ---
 
-### TC-003-01-013: Person Delete Confirmation
-**Parent Use Case:** [UC-003-01-04: Delete Person](use-cases.md#uc-003-01-04-delete-person)
+# US-003-04: Delete Person
+
+### TC-003-04-001: Person Delete Confirmation
+**Parent Use Case:** [UC-003-04-01: Delete Person](use-cases.md#uc-003-04-01-delete-person)
 
 **Objective:** Verify delete confirmation dialog appears.
 
@@ -281,8 +302,8 @@
 
 ---
 
-### TC-003-01-014: Person Delete Success
-**Parent Use Case:** [UC-003-01-04: Delete Person](use-cases.md#uc-003-01-04-delete-person)
+### TC-003-04-002: Person Delete Success
+**Parent Use Case:** [UC-003-04-01: Delete Person](use-cases.md#uc-003-04-01-delete-person)
 
 **Objective:** Verify successful person deletion.
 
@@ -300,8 +321,8 @@
 
 ---
 
-### TC-003-01-015: Person Delete Cancel
-**Parent Use Case:** [UC-003-01-04: Delete Person](use-cases.md#uc-003-01-04-delete-person)
+### TC-003-04-003: Person Delete Cancel
+**Parent Use Case:** [UC-003-04-01: Delete Person](use-cases.md#uc-003-04-01-delete-person)
 
 **Objective:** Verify cancel preserves record.
 
@@ -317,8 +338,10 @@
 
 ---
 
-### TC-003-01-016: Persons Filter by Name
-**Parent Use Case:** [UC-003-01-05: Filter Persons](use-cases.md#uc-003-01-05-filter-persons)
+# US-003-05: Filter People
+
+### TC-003-05-001: Persons Filter by Name
+**Parent Use Case:** [UC-003-05-01: Apply Filter](use-cases.md#uc-003-05-01-apply-filter)
 
 **Objective:** Verify filtering by name works.
 
@@ -336,8 +359,8 @@
 
 ---
 
-### TC-003-01-017: Persons Filter No Results
-**Parent Use Case:** [UC-003-01-05: Filter Persons](use-cases.md#uc-003-01-05-filter-persons)
+### TC-003-05-002: Persons Filter No Results
+**Parent Use Case:** [UC-003-05-01: Apply Filter](use-cases.md#uc-003-05-01-apply-filter)
 
 **Objective:** Verify filter with no matches shows appropriate message.
 
@@ -353,8 +376,8 @@
 
 ---
 
-### TC-003-01-018: Persons Filter Clear
-**Parent Use Case:** [UC-003-01-05: Filter Persons](use-cases.md#uc-003-01-05-filter-persons)
+### TC-003-05-003: Persons Filter Clear
+**Parent Use Case:** [UC-003-05-02: Clear Filter](use-cases.md#uc-003-05-02-clear-filter)
 
 **Objective:** Verify clearing filter shows all records.
 
@@ -371,8 +394,8 @@
 
 ---
 
-### TC-003-01-019: Persons Filter Persistence
-**Parent Use Case:** [UC-003-01-05: Filter Persons](use-cases.md#uc-003-01-05-filter-persons)
+### TC-003-05-004: Persons Filter Persistence
+**Parent Use Case:** [UC-003-05-01: Apply Filter](use-cases.md#uc-003-05-01-apply-filter)
 
 **Objective:** Verify filter persists during session.
 
@@ -389,18 +412,61 @@
 
 ---
 
-### TC-003-01-020: Persons Access Requires Authentication
-**Parent Use Case:** [UC-003-01-01: View Persons List](use-cases.md#uc-003-01-01-view-persons-list)
+# US-003-06: Sort People
 
-**Objective:** Verify unauthenticated users cannot access persons page.
+### TC-003-06-001: Persons Sort by Name
+**Parent Use Case:** [UC-003-06-01: Apply Sort](use-cases.md#uc-003-06-01-apply-sort)
+
+**Objective:** Verify sorting by name works.
+
+**Precondition:** Multiple person records exist
 
 **Steps:**
-1. Ensure not logged in
+1. Login as `admin@example.com` / `AdminPassword123`
 2. Navigate to `/persons`
+3. Select sort field: firstName
+4. Select sort direction: descending
+5. Click Sort button
 
 **Expected:**
-- [ ] Redirected to `/login` page
-- [ ] Cannot access persons list without authentication
+- [ ] Records reordered by firstName descending
+- [ ] Sort criteria visible in sort panel
+
+---
+
+### TC-003-06-002: Persons Sort Clear
+**Parent Use Case:** [UC-003-06-02: Clear Sort](use-cases.md#uc-003-06-02-clear-sort)
+
+**Objective:** Verify clearing sort restores default order.
+
+**Precondition:** Custom sort is currently applied
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/persons` with active custom sort
+3. Click Clear Sort button
+
+**Expected:**
+- [ ] Records sorted by lastName, firstName (ascending) - default
+- [ ] Sort panel reset
+
+---
+
+### TC-003-06-003: Persons Sort Persistence
+**Parent Use Case:** [UC-003-06-01: Apply Sort](use-cases.md#uc-003-06-01-apply-sort)
+
+**Objective:** Verify sort persists during session.
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/persons`
+3. Apply custom sort
+4. Navigate away to another page
+5. Return to `/persons`
+
+**Expected:**
+- [ ] Previous sort still applied
+- [ ] Sorted results displayed
 
 ---
 
@@ -411,32 +477,36 @@
 | TC-003-01-001 | Persons Page UI | UC-003-01-01 | [ ] | |
 | TC-003-01-002 | Persons List Display | UC-003-01-01 | [ ] | |
 | TC-003-01-003 | Persons List Empty | UC-003-01-01 | [ ] | |
-| TC-003-01-004 | Person Create Form | UC-003-01-02 | [ ] | |
-| TC-003-01-005 | Person Create Success | UC-003-01-02 | [ ] | |
-| TC-003-01-006 | Person Email Required | UC-003-01-02 | [ ] | |
-| TC-003-01-007 | Person Email Format | UC-003-01-02 | [ ] | |
-| TC-003-01-008 | Person Duplicate Email | UC-003-01-02 | [ ] | |
-| TC-003-01-009 | Person Edit Form | UC-003-01-03 | [ ] | |
-| TC-003-01-010 | Person Edit Success | UC-003-01-03 | [ ] | |
-| TC-003-01-011 | Person Edit Email Unique | UC-003-01-03 | [ ] | |
-| TC-003-01-012 | Person Edit Cancel | UC-003-01-03 | [ ] | |
-| TC-003-01-013 | Person Delete Confirm | UC-003-01-04 | [ ] | |
-| TC-003-01-014 | Person Delete Success | UC-003-01-04 | [ ] | |
-| TC-003-01-015 | Person Delete Cancel | UC-003-01-04 | [ ] | |
-| TC-003-01-016 | Persons Filter Name | UC-003-01-05 | [ ] | |
-| TC-003-01-017 | Persons Filter No Results | UC-003-01-05 | [ ] | |
-| TC-003-01-018 | Persons Filter Clear | UC-003-01-05 | [ ] | |
-| TC-003-01-019 | Persons Filter Persist | UC-003-01-05 | [ ] | |
-| TC-003-01-020 | Persons Auth Required | UC-003-01-01 | [ ] | |
+| TC-003-01-004 | Persons Auth Required | UC-003-01-01 | [ ] | |
+| TC-003-02-001 | Person Create Form | UC-003-02-01 | [ ] | |
+| TC-003-02-002 | Person Create Success | UC-003-02-02 | [ ] | |
+| TC-003-02-003 | Person Email Required | UC-003-02-02 | [ ] | |
+| TC-003-02-004 | Person Email Format | UC-003-02-02 | [ ] | |
+| TC-003-02-005 | Person Duplicate Email | UC-003-02-02 | [ ] | |
+| TC-003-03-001 | Person Edit Form | UC-003-03-01 | [ ] | |
+| TC-003-03-002 | Person Edit Success | UC-003-03-02 | [ ] | |
+| TC-003-03-003 | Person Edit Email Unique | UC-003-03-02 | [ ] | |
+| TC-003-03-004 | Person Edit Cancel | UC-003-03-03 | [ ] | |
+| TC-003-04-001 | Person Delete Confirm | UC-003-04-01 | [ ] | |
+| TC-003-04-002 | Person Delete Success | UC-003-04-01 | [ ] | |
+| TC-003-04-003 | Person Delete Cancel | UC-003-04-01 | [ ] | |
+| TC-003-05-001 | Persons Filter Name | UC-003-05-01 | [ ] | |
+| TC-003-05-002 | Persons Filter No Results | UC-003-05-01 | [ ] | |
+| TC-003-05-003 | Persons Filter Clear | UC-003-05-02 | [ ] | |
+| TC-003-05-004 | Persons Filter Persist | UC-003-05-01 | [ ] | |
+| TC-003-06-001 | Persons Sort Name | UC-003-06-01 | [ ] | |
+| TC-003-06-002 | Persons Sort Clear | UC-003-06-02 | [ ] | |
+| TC-003-06-003 | Persons Sort Persist | UC-003-06-01 | [ ] | |
 
 ---
 
 ## Traceability Matrix
 
-| Use Case | Test Cases |
-|----------|------------|
-| UC-003-01-01: View Persons List | TC-003-01-001, TC-003-01-002, TC-003-01-003, TC-003-01-020 |
-| UC-003-01-02: Create Person | TC-003-01-004, TC-003-01-005, TC-003-01-006, TC-003-01-007, TC-003-01-008 |
-| UC-003-01-03: Edit Person | TC-003-01-009, TC-003-01-010, TC-003-01-011, TC-003-01-012 |
-| UC-003-01-04: Delete Person | TC-003-01-013, TC-003-01-014, TC-003-01-015 |
-| UC-003-01-05: Filter Persons | TC-003-01-016, TC-003-01-017, TC-003-01-018, TC-003-01-019 |
+| User Story | Use Cases | Test Cases |
+|------------|-----------|------------|
+| US-003-01: View Persons List | UC-003-01-01 | TC-003-01-001, TC-003-01-002, TC-003-01-003, TC-003-01-004 |
+| US-003-02: Create New Person | UC-003-02-01, UC-003-02-02 | TC-003-02-001, TC-003-02-002, TC-003-02-003, TC-003-02-004, TC-003-02-005 |
+| US-003-03: Edit Existing Person | UC-003-03-01, UC-003-03-02, UC-003-03-03 | TC-003-03-001, TC-003-03-002, TC-003-03-003, TC-003-03-004 |
+| US-003-04: Delete Person | UC-003-04-01 | TC-003-04-001, TC-003-04-002, TC-003-04-003 |
+| US-003-05: Filter People | UC-003-05-01, UC-003-05-02 | TC-003-05-001, TC-003-05-002, TC-003-05-003, TC-003-05-004 |
+| US-003-06: Sort People | UC-003-06-01, UC-003-06-02 | TC-003-06-001, TC-003-06-002, TC-003-06-003 |

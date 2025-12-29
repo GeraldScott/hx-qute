@@ -10,7 +10,7 @@ This feature provides CRUD operations for master data entities used throughout t
 
 ---
 
-# US-002-01: Gender Master Data
+# US-002-01: View Gender Master Data
 
 ## UC-002-01-01: View Gender List
 
@@ -36,7 +36,9 @@ This feature provides CRUD operations for master data entities used throughout t
 
 ---
 
-## UC-002-01-02: Create Gender
+# US-002-02: Create New Gender
+
+## UC-002-02-01: Display Create Form
 
 | Attribute | Value |
 |-----------|-------|
@@ -45,31 +47,51 @@ This feature provides CRUD operations for master data entities used throughout t
 | Trigger | User clicks Add button |
 
 **Main Flow:**
-1. System displays create form with fields: code, description
-2. User enters code (max 7 characters)
-3. User enters description
-4. User submits form
-5. System coerces code to uppercase
-6. System validates uniqueness of code and description
-7. System sets audit fields (createdBy, createdAt)
+1. System displays inline create form above table
+2. Form includes fields: code (max 7 chars), description
+3. Form includes Save and Cancel buttons
+
+**Postcondition:** Create form is displayed
+
+---
+
+## UC-002-02-02: Submit Create Form
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User has filled create form |
+| Trigger | User clicks Save button |
+
+**Main Flow:**
+1. System coerces code to uppercase
+2. System validates code is not empty
+3. System validates description is not empty
+4. System validates code is max 7 characters
+5. System validates uniqueness of code
+6. System validates uniqueness of description
+7. System sets audit fields (createdBy, createdAt, updatedBy, updatedAt)
 8. System persists new Gender record
-9. System redirects to Gender list
+9. System displays success message
+10. System refreshes Gender list
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 2a | Code empty | Display validation error |
-| 2b | Code > 7 characters | Display "Code must be 7 characters or less" |
-| 3a | Description empty | Display validation error |
-| 6a | Code already exists | Display "Code already exists" error |
-| 6b | Description already exists | Display "Description already exists" error |
+| 2a | Code empty | Display "Code is required." error |
+| 3a | Description empty | Display "Description is required." error |
+| 4a | Code > 7 characters | Display "Code must be 7 characters or less." error |
+| 5a | Code already exists | Display "Code already exists." error |
+| 6a | Description already exists | Display "Description already exists." error |
 
 **Postcondition:** New Gender record created; list updated
 
 ---
 
-## UC-002-01-03: Edit Gender
+# US-002-03: Edit Existing Gender
+
+## UC-002-03-01: Display Edit Form
 
 | Attribute | Value |
 |-----------|-------|
@@ -79,29 +101,71 @@ This feature provides CRUD operations for master data entities used throughout t
 
 **Main Flow:**
 1. System retrieves Gender record by ID
-2. System displays edit form pre-populated with current values
-3. System displays audit fields (read-only)
-4. User modifies code and/or description
-5. User submits form
-6. System coerces code to uppercase
-7. System validates uniqueness of code and description
-8. System updates audit fields (updatedBy, updatedAt)
-9. System persists updated Gender record
-10. System redirects to Gender list
+2. System replaces table row with inline edit form
+3. Form pre-populates code and description fields
+4. Form displays audit fields (read-only)
+5. Form includes Save and Cancel buttons
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 1a | Gender not found | Display error; redirect to list |
-| 7a | Code conflicts with another record | Display "Code already exists" error |
-| 7b | Description conflicts with another record | Display "Description already exists" error |
+| 1a | Gender not found | Display error; refresh list |
 
-**Postcondition:** Gender record updated; list reflects changes
+**Postcondition:** Edit form displayed in place of row
 
 ---
 
-## UC-002-01-04: Delete Gender
+## UC-002-03-02: Submit Edit Form
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User has modified edit form |
+| Trigger | User clicks Save button |
+
+**Main Flow:**
+1. System coerces code to uppercase
+2. System validates code is not empty
+3. System validates description is not empty
+4. System validates uniqueness of code (excluding current record)
+5. System validates uniqueness of description (excluding current record)
+6. System updates audit fields (updatedBy, updatedAt)
+7. System persists updated Gender record
+8. System replaces edit form with updated display row
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 2a | Code empty | Display "Code is required." error |
+| 3a | Description empty | Display "Description is required." error |
+| 4a | Code conflicts with another record | Display "Code already exists." error |
+| 5a | Description conflicts with another record | Display "Description already exists." error |
+
+**Postcondition:** Gender record updated; row reflects changes
+
+---
+
+## UC-002-03-03: Cancel Edit
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User is in edit mode for a Gender entry |
+| Trigger | User clicks Cancel button |
+
+**Main Flow:**
+1. System discards any changes
+2. System replaces edit form with original display row
+
+**Postcondition:** Original values preserved; edit mode exited
+
+---
+
+# US-002-04: Delete Gender
+
+## UC-002-04-01: Delete Gender
 
 | Attribute | Value |
 |-----------|-------|
@@ -110,17 +174,18 @@ This feature provides CRUD operations for master data entities used throughout t
 | Trigger | User clicks Delete button for a Gender entry |
 
 **Main Flow:**
-1. System displays confirmation dialog
+1. System displays browser confirmation dialog
 2. User confirms deletion
-3. System deletes Gender record
-4. System updates Gender list
+3. System checks if Gender is in use by Person records
+4. System deletes Gender record
+5. System removes row from list with animation
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
 | 2a | User cancels | Close dialog; no action taken |
-| 3a | Gender in use by Person records | Display "Cannot delete: Gender is in use" error |
+| 3a | Gender in use by Person records | Display "Cannot delete: Gender is in use by X person(s)." error |
 
 **Postcondition:** Gender record deleted; list updated
 
@@ -131,9 +196,12 @@ This feature provides CRUD operations for master data entities used throughout t
 | ID | Use Case | Parent Story | Actor |
 |----|----------|--------------|-------|
 | UC-002-01-01 | View Gender List | US-002-01 | Administrator |
-| UC-002-01-02 | Create Gender | US-002-01 | Administrator |
-| UC-002-01-03 | Edit Gender | US-002-01 | Administrator |
-| UC-002-01-04 | Delete Gender | US-002-01 | Administrator |
+| UC-002-02-01 | Display Create Form | US-002-02 | Administrator |
+| UC-002-02-02 | Submit Create Form | US-002-02 | Administrator |
+| UC-002-03-01 | Display Edit Form | US-002-03 | Administrator |
+| UC-002-03-02 | Submit Edit Form | US-002-03 | Administrator |
+| UC-002-03-03 | Cancel Edit | US-002-03 | Administrator |
+| UC-002-04-01 | Delete Gender | US-002-04 | Administrator |
 
 ---
 
@@ -141,4 +209,7 @@ This feature provides CRUD operations for master data entities used throughout t
 
 | User Story | Use Cases |
 |------------|-----------|
-| US-002-01: Gender Master Data | UC-002-01-01, UC-002-01-02, UC-002-01-03, UC-002-01-04 |
+| US-002-01: View Gender Master Data | UC-002-01-01 |
+| US-002-02: Create New Gender | UC-002-02-01, UC-002-02-02 |
+| US-002-03: Edit Existing Gender | UC-002-03-01, UC-002-03-02, UC-002-03-03 |
+| US-002-04: Delete Gender | UC-002-04-01 |

@@ -14,7 +14,7 @@
 
 ---
 
-# US-002-01: Gender Master Data
+# US-002-01: View Gender Master Data
 
 ### TC-002-01-001: Gender Page UI Elements
 **Parent Use Case:** [UC-002-01-01: View Gender List](use-cases.md#uc-002-01-01-view-gender-list)
@@ -68,8 +68,27 @@
 
 ---
 
-### TC-002-01-004: Gender Create Form Display
-**Parent Use Case:** [UC-002-01-02: Create Gender](use-cases.md#uc-002-01-02-create-gender)
+### TC-002-01-004: Gender Access Requires Admin Role
+**Parent Use Case:** [UC-002-01-01: View Gender List](use-cases.md#uc-002-01-01-view-gender-list)
+
+**Objective:** Verify only admin users can access gender management.
+
+**Precondition:** User with "user" role exists
+
+**Steps:**
+1. Login as non-admin user
+2. Attempt to navigate to `/genders`
+
+**Expected:**
+- [ ] Access denied or redirected
+- [ ] Error message indicates insufficient permissions
+
+---
+
+# US-002-02: Create New Gender
+
+### TC-002-02-001: Gender Create Form Display
+**Parent Use Case:** [UC-002-02-01: Display Create Form](use-cases.md#uc-002-02-01-display-create-form)
 
 **Objective:** Verify create form displays correctly.
 
@@ -86,8 +105,8 @@
 
 ---
 
-### TC-002-01-005: Gender Create Success
-**Parent Use Case:** [UC-002-01-02: Create Gender](use-cases.md#uc-002-01-02-create-gender)
+### TC-002-02-002: Gender Create Success
+**Parent Use Case:** [UC-002-02-02: Submit Create Form](use-cases.md#uc-002-02-02-submit-create-form)
 
 **Objective:** Verify successful gender creation.
 
@@ -107,8 +126,8 @@
 
 ---
 
-### TC-002-01-006: Gender Create Code Uppercase Coercion
-**Parent Use Case:** [UC-002-01-02: Create Gender](use-cases.md#uc-002-01-02-create-gender)
+### TC-002-02-003: Gender Create Code Uppercase Coercion
+**Parent Use Case:** [UC-002-02-02: Submit Create Form](use-cases.md#uc-002-02-02-submit-create-form)
 
 **Objective:** Verify code is coerced to uppercase.
 
@@ -127,8 +146,8 @@
 
 ---
 
-### TC-002-01-007: Gender Create Duplicate Code Prevention
-**Parent Use Case:** [UC-002-01-02: Create Gender](use-cases.md#uc-002-01-02-create-gender)
+### TC-002-02-004: Gender Create Duplicate Code Prevention
+**Parent Use Case:** [UC-002-02-02: Submit Create Form](use-cases.md#uc-002-02-02-submit-create-form)
 
 **Objective:** Verify duplicate code is rejected.
 
@@ -149,8 +168,8 @@
 
 ---
 
-### TC-002-01-008: Gender Create Duplicate Description Prevention
-**Parent Use Case:** [UC-002-01-02: Create Gender](use-cases.md#uc-002-01-02-create-gender)
+### TC-002-02-005: Gender Create Duplicate Description Prevention
+**Parent Use Case:** [UC-002-02-02: Submit Create Form](use-cases.md#uc-002-02-02-submit-create-form)
 
 **Objective:** Verify duplicate description is rejected.
 
@@ -171,8 +190,8 @@
 
 ---
 
-### TC-002-01-009: Gender Create Code Max Length
-**Parent Use Case:** [UC-002-01-02: Create Gender](use-cases.md#uc-002-01-02-create-gender)
+### TC-002-02-006: Gender Create Code Max Length
+**Parent Use Case:** [UC-002-02-02: Submit Create Form](use-cases.md#uc-002-02-02-submit-create-form)
 
 **Objective:** Verify code maximum length validation.
 
@@ -191,8 +210,10 @@
 
 ---
 
-### TC-002-01-010: Gender Edit Form Display
-**Parent Use Case:** [UC-002-01-03: Edit Gender](use-cases.md#uc-002-01-03-edit-gender)
+# US-002-03: Edit Existing Gender
+
+### TC-002-03-001: Gender Edit Form Display
+**Parent Use Case:** [UC-002-03-01: Display Edit Form](use-cases.md#uc-002-03-01-display-edit-form)
 
 **Objective:** Verify edit form displays with pre-populated data.
 
@@ -212,8 +233,8 @@
 
 ---
 
-### TC-002-01-011: Gender Edit Success
-**Parent Use Case:** [UC-002-01-03: Edit Gender](use-cases.md#uc-002-01-03-edit-gender)
+### TC-002-03-002: Gender Edit Success
+**Parent Use Case:** [UC-002-03-02: Submit Edit Form](use-cases.md#uc-002-03-02-submit-edit-form)
 
 **Objective:** Verify successful gender update.
 
@@ -233,8 +254,8 @@
 
 ---
 
-### TC-002-01-012: Gender Edit Cancel
-**Parent Use Case:** [UC-002-01-03: Edit Gender](use-cases.md#uc-002-01-03-edit-gender)
+### TC-002-03-003: Gender Edit Cancel
+**Parent Use Case:** [UC-002-03-03: Cancel Edit](use-cases.md#uc-002-03-03-cancel-edit)
 
 **Objective:** Verify cancel discards changes.
 
@@ -251,8 +272,10 @@
 
 ---
 
-### TC-002-01-013: Gender Delete Confirmation
-**Parent Use Case:** [UC-002-01-04: Delete Gender](use-cases.md#uc-002-01-04-delete-gender)
+# US-002-04: Delete Gender
+
+### TC-002-04-001: Gender Delete Confirmation
+**Parent Use Case:** [UC-002-04-01: Delete Gender](use-cases.md#uc-002-04-01-delete-gender)
 
 **Objective:** Verify delete confirmation dialog appears.
 
@@ -270,8 +293,8 @@
 
 ---
 
-### TC-002-01-014: Gender Delete Success
-**Parent Use Case:** [UC-002-01-04: Delete Gender](use-cases.md#uc-002-01-04-delete-gender)
+### TC-002-04-002: Gender Delete Success
+**Parent Use Case:** [UC-002-04-01: Delete Gender](use-cases.md#uc-002-04-01-delete-gender)
 
 **Objective:** Verify successful gender deletion.
 
@@ -289,8 +312,8 @@
 
 ---
 
-### TC-002-01-015: Gender Delete Cancel
-**Parent Use Case:** [UC-002-01-04: Delete Gender](use-cases.md#uc-002-01-04-delete-gender)
+### TC-002-04-003: Gender Delete Cancel
+**Parent Use Case:** [UC-002-04-01: Delete Gender](use-cases.md#uc-002-04-01-delete-gender)
 
 **Objective:** Verify cancel preserves record.
 
@@ -306,23 +329,6 @@
 
 ---
 
-### TC-002-01-016: Gender Access Requires Admin Role
-**Parent Use Case:** [UC-002-01-01: View Gender List](use-cases.md#uc-002-01-01-view-gender-list)
-
-**Objective:** Verify only admin users can access gender management.
-
-**Precondition:** User with "user" role exists
-
-**Steps:**
-1. Login as non-admin user
-2. Attempt to navigate to `/genders`
-
-**Expected:**
-- [ ] Access denied or redirected
-- [ ] Error message indicates insufficient permissions
-
----
-
 ## Test Summary
 
 | Test ID | Test Name | Parent UC | Status | Notes |
@@ -330,27 +336,27 @@
 | TC-002-01-001 | Gender Page UI | UC-002-01-01 | [ ] | |
 | TC-002-01-002 | Gender List Display | UC-002-01-01 | [ ] | |
 | TC-002-01-003 | Gender List Empty | UC-002-01-01 | [ ] | |
-| TC-002-01-004 | Gender Create Form | UC-002-01-02 | [ ] | |
-| TC-002-01-005 | Gender Create Success | UC-002-01-02 | [ ] | |
-| TC-002-01-006 | Gender Code Uppercase | UC-002-01-02 | [ ] | |
-| TC-002-01-007 | Gender Duplicate Code | UC-002-01-02 | [ ] | |
-| TC-002-01-008 | Gender Duplicate Desc | UC-002-01-02 | [ ] | |
-| TC-002-01-009 | Gender Code Max Length | UC-002-01-02 | [ ] | |
-| TC-002-01-010 | Gender Edit Form | UC-002-01-03 | [ ] | |
-| TC-002-01-011 | Gender Edit Success | UC-002-01-03 | [ ] | |
-| TC-002-01-012 | Gender Edit Cancel | UC-002-01-03 | [ ] | |
-| TC-002-01-013 | Gender Delete Confirm | UC-002-01-04 | [ ] | |
-| TC-002-01-014 | Gender Delete Success | UC-002-01-04 | [ ] | |
-| TC-002-01-015 | Gender Delete Cancel | UC-002-01-04 | [ ] | |
-| TC-002-01-016 | Gender Admin Role | UC-002-01-01 | [ ] | |
+| TC-002-01-004 | Gender Admin Role | UC-002-01-01 | [ ] | |
+| TC-002-02-001 | Gender Create Form | UC-002-02-01 | [ ] | |
+| TC-002-02-002 | Gender Create Success | UC-002-02-02 | [ ] | |
+| TC-002-02-003 | Gender Code Uppercase | UC-002-02-02 | [ ] | |
+| TC-002-02-004 | Gender Duplicate Code | UC-002-02-02 | [ ] | |
+| TC-002-02-005 | Gender Duplicate Desc | UC-002-02-02 | [ ] | |
+| TC-002-02-006 | Gender Code Max Length | UC-002-02-02 | [ ] | |
+| TC-002-03-001 | Gender Edit Form | UC-002-03-01 | [ ] | |
+| TC-002-03-002 | Gender Edit Success | UC-002-03-02 | [ ] | |
+| TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | [ ] | |
+| TC-002-04-001 | Gender Delete Confirm | UC-002-04-01 | [ ] | |
+| TC-002-04-002 | Gender Delete Success | UC-002-04-01 | [ ] | |
+| TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | [ ] | |
 
 ---
 
 ## Traceability Matrix
 
-| Use Case | Test Cases |
-|----------|------------|
-| UC-002-01-01: View Gender List | TC-002-01-001, TC-002-01-002, TC-002-01-003, TC-002-01-016 |
-| UC-002-01-02: Create Gender | TC-002-01-004, TC-002-01-005, TC-002-01-006, TC-002-01-007, TC-002-01-008, TC-002-01-009 |
-| UC-002-01-03: Edit Gender | TC-002-01-010, TC-002-01-011, TC-002-01-012 |
-| UC-002-01-04: Delete Gender | TC-002-01-013, TC-002-01-014, TC-002-01-015 |
+| User Story | Use Cases | Test Cases |
+|------------|-----------|------------|
+| US-002-01: View Gender Master Data | UC-002-01-01 | TC-002-01-001, TC-002-01-002, TC-002-01-003, TC-002-01-004 |
+| US-002-02: Create New Gender | UC-002-02-01, UC-002-02-02 | TC-002-02-001, TC-002-02-002, TC-002-02-003, TC-002-02-004, TC-002-02-005, TC-002-02-006 |
+| US-002-03: Edit Existing Gender | UC-002-03-01, UC-002-03-02, UC-002-03-03 | TC-002-03-001, TC-002-03-002, TC-002-03-003 |
+| US-002-04: Delete Gender | UC-002-04-01 | TC-002-04-001, TC-002-04-002, TC-002-04-003 |
