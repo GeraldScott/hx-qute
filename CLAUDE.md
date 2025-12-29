@@ -34,7 +34,7 @@ This is a reference application that uses Quarkus and HTMX to build server-rende
 
 - `docs/ARCHITECTURE.md` - Patterns and technical decisions
 - `docs/SECURITY.md` - Security policies and implementation
-- @docs/WORKFLOW.md - Spec-driven development workflow and naming conventions
+- `docs/WORKFLOW.md` - Spec-driven development workflow and naming conventions
 
 ## Managing the Backend Server
 
