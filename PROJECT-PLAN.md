@@ -1,34 +1,34 @@
 # HX Qute - Project Implementation Plan
 
 **Product:** HX Qute Reference Application
-**Current Phase:** Phase 1 - Authentication
-**Last Updated:** 2025-12-28
+**Current Phase:** Feature 001 - Identity and Access Management
+**Last Updated:** 2025-12-29
 
 ---
 
 ## Current Status
 
-**Current Phase:** Phase 1 - Authentication ✅ COMPLETE
-**Next Use Case:** Phase 2 - Gender Management (UC-2.1)
+**Current Phase:** Feature 001 - Identity and Access Management ✅ COMPLETE
+**Next Use Case:** Feature 002 - Master Data Management (UC-002-01-01)
 **Blockers:** None
 
 ---
 
 ## Progress Summary
 
-| Phase | Use Cases | Completed | Remaining |
-|-------|-----------|-----------|-----------|
-| Phase 0 - Foundation | 4 | 4 | 0 |
-| Phase 1 - Authentication | 6 | 6 | 0 |
+| Feature | Use Cases | Completed | Remaining |
+|---------|-----------|-----------|-----------|
+| Feature 000 - Foundation | 4 | 4 | 0 |
+| Feature 001 - Identity and Access Management | 6 | 6 | 0 |
 | **Total** | **10** | **10** | **0** |
 
 ---
 
-## Phase 0: Foundation
+## Feature 000: Foundation
 
 This phase establishes the database schema and entity classes required for authentication.
 
-### UC-0.1: Create UserLogin Database Table
+### Task 000-01: Create UserLogin Database Table
 
 **Status:** ✅ Complete
 
@@ -64,7 +64,7 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 
 ---
 
-### UC-0.2: Create UserLogin Entity
+### Task 000-02: Create UserLogin Entity
 
 **Status:** ✅ Complete
 
@@ -91,7 +91,7 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 
 ---
 
-### UC-0.3: Create PasswordValidator Service
+### Task 000-03: Create PasswordValidator Service
 
 **Status:** ✅ Complete
 
@@ -119,7 +119,7 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 
 ---
 
-### UC-0.4: Seed Admin User
+### Task 000-04: Seed Admin User
 
 **Status:** ✅ Complete
 
@@ -139,22 +139,21 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 
 ---
 
-## Phase 1: Authentication
+## Feature 001: Identity and Access Management
 
-This phase implements Epic 1: User Authentication & Account Management.
+This feature implements user authentication and account management.
 
 **Reference Documents:**
-- [USER-STORIES.md](specs/USER-STORIES.md) - US-1.1, US-1.2, US-1.3
-- [USE-CASES.md](specs/USE-CASES.md) - UC-1.1 to UC-1.6
-- [LOGIN-PHASED.md](specs/LOGIN-PHASED.md) - Phase 1 specification
-- [SYSTEM-SPECIFICATION.md](specs/SYSTEM-SPECIFICATION.md) - Sections 4.4, 5.6, 5.7
+- [USER-STORIES.md](docs/USER-STORIES.md) - US-001-01, US-001-02, US-001-03
+- [use-cases.md](specs/US-001-identity-and-access-management/use-cases.md) - UC-001-01-01 to UC-001-03-01
+- [test-cases.md](specs/US-001-identity-and-access-management/test-cases.md) - TC-001-01-001 to TC-001-03-001
 
 ---
 
-### UC-1.1: Display Signup Page
+### UC-001-01-01: Display Signup Page
 
 **Status:** ✅ Complete
-**Parent Story:** US-1.1 - User Registration
+**Parent Story:** US-001-01 - User Registration
 
 **Description:** Display signup form with email and password fields.
 
@@ -174,16 +173,16 @@ This phase implements Epic 1: User Authentication & Account Management.
 | GET | `/signup` | Display signup form |
 
 **Test Results:**
-- Test ID: TC-1.01
+- Test ID: TC-001-01-001
 - Status: ✅ Passed
 - Notes: All 5 expected elements verified on 2025-12-28. Page title "Sign Up", email input (id=email), password input (id=password), "Sign Up" button, and link to login page all present and correctly configured.
 
 ---
 
-### UC-1.2: Register New User
+### UC-001-01-02: Register New User
 
 **Status:** ✅ Complete
-**Parent Story:** US-1.1 - User Registration
+**Parent Story:** US-001-01 - User Registration
 
 **Description:** Process signup form submission with validation and user creation.
 
@@ -213,16 +212,16 @@ This phase implements Epic 1: User Authentication & Account Management.
 | POST | `/signup` | Process registration |
 
 **Test Results:**
-- Test ID: TC-1.02, TC-1.03, TC-1.04, TC-1.05, TC-1.06
+- Test ID: TC-001-01-002, TC-001-01-003, TC-001-01-004, TC-001-01-005, TC-001-01-006, TC-001-01-007, TC-001-01-008
 - Status: ✅ Passed
-- Notes: All 5 tests passed on 2025-12-28. TC-1.02 successful registration with redirect to /login. TC-1.03 email required validation works (both HTML5 and server-side). TC-1.04 password minimum 15 chars enforced. TC-1.05 duplicate email prevention working. TC-1.06 case-insensitive email matching verified.
+- Notes: All tests passed on 2025-12-28. Successful registration with redirect to /login. Email required validation works (both HTML5 and server-side). Password minimum 15 chars enforced. Duplicate email prevention working. Case-insensitive email matching verified. Form input sanitization and client-side normalization confirmed.
 
 ---
 
-### UC-1.3: Display Login Page
+### UC-001-02-01: Display Login Page
 
 **Status:** ✅ Complete
-**Parent Story:** US-1.2 - User Login
+**Parent Story:** US-001-02 - User Login
 
 **Description:** Display login form with email and password fields.
 
@@ -246,16 +245,16 @@ This phase implements Epic 1: User Authentication & Account Management.
 | GET | `/login` | Display login form |
 
 **Test Results:**
-- Test ID: TC-1.07
+- Test ID: TC-001-02-001
 - Status: ✅ Passed
 - Notes: All 5 UI elements verified on 2025-12-28. Page title "Login", email input (id=j_username), password input (id=j_password), "Login" button, and link to signup page all present. Form correctly posts to /j_security_check.
 
 ---
 
-### UC-1.4: Authenticate User
+### UC-001-02-02: Authenticate User
 
 **Status:** ✅ Complete
-**Parent Story:** US-1.2 - User Login
+**Parent Story:** US-001-02 - User Login
 
 **Description:** Configure Quarkus form authentication to handle login submission.
 
@@ -281,45 +280,16 @@ This phase implements Epic 1: User Authentication & Account Management.
 5. On failure: redirect to error page
 
 **Test Results:**
-- Test ID: TC-1.08, TC-1.09, TC-1.10, TC-1.11, TC-1.12, TC-1.17
+- Test ID: TC-001-02-002, TC-001-02-003, TC-001-02-004, TC-001-02-005, TC-001-02-006, TC-001-02-007, TC-001-02-009
 - Status: ✅ Passed
-- Notes: All 6 tests passed on 2025-12-28. TC-1.08 successful login with admin credentials. TC-1.09/TC-1.10 invalid credentials show generic error. TC-1.11 case-insensitive email via client-side JS normalization. TC-1.12 HTML5 validation prevents empty submission. TC-1.17 user enumeration prevention verified (identical error messages).
+- Notes: All tests passed on 2025-12-28. Successful login with admin credentials. Invalid credentials show generic error. Case-insensitive email via client-side JS normalization. HTML5 validation prevents empty submission. User enumeration prevention verified (identical error messages). Protected route access after authentication confirmed.
 
 ---
 
-### UC-1.5: Logout User
+### UC-001-02-03: Access Protected Route (Unauthenticated)
 
 **Status:** ✅ Complete
-**Parent Story:** US-1.3 - User Logout
-
-**Description:** Implement logout functionality with session termination.
-
-**Implementation Tasks:**
-- [x] Add `logout()` template method to AuthResource.Templates
-- [x] Implement `GET /logout` endpoint
-- [x] Inject `RoutingContext` for session access
-- [x] Destroy user session
-- [x] Clear authentication cookie (`quarkus-credential`)
-- [x] Create `templates/AuthResource/logout.html`
-- [x] Display logout confirmation message
-- [x] Include link to home page and login page
-
-**Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/logout` | Logout and show confirmation |
-
-**Test Results:**
-- Test ID: TC-1.13
-- Status: ✅ Passed
-- Notes: All assertions passed on 2025-12-28. Logout page displays "Logged Out" title, confirmation message "You have been successfully logged out.", "GO TO HOME" link to /, and "LOGIN AGAIN" link to /login. Note: Session termination testing requires protected routes (UC-1.6) which is not yet implemented.
-
----
-
-### UC-1.6: Access Protected Route (Unauthenticated)
-
-**Status:** ✅ Complete
-**Parent Story:** US-1.2 - User Login
+**Parent Story:** US-001-02 - User Login
 
 **Description:** Configure route protection to redirect unauthenticated users to login.
 
@@ -343,36 +313,66 @@ This phase implements Epic 1: User Authentication & Account Management.
 | `/genders/*`, `/admin/*` | Admin | admin |
 
 **Test Results:**
-- Test ID: TC-1.14, TC-1.16
+- Test ID: TC-001-02-008, TC-001-02-010
 - Status: ✅ Passed
-- Notes: All tests passed on 2025-12-28. TC-1.14 verified unauthenticated access to /persons and /genders redirects to /login. TC-1.16 verified navigation links work correctly between login and signup pages.
+- Notes: All tests passed on 2025-12-28. Unauthenticated access to /persons and /genders redirects to /login. Navigation links work correctly between login and signup pages.
+
+---
+
+### UC-001-03-01: Logout User
+
+**Status:** ✅ Complete
+**Parent Story:** US-001-03 - User Logout
+
+**Description:** Implement logout functionality with session termination.
+
+**Implementation Tasks:**
+- [x] Add `logout()` template method to AuthResource.Templates
+- [x] Implement `GET /logout` endpoint
+- [x] Inject `RoutingContext` for session access
+- [x] Destroy user session
+- [x] Clear authentication cookie (`quarkus-credential`)
+- [x] Create `templates/AuthResource/logout.html`
+- [x] Display logout confirmation message
+- [x] Include link to home page and login page
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/logout` | Logout and show confirmation |
+
+**Test Results:**
+- Test ID: TC-001-03-001
+- Status: ✅ Passed
+- Notes: All assertions passed on 2025-12-28. Logout page displays "Logged Out" title, confirmation message "You have been successfully logged out.", "GO TO HOME" link to /, and "LOGIN AGAIN" link to /login.
 
 ---
 
 ## Test Cases Reference
 
-### Phase 1 Test Cases
+### Feature 001 Test Cases
 
 | Test ID | Description | Use Case | Status |
 |---------|-------------|----------|--------|
-| TC-1.01 | Signup Page UI Elements | UC-1.1 | 🔲 |
-| TC-1.02 | Signup Successful Registration | UC-1.2 | 🔲 |
-| TC-1.03 | Signup Email Required | UC-1.2 | 🔲 |
-| TC-1.04 | Signup Password Minimum Length | UC-1.2 | 🔲 |
-| TC-1.05 | Signup Duplicate Email Prevention | UC-1.2 | 🔲 |
-| TC-1.06 | Signup Email Case Insensitivity | UC-1.2 | 🔲 |
-| TC-1.07 | Login Page UI Elements | UC-1.3 | 🔲 |
-| TC-1.08 | Login Successful Authentication | UC-1.4 | 🔲 |
-| TC-1.09 | Login Invalid Password | UC-1.4 | 🔲 |
-| TC-1.10 | Login Invalid Email | UC-1.4 | 🔲 |
-| TC-1.11 | Login Email Case Insensitivity | UC-1.4 | 🔲 |
-| TC-1.12 | Login Empty Credentials | UC-1.4 | 🔲 |
-| TC-1.13 | Logout Flow | UC-1.5 | 🔲 |
-| TC-1.14 | Protected Route Unauthenticated | UC-1.6 | 🔲 |
-| TC-1.15 | Protected Route Authenticated | UC-1.4 | 🔲 |
-| TC-1.16 | Navigation Between Auth Pages | UC-1.1, UC-1.3 | 🔲 |
-| TC-1.17 | User Enumeration Prevention | UC-1.4 | 🔲 |
-| TC-1.18 | Form Input Sanitization | UC-1.2 | 🔲 |
+| TC-001-01-001 | Signup Page UI Elements | UC-001-01-01 | ✅ |
+| TC-001-01-002 | Signup Successful Registration | UC-001-01-02 | ✅ |
+| TC-001-01-003 | Signup Email Required | UC-001-01-02 | ✅ |
+| TC-001-01-004 | Signup Password Minimum Length | UC-001-01-02 | ✅ |
+| TC-001-01-005 | Signup Duplicate Email Prevention | UC-001-01-02 | ✅ |
+| TC-001-01-006 | Signup Email Case Insensitivity | UC-001-01-02 | ✅ |
+| TC-001-01-007 | Form Input Sanitization | UC-001-01-02 | ✅ |
+| TC-001-01-008 | Signup Email Client-Side Normalization | UC-001-01-02 | ✅ |
+| TC-001-02-001 | Login Page UI Elements | UC-001-02-01 | ✅ |
+| TC-001-02-002 | Login Successful Authentication | UC-001-02-02 | ✅ |
+| TC-001-02-003 | Login Invalid Password | UC-001-02-02 | ✅ |
+| TC-001-02-004 | Login Invalid Email | UC-001-02-02 | ✅ |
+| TC-001-02-005 | Login Email Case Insensitivity | UC-001-02-02 | ✅ |
+| TC-001-02-006 | Login Empty Credentials | UC-001-02-02 | ✅ |
+| TC-001-02-007 | User Enumeration Prevention | UC-001-02-02 | ✅ |
+| TC-001-02-008 | Protected Route Unauthenticated | UC-001-02-03 | ✅ |
+| TC-001-02-009 | Protected Route Authenticated | UC-001-02-02 | ✅ |
+| TC-001-02-010 | Navigation Between Auth Pages | UC-001-02-01 | ✅ |
+| TC-001-03-001 | Logout Flow | UC-001-03-01 | ✅ |
 
 ---
 
@@ -391,7 +391,7 @@ This phase implements Epic 1: User Authentication & Account Management.
     <artifactId>quarkus-hibernate-validator</artifactId>
 </dependency>
 
-<!-- Required for Phase 1 -->
+<!-- Required for Feature 001 -->
 <dependency>
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-security-jpa</artifactId>
@@ -402,11 +402,11 @@ This phase implements Epic 1: User Authentication & Account Management.
 
 ## Configuration Reference
 
-### application.properties additions for Phase 1
+### application.properties additions for Feature 001
 
 ```properties
 # =============================================================================
-# Phase 1: Form-Based Authentication Configuration
+# Feature 001: Form-Based Authentication Configuration
 # =============================================================================
 
 # --- Form Authentication ---
@@ -444,4 +444,5 @@ quarkus.http.same-site-cookie.quarkus-credential=strict
 
 | Date | Version | Changes |
 |------|---------|---------|
-| 2025-12-28 | 1.0 | Initial plan created for Phase 0 (Foundation) and Phase 1 (Authentication) |
+| 2025-12-28 | 1.0 | Initial plan created for Feature 000 (Foundation) and Feature 001 (Identity and Access Management) |
+| 2025-12-29 | 1.1 | Renumbered use cases and test cases to follow UC-FFF-SS-NN and TC-FFF-SS-NNN conventions |
