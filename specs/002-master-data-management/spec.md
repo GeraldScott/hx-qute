@@ -8,23 +8,6 @@ This document describes the technical implementation requirements for the Master
 
 ### 1.1 Gender Table
 
-**Migration**: `V1.0.0__Create_gender_table.sql` (existing) + `V1.0.2__Add_gender_audit_fields.sql` (new)
-
-```sql
--- V1.0.0__Create_gender_table.sql (existing)
-CREATE TABLE gender (
-    id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(1) NOT NULL UNIQUE,
-    description VARCHAR(255) NOT NULL UNIQUE
-);
-
--- V1.0.2__Add_gender_audit_fields.sql (new migration)
-ALTER TABLE gender ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE gender ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE gender ADD COLUMN created_by VARCHAR(255);
-ALTER TABLE gender ADD COLUMN updated_by VARCHAR(255);
-```
-
 **Key Constraints:**
 - `code`: Max 1 character, unique, uppercase, not null
 - `description`: Max 255 characters, unique, not null
