@@ -2,17 +2,18 @@
 
 This phase establishes the database schema and entity classes required for authentication.
 
-## Task 000-01: Create UserLogin Database Table
+## UC-000-01-01: Create UserLogin Database Table
 
 **Status:** ✅ Complete
+**Parent Story:** US-000-01 - Establish Authentication Infrastructure
 
-**Description:** Create Flyway migration for the `user_login` table with all required columns per LOGIN-PHASED.md specification.
+**Description:** Create Flyway migration for the `user_login` table with all required columns.
 
 **Implementation Tasks:**
 - [x] Create migration file `V1.2.0__Create_user_login_table.sql`
 - [x] Define columns: id, email, password, role, first_name, last_name, created_at, updated_at, active
-- [x] Add unique constraint on email
-- [x] Add index on email column
+- [x] Add unique constraint on email (`uq_user_login_email`)
+- [x] Add index on email column (`idx_user_login_email`)
 
 **Technical Specification:**
 ```sql
@@ -32,15 +33,16 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 ```
 
 **Test Results:**
-- Test ID: N/A (database migration)
-- Status: ✅ Verified
-- Notes: Migration applied successfully on 2025-12-28. Flyway version v1.2.0 confirmed.
+- Test ID: TC-000-01-001, TC-000-01-002, TC-000-01-012
+- Status: ✅ Passed
+- Notes: Migration applied successfully on 2025-12-28. Schema and constraints verified.
 
 ---
 
-## Task 000-02: Create UserLogin Entity
+## UC-000-01-02: Create UserLogin Entity
 
 **Status:** ✅ Complete
+**Parent Story:** US-000-01 - Establish Authentication Infrastructure
 
 **Description:** Implement the `UserLogin` entity with Quarkus Security JPA annotations for form-based authentication.
 
@@ -56,18 +58,17 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 - [x] Add `emailExists()` helper method
 - [x] Add `getDisplayName()` display method
 
-**Technical Reference:** See SYSTEM-SPECIFICATION.md Section 3.4
-
 **Test Results:**
-- Test ID: N/A (unit test)
-- Status: ✅ Verified
-- Notes: Entity compiles and server starts without errors. Added quarkus-security-jpa and quarkus-hibernate-validator dependencies. Used PanacheEntityBase with IDENTITY generation to match BIGSERIAL migration.
+- Test ID: TC-000-01-003, TC-000-01-004, TC-000-01-005, TC-000-01-006
+- Status: ✅ Passed
+- Notes: Entity compiles and server starts without errors. BCrypt hashing verified with cost 12. Email normalization confirmed.
 
 ---
 
-## Task 000-03: Create PasswordValidator Service
+## UC-000-01-03: Create PasswordValidator Service
 
 **Status:** ✅ Complete
+**Parent Story:** US-000-01 - Establish Authentication Infrastructure
 
 **Description:** Implement NIST SP 800-63B-4 compliant password validation service.
 
@@ -84,18 +85,17 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 - No composition rules (no special chars required)
 - No truncation
 
-**Technical Reference:** See LOGIN-PHASED.md Section 2.5
-
 **Test Results:**
-- Test ID: N/A (unit test)
-- Status: ✅ Verified
-- Notes: Service compiles and server starts without errors. Uses ConfigProperty with defaultValues (min=15, max=128) per NIST SP 800-63B-4.
+- Test ID: TC-000-01-007, TC-000-01-008, TC-000-01-009
+- Status: ✅ Passed
+- Notes: Service compiles and validates correctly. Min/max length enforcement verified. No composition rules confirmed per NIST.
 
 ---
 
-## Task 000-04: Seed Admin User
+## UC-000-01-04: Seed Admin User
 
 **Status:** ✅ Complete
+**Parent Story:** US-000-01 - Establish Authentication Infrastructure
 
 **Description:** Create Flyway migration to insert default admin user for testing.
 
@@ -103,10 +103,33 @@ CREATE INDEX idx_user_login_email ON user_login(email);
 - [x] Create migration file `V1.2.1__Insert_admin_user.sql`
 - [x] Insert admin user with BCrypt hashed password
 - [x] Email: `admin@example.com`
-- [x] Password: `AdminPassword123` (BCrypt hashed)
+- [x] Password: `AdminPassword123` (BCrypt hashed, cost 12)
 - [x] Role: `admin`
 
 **Test Results:**
-- Test ID: N/A (database seed)
-- Status: ✅ Verified
-- Notes: Migration applied successfully on 2025-12-28. Flyway version v1.2.1 confirmed. Admin user seeded with BCrypt cost 12 hash.
+- Test ID: TC-000-01-010, TC-000-01-011
+- Status: ✅ Passed
+- Notes: Migration applied successfully on 2025-12-28. Admin user authentication verified.
+
+---
+
+## Test Cases Reference
+
+### Feature 000 Test Cases
+
+| Test ID | Description | Use Case | Status |
+|---------|-------------|----------|--------|
+| TC-000-01-001 | UserLogin Table Schema | UC-000-01-01 | ✅ |
+| TC-000-01-002 | UserLogin Table Constraints | UC-000-01-01 | ✅ |
+| TC-000-01-003 | UserLogin Entity Annotations | UC-000-01-02 | ✅ |
+| TC-000-01-004 | UserLogin Email Normalization | UC-000-01-02 | ✅ |
+| TC-000-01-005 | UserLogin BCrypt Hashing | UC-000-01-02 | ✅ |
+| TC-000-01-006 | UserLogin Finder Methods | UC-000-01-02 | ✅ |
+| TC-000-01-007 | PasswordValidator Min Length | UC-000-01-03 | ✅ |
+| TC-000-01-008 | PasswordValidator Max Length | UC-000-01-03 | ✅ |
+| TC-000-01-009 | PasswordValidator No Composition | UC-000-01-03 | ✅ |
+| TC-000-01-010 | Admin User Seed Verification | UC-000-01-04 | ✅ |
+| TC-000-01-011 | Admin User Authentication | UC-000-01-04 | ✅ |
+| TC-000-01-012 | Application Startup | UC-000-01-01 | ✅ |
+
+---

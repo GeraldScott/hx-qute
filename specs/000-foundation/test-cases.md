@@ -1,0 +1,299 @@
+# Test Cases for Feature 000: Foundation
+
+## Prerequisites
+
+- PostgreSQL database is accessible
+- Flyway migrations can execute
+- Application can start in dev mode
+
+## Test Data
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@example.com | AdminPassword123 | admin |
+
+---
+
+# US-000-01: Establish Authentication Infrastructure
+
+### TC-000-01-001: UserLogin Table Schema Verification
+**Parent Use Case:** [UC-000-01-01: Create UserLogin Database Table](use-cases.md#uc-000-01-01-create-userlogin-database-table)
+
+**Objective:** Verify the user_login table is created with correct schema.
+
+**Type:** Database verification
+
+**Steps:**
+1. Start the application (triggers Flyway migrations)
+2. Query database schema for user_login table
+
+**Verification Query:**
+```sql
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_name = 'user_login'
+ORDER BY ordinal_position;
+```
+
+**Expected:**
+- [ ] Column `id` exists as BIGSERIAL (bigint with identity)
+- [ ] Column `email` exists as VARCHAR(255), NOT NULL
+- [ ] Column `password` exists as VARCHAR(255), NOT NULL
+- [ ] Column `role` exists as VARCHAR(50), NOT NULL, DEFAULT 'user'
+- [ ] Column `first_name` exists as VARCHAR(100), NULLABLE
+- [ ] Column `last_name` exists as VARCHAR(100), NULLABLE
+- [ ] Column `created_at` exists as TIMESTAMP WITH TIME ZONE
+- [ ] Column `updated_at` exists as TIMESTAMP WITH TIME ZONE
+- [ ] Column `active` exists as BOOLEAN, DEFAULT TRUE
+
+---
+
+### TC-000-01-002: UserLogin Table Constraints Verification
+**Parent Use Case:** [UC-000-01-01: Create UserLogin Database Table](use-cases.md#uc-000-01-01-create-userlogin-database-table)
+
+**Objective:** Verify the user_login table has correct constraints and indexes.
+
+**Type:** Database verification
+
+**Steps:**
+1. Query database for constraints on user_login table
+2. Query database for indexes on user_login table
+
+**Verification Queries:**
+```sql
+-- Check unique constraint
+SELECT constraint_name, constraint_type
+FROM information_schema.table_constraints
+WHERE table_name = 'user_login';
+
+-- Check indexes
+SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
+```
+
+**Expected:**
+- [ ] Unique constraint exists on email column (`uq_user_login_email`)
+- [ ] Index exists on email column (`idx_user_login_email`)
+- [ ] Primary key exists on id column
+
+---
+
+### TC-000-01-003: UserLogin Entity Annotations Verification
+**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+
+**Objective:** Verify the UserLogin entity has correct security annotations.
+
+**Type:** Code inspection / Unit test
+
+**Steps:**
+1. Inspect UserLogin.java source code
+2. Verify annotations are present
+
+**Expected:**
+- [ ] Class annotated with `@Entity` and `@Table(name = "user_login")`
+- [ ] Class annotated with `@UserDefinition`
+- [ ] Field `email` annotated with `@Username`
+- [ ] Field `password` annotated with `@Password(PasswordType.MCF)`
+- [ ] Field `role` annotated with `@Roles`
+
+---
+
+### TC-000-01-004: UserLogin Email Normalization
+**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+
+**Objective:** Verify email addresses are normalized to lowercase and trimmed.
+
+**Type:** Unit test
+
+**Steps:**
+1. Create UserLogin with uppercase email: `"  TEST@EXAMPLE.COM  "`
+2. Persist the entity
+3. Retrieve and verify email is normalized
+
+**Expected:**
+- [ ] Email is stored as `"test@example.com"` (lowercase, trimmed)
+
+---
+
+### TC-000-01-005: UserLogin BCrypt Password Hashing
+**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+
+**Objective:** Verify passwords are hashed using BCrypt with cost factor 12.
+
+**Type:** Unit test
+
+**Steps:**
+1. Create UserLogin using `UserLogin.create("test@example.com", "TestPassword12345", "user")`
+2. Inspect the password field
+
+**Expected:**
+- [ ] Password starts with `$2a$12$` (BCrypt, cost 12)
+- [ ] Password is not stored in plain text
+- [ ] Password hash is approximately 60 characters
+
+---
+
+### TC-000-01-006: UserLogin Finder Methods
+**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+
+**Objective:** Verify finder methods work correctly with case-insensitive email lookup.
+
+**Type:** Integration test
+
+**Steps:**
+1. Ensure admin user exists
+2. Call `UserLogin.findByEmail("ADMIN@EXAMPLE.COM")` (uppercase)
+3. Call `UserLogin.emailExists("admin@example.com")`
+
+**Expected:**
+- [ ] `findByEmail()` returns the admin user despite case difference
+- [ ] `emailExists()` returns true for existing email
+- [ ] `emailExists()` returns false for non-existing email
+
+---
+
+### TC-000-01-007: PasswordValidator Minimum Length
+**Parent Use Case:** [UC-000-01-03: Create PasswordValidator Service](use-cases.md#uc-000-01-03-create-passwordvalidator-service)
+
+**Objective:** Verify password minimum length validation (NIST SP 800-63B-4).
+
+**Type:** Unit test
+
+**Steps:**
+1. Inject PasswordValidator service
+2. Validate password with 14 characters (too short)
+3. Validate password with 15 characters (minimum)
+4. Validate password with 16 characters (valid)
+
+**Expected:**
+- [ ] 14 chars returns error: "Password must be at least 15 characters"
+- [ ] 15 chars returns no errors
+- [ ] 16 chars returns no errors
+
+---
+
+### TC-000-01-008: PasswordValidator Maximum Length
+**Parent Use Case:** [UC-000-01-03: Create PasswordValidator Service](use-cases.md#uc-000-01-03-create-passwordvalidator-service)
+
+**Objective:** Verify password maximum length validation.
+
+**Type:** Unit test
+
+**Steps:**
+1. Inject PasswordValidator service
+2. Validate password with 128 characters (maximum)
+3. Validate password with 129 characters (too long)
+
+**Expected:**
+- [ ] 128 chars returns no errors
+- [ ] 129 chars returns error: "Password must be 128 characters or less"
+
+---
+
+### TC-000-01-009: PasswordValidator No Composition Rules
+**Parent Use Case:** [UC-000-01-03: Create PasswordValidator Service](use-cases.md#uc-000-01-03-create-passwordvalidator-service)
+
+**Objective:** Verify NIST compliance - no composition rules enforced.
+
+**Type:** Unit test
+
+**Steps:**
+1. Inject PasswordValidator service
+2. Validate password with only lowercase letters (15+ chars)
+3. Validate password with only numbers (15+ chars)
+
+**Expected:**
+- [ ] All-lowercase password is valid (no uppercase required)
+- [ ] All-numeric password is valid (no special chars required)
+- [ ] No composition rules are enforced per NIST SP 800-63B-4
+
+---
+
+### TC-000-01-010: Admin User Seed Verification
+**Parent Use Case:** [UC-000-01-04: Seed Admin User](use-cases.md#uc-000-01-04-seed-admin-user)
+
+**Objective:** Verify admin user is seeded correctly.
+
+**Type:** Database verification
+
+**Steps:**
+1. Start the application (triggers Flyway migrations)
+2. Query user_login table for admin user
+
+**Verification Query:**
+```sql
+SELECT email, role, first_name, last_name, active
+FROM user_login
+WHERE email = 'admin@example.com';
+```
+
+**Expected:**
+- [ ] Admin user exists with email `admin@example.com`
+- [ ] Role is `admin`
+- [ ] first_name is `Admin`
+- [ ] last_name is `User`
+- [ ] active is `true`
+
+---
+
+### TC-000-01-011: Admin User Authentication
+**Parent Use Case:** [UC-000-01-04: Seed Admin User](use-cases.md#uc-000-01-04-seed-admin-user)
+
+**Objective:** Verify admin user can authenticate with seeded credentials.
+
+**Type:** Integration test (browser-based)
+
+**Steps:**
+1. Navigate to `/login`
+2. Enter email: `admin@example.com`
+3. Enter password: `AdminPassword123`
+4. Click Login button
+
+**Expected:**
+- [ ] Login is successful
+- [ ] User is redirected to home page
+- [ ] Navigation shows authenticated state
+
+---
+
+### TC-000-01-012: Application Startup Verification
+**Parent Use Case:** [UC-000-01-01: Create UserLogin Database Table](use-cases.md#uc-000-01-01-create-userlogin-database-table)
+
+**Objective:** Verify application starts successfully with all migrations applied.
+
+**Type:** Smoke test
+
+**Steps:**
+1. Start application with `./mvnw quarkus:dev`
+2. Wait for startup complete message
+3. Check health endpoint
+
+**Verification:**
+```bash
+curl http://127.0.0.1:9080/q/health
+```
+
+**Expected:**
+- [ ] Application starts without errors
+- [ ] Health check returns status "UP"
+- [ ] Flyway migrations show as applied in logs
+
+---
+
+## Test Summary
+
+| Test ID | Use Case | Type | Status |
+|---------|----------|------|--------|
+| TC-000-01-001 | UC-000-01-01 | Database | ✅ Passed |
+| TC-000-01-002 | UC-000-01-01 | Database | ✅ Passed |
+| TC-000-01-003 | UC-000-01-02 | Code Inspection | ✅ Passed |
+| TC-000-01-004 | UC-000-01-02 | Unit Test | ✅ Passed |
+| TC-000-01-005 | UC-000-01-02 | Unit Test | ✅ Passed |
+| TC-000-01-006 | UC-000-01-02 | Integration | ✅ Passed |
+| TC-000-01-007 | UC-000-01-03 | Unit Test | ✅ Passed |
+| TC-000-01-008 | UC-000-01-03 | Unit Test | ✅ Passed |
+| TC-000-01-009 | UC-000-01-03 | Unit Test | ✅ Passed |
+| TC-000-01-010 | UC-000-01-04 | Database | ✅ Passed |
+| TC-000-01-011 | UC-000-01-04 | Integration | ✅ Passed |
+| TC-000-01-012 | UC-000-01-01 | Smoke Test | ✅ Passed |
+
+---

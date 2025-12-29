@@ -26,18 +26,23 @@ The user stories are grouped into domain-specific features that deliver business
 
 ## Feature 000: Foundation
 
-### US-000-01: Establish base technology and configure the system to start implementation
-**As a** senior developr
-**I want to** prepare the system for feature implementation
-**So that** I can successfully implement the features and maintain developer velocity
+### US-000-01: Establish Authentication Infrastructure
+**As a** senior developer
+**I want to** establish the database schema, entity classes, and services required for user authentication
+**So that** the Identity and Access Management feature can be implemented on a solid foundation
 
 **Acceptance Criteria:**
-- Backend server starts successfully
-- Database is primed with initial data sets
-- Flyway migration scripts run
+- UserLogin database table is created via Flyway migration with proper schema (id, email, password, role, first_name, last_name, created_at, updated_at, active)
+- Email column has unique constraint and index for efficient lookups
+- UserLogin entity is annotated with Quarkus Security JPA annotations (@UserDefinition, @Username, @Password, @Roles)
+- Password hashing uses BCrypt with cost factor 12
+- Email addresses are normalized to lowercase and trimmed
+- PasswordValidator service enforces NIST SP 800-63B-4 requirements (minimum 15 characters, maximum 128 characters)
+- Default admin user is seeded for testing (admin@example.com)
+- Backend server starts successfully with all migrations applied
 
 **Priority:** High
-**Story Points:** 3
+**Story Points:** 5
 
 ---
 
