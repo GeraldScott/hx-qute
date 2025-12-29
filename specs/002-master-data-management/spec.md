@@ -13,6 +13,23 @@ This document describes the technical implementation requirements for the Master
 - `description`: Max 255 characters, unique, not null
 - Audit fields track creation and modification metadata
 
+**Important - PostgreSQL ID Generation:**
+- Primary key column must use `BIGSERIAL` type (auto-increment)
+- This maps to `GenerationType.IDENTITY` in JPA
+- Do NOT use sequences - Panache's default sequence strategy conflicts with `BIGSERIAL`
+
+```sql
+CREATE TABLE gender (
+    id BIGSERIAL PRIMARY KEY,  -- Must be BIGSERIAL, not BIGINT with sequence
+    code VARCHAR(1) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255) NOT NULL DEFAULT 'system',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(255)
+);
+```
+
 ---
 
 ## 2. Entity Design
@@ -21,12 +38,17 @@ This document describes the technical implementation requirements for the Master
 
 **File**: `src/main/java/io/archton/scaffold/entity/Gender.java`
 
-**Pattern**: Active Record using PanacheEntity (no separate repository class)
+**Pattern**: Active Record using PanacheEntityBase (no separate repository class)
+
+**Important - Use PanacheEntityBase, NOT PanacheEntity:**
+- `PanacheEntity` assumes sequence-based ID generation (creates `entity_SEQ` sequence)
+- `PanacheEntityBase` allows explicit `@Id` with `GenerationType.IDENTITY`
+- When using PostgreSQL `BIGSERIAL`, you MUST use `PanacheEntityBase`
 
 ```java
 package io.archton.scaffold.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -36,7 +58,11 @@ import java.util.List;
     @UniqueConstraint(columnNames = "code"),
     @UniqueConstraint(columnNames = "description")
 })
-public class Gender extends PanacheEntity {
+public class Gender extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @Column(name = "code", nullable = false, unique = true, length = 1)
     public String code;
@@ -143,7 +169,15 @@ public class Gender extends PanacheEntity {
 
 Uses Qute fragments (`{#fragment}`) for HTMX partial responses. All fragments are defined within the main template file for compile-time validation and maintainability.
 
+**Important - Type-Safe Template Limitations:**
+With `@CheckedTemplate`, Qute validates ALL expressions at compile time against the template's parameter list. This means:
+- Loop variables (e.g., `gender` from `{#for gender in genders}`) cannot be passed to included fragments
+- `{#include $row gender=gender /}` does NOT work - the fragment's parameter is not in the main template's parameter list
+- **Solution**: Inline row content directly in the for loop within `$table` fragment
+- Standalone fragments (like `$row` for edit/cancel) must declare their own parameters with `{@...}` syntax
+
 ```html
+{@java.util.List<io.archton.scaffold.entity.Gender> genders}
 {#include base}
 {#title}Gender Management{/title}
 
@@ -157,26 +191,43 @@ Uses Qute fragments (`{#fragment}`) for HTMX partial responses. All fragments ar
 
 {/include}
 
+{!-- Table fragment: rows are INLINED, not included from $row --}
 {#fragment id=table}
+{#if genders.isEmpty()}
+<p class="uk-text-muted">No genders found.</p>
+{#else}
 <table class="uk-table">
     <thead>...</thead>
     <tbody id="gender-table-body">
-        {#for gender in genders}
-        {#include $row gender=gender /}
+        {#for g in genders}
+        <tr id="gender-row-{g.id}">
+            <td>{g.code}</td>
+            <td>{g.description}</td>
+        </tr>
         {/for}
     </tbody>
 </table>
+{/if}
 {/fragment}
 
+{!-- Standalone row fragment for direct calls (edit/cancel operations) --}
+{!-- Must declare parameter explicitly for type-safe validation --}
 {#fragment id=row}
-<tr>...</tr>
+{@io.archton.scaffold.entity.Gender gender}
+<tr id="gender-row-{gender.id}">
+    <td>{gender.code}</td>
+    <td>{gender.description}</td>
+</tr>
 {/fragment}
 
 {#fragment id=row_edit}
+{@io.archton.scaffold.entity.Gender gender}
+{@String error}
 <tr class="editing">...</tr>
 {/fragment}
 
 {#fragment id=create_form}
+{@String error}
 <div class="uk-card uk-card-body">...</div>
 {/fragment}
 
@@ -185,6 +236,8 @@ Uses Qute fragments (`{#fragment}`) for HTMX partial responses. All fragments ar
 {/fragment}
 
 {#fragment id=success}
+{@String message}
+{@java.util.List<io.archton.scaffold.entity.Gender> genders}
 <!-- Primary swap content + OOB table refresh -->
 {/fragment}
 ```
@@ -291,16 +344,22 @@ public static class Templates {
 
 <!-- OOB swap: Refresh table body independently -->
 <!-- Note: <tbody> wrapped in <template> for HTML spec compliance -->
+<!-- Note: Rows are INLINED, not included via $row fragment -->
 <template>
     <tbody id="gender-table-body" hx-swap-oob="true">
-        {#for gender in genders}
-        {#include $row gender=gender /}
+        {#for g in genders}
+        <tr id="gender-row-{g.id}">
+            <td>{g.code}</td>
+            <td>{g.description}</td>
+        </tr>
         {/for}
     </tbody>
 </template>
 ```
 
 **Why `<template>` wrapper?** Per HTMX documentation, table elements like `<tbody>`, `<tr>`, `<td>` cannot stand alone in HTML responses. Wrapping in `<template>` ensures proper parsing while HTMX still processes the OOB swap correctly.
+
+**Why inline rows instead of `{#include $row /}`?** With `@CheckedTemplate`, loop variables cannot be passed to included fragments. The `$row` fragment is only used for standalone calls (e.g., cancel edit returning a single row).
 
 ---
 
@@ -372,7 +431,7 @@ public class GenderResource { ... }
 
 | Use Case | Implementation Component |
 |----------|-------------------------|
-| UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender$table`, `gender$row` fragments |
+| UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender$table` fragment (rows inlined) |
 | UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender$create_form` fragment |
 | UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender$success` fragment |
 | UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender$row_edit` fragment |
@@ -409,5 +468,6 @@ public class GenderResource { ... }
 
 ---
 
-*Document Version: 1.0*
+*Document Version: 1.1*
 *Last Updated: December 2025*
+*Changes: Added PostgreSQL BIGSERIAL/IDENTITY requirement, PanacheEntityBase usage, and type-safe template fragment limitations*
