@@ -39,7 +39,7 @@ This is a reference application that uses Quarkus and HTMX to build server-rende
 ## Naming Conventions
 
 ### User Stories (US-FFF-SS)
-User stories in `docs/USER-STORIES.md` follow the format `US-FFF-SS` (to cater for 999 features, each with 99 user stories. That is enough for any hefty system):
+User stories in `docs/USER-STORIES.md` are grouped by feature and follow the format `US-FFF-SS` (to cater for 999 features, each with 99 user stories. That is enough for a large system):
 - `FFF` - 3-digit feature number (001, 002, 003)
 - `SS` - 2-digit story number within feature (01, 02, 03)
 
@@ -69,13 +69,13 @@ Test cases follow the same pattern as use cases: `TC-FFF-SS-NNN` (note the three
 The project implementation is controlled by @specs/PROJECT-PLAN.md
 
 It will be implemented in a phased approach, one feature at a time:
-- Read `NNN-feature-name/tasks.md` for the status of the current phase and the use cases that must be implemented. 
+- Read `NNN-feature-name/tasks.md` for the status of the current phase and the use cases that must be implemented.
 - Read `NNN-feature-name/spec.md` before implementing each use case to understand the technical requirements.
 - Implement the use case as per the technical specification and keep track of progress in `NNN-feature-name/tasks.md`
 - Issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
 
 For the development and implementation of new features, use the spec workflow in `specs/`:
-1. Create a new folder `NNN-feature-name/`
+1. Create a new folder `NNN-feature-name/` (e.g., `001-identity-and-access-management/`)
 2. Fill in `use-cases.md` to describe the feature requirements from the user perspective where each use case relates back to a User Story in `docs/USER-STORIES.md` for traceability
 3. Describe the technical specification of the feature in `spec.md`, including data models, routing, navbar, security, and so on where the specification relates back to `docs/ARCHITECTURE.md`
 4. Generate the test cases for verification of use cases in `test-cases.md` to guide the browser-based testing by chrome-devtools MCP as well as the CI/CD tests in `src/test` 

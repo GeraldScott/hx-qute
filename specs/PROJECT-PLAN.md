@@ -12,8 +12,8 @@
 
 ## Feature plans
 
-@specs/US-000-foundation/tasks.md
-@specs/US-001-identity-and-access-management/tasks.md
+@specs/000-foundation/tasks.md
+@specs/001-identity-and-access-management/tasks.md
 
 ## Progress Summary
 
