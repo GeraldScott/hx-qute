@@ -54,9 +54,9 @@ cat /tmp/claude/-home-geraldo-quarkus-dd-mailer/tasks/<task-id>.output
 tail -f /tmp/claude/-home-geraldo-quarkus-dd-mailer/tasks/<task-id>.output
 ```
 
-## Technology Documentation Reference
+## Web Research Strategy
 
-When you are asked to do web research for designing, reviewing or implementing anything, use the following web sites as the starting point and then supplement your search by using context7 MCP.
+When doing web research for designing, reviewing or implementing anything, use the following sources and then supplement with Context7 MCP.
 
 ### Core Framework & Language
 
@@ -64,12 +64,10 @@ When you are asked to do web research for designing, reviewing or implementing a
 |------------|---------|---------------|
 | Java | 21 LTS | https://docs.oracle.com/en/java/javase/21/ |
 | Eclipse Temurin | 21 | https://adoptium.net/docs/ |
-| Quarkus | 3.30.3 | https://quarkus.io/guides/ | 
+| Quarkus | 3.30.3 | https://quarkus.io/guides/ |
 | Quarkus | 3.30.3 | https://quarkus.io/guides/getting-started |
 | Maven | 3.x | https://maven.apache.org/guides/ |
 | GraalVM (Native) | — | https://www.graalvm.org/latest/docs/ |
-
----
 
 ### Quarkus Extensions
 
@@ -86,8 +84,6 @@ When you are asked to do web research for designing, reviewing or implementing a
 | CDI | `quarkus-arc` | https://quarkus.io/guides/cdi |
 | Testing | `quarkus-junit5` | https://quarkus.io/guides/getting-started-testing |
 
----
-
 ### Database
 
 | Technology | Version | Documentation |
@@ -99,8 +95,6 @@ When you are asked to do web research for designing, reviewing or implementing a
 | Hibernate ORM | — | https://hibernate.org/orm/documentation/ |
 | Jakarta Persistence (JPA) | — | https://jakarta.ee/specifications/persistence/ |
 
----
-
 ### Frontend Stack
 
 | Technology | Version | Documentation |
@@ -110,9 +104,7 @@ When you are asked to do web research for designing, reviewing or implementing a
 | HTMX | 2.0.8 | https://htmx.org/docs/ |
 | UIkit | 3.25 | https://getuikit.com/docs/introduction |
 
----
-
-## Testing
+### Testing
 
 | Technology | Documentation |
 |------------|---------------|
@@ -122,9 +114,7 @@ When you are asked to do web research for designing, reviewing or implementing a
 | Jsoup | https://jsoup.org/cookbook/ |
 | Quarkus Testing | https://quarkus.io/guides/getting-started-testing |
 
----
-
-## Security
+### Security
 
 | Topic | Documentation |
 |-------|---------------|
@@ -132,5 +122,53 @@ When you are asked to do web research for designing, reviewing or implementing a
 | Quarkus Form Authentication | https://quarkus.io/guides/security-form-auth |
 | BCrypt Password Hashing | https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-bcrypt |
 | NIST SP 800-63B-4 (Password Guidelines) | https://pages.nist.gov/800-63-4/sp800-63b.html |
+
+### Quick Lookup by Task
+
+| Task Type | First Consult |
+|-----------|---------------|
+| REST endpoints | https://quarkus.io/guides/rest |
+| Templates/views | https://quarkus.io/guides/qute |
+| Database/entities | https://quarkus.io/guides/hibernate-orm-panache |
+| Migrations | https://quarkus.io/guides/flyway |
+| Authentication | https://quarkus.io/guides/security-form-auth |
+| Validation | https://quarkus.io/guides/validation |
+| Frontend interactions | https://htmx.org/docs/ |
+| UI components | https://getuikit.com/docs/introduction |
+
+### Decision Tree
+
+```
+Need to research something?
+│
+├─ Is it Quarkus-specific?
+│  └─ YES → Start at quarkus.io/guides/{topic}
+│
+├─ Is it database/SQL related?
+│  └─ YES → PostgreSQL docs + Flyway docs
+│
+├─ Is it frontend behavior?
+│  └─ YES → HTMX docs → UIkit docs
+│
+├─ Is it Java language feature?
+│  └─ YES → Oracle Java 21 docs
+│
+└─ Is it testing related?
+   └─ YES → Quarkus testing guide → JUnit 5 → REST Assured
+```
+
+### Context7 MCP (Supplement)
+
+Use after consulting primary sources for:
+- Code examples beyond official docs
+- Version-specific API details
+- Edge cases and workarounds
+
+### Key Principles
+
+1. **Version awareness**: This project uses specific versions (Quarkus 3.30.3, HTMX 2.0.8, UIkit 3.25, Java 21)
+2. **Quarkus-first**: Most integration questions should start with Quarkus guides
+3. **HTMX patterns**: Frontend behavior lookups should reference htmx.org/examples/
+4. **Security compliance**: Security decisions reference NIST SP 800-63B-4
 
 ---
