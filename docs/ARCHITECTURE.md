@@ -2874,15 +2874,6 @@ public static class Templates {
 {/include}
 ```
 
-### URL Patterns
-| Pattern | Purpose |
-|---------|---------|
-| `/{resource}` | List (GET) |
-| `/{resource}/create` | Create form (GET) / Create action (POST) |
-| `/{resource}/{id}/edit` | Edit form (GET) |
-| `/{resource}/{id}/update` | Update action (POST) |
-| `/{resource}/{id}` | Delete (DELETE) |
-
 ### Security
 - Use `@RolesAllowed({"user", "admin"})` for authorization
 - Get current user via `SecurityIdentity.getPrincipal().getName()`
