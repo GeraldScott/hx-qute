@@ -2829,15 +2829,88 @@ This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technic
 | `/genders/{id}/update` | POST | GenderResource.update() | Yes | admin |
 | `/genders/{id}` | DELETE | GenderResource.delete() | Yes | admin |
 
----
 
-*Document Version: 3.0*
-*Last Updated: December 2025*
+## Key Conventions
 
----
+### Entities
+- Extend `PanacheEntity` (Active Record pattern)
+- Use public fields (Panache convention)
+- Add static finder methods: `findByX(...)`, `findByXAndY(...)`
+- Use `@EntityListeners(AuditListener.class)` for audit fields
 
-## Document History
+```java
+@Entity
+public class MyEntity {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    public String field;  // Public fields, no getters/setters
+}
+```
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 3.0 | December 2025 | Senior Developer | **Major refactor**: Aligned with LOGIN-PHASED.md Phase 1 - Simplified to single `UserLogin` entity with `@UserDefinition` annotations, removed custom identity providers, email-based auth using built-in `quarkus-security-jpa`, NIST SP 800-63B-4 compliant `PasswordValidator` service, 15-char minimum password |
+### Template Conventions
+
+**Base template** (`templates/base.html`) requires three parameters:
+- `title` - Page title
+- `currentPage` - Navigation highlight key (`"home"`, `"gender"`, etc.)
+- `userName` - Display name or null
+
+**Resource templates** 
+- Use `@CheckedTemplate` for type-safe templates with native methods:
+```java
+@CheckedTemplate
+public static class Templates {
+    public static native TemplateInstance gender(
+        String title, String currentPage, String userName, List<Gender> genders);
+}
+```
+- Separate `Templates` (full pages) and `Partials` classes
+- Check `HX-Request` header for HTMX vs full-page requests
+- Return `TemplateInstance` for HTML, `Response` for redirects
+- Follow `templates/{ResourceClass}/{methodName}.html` pattern:
+```html
+{@Type paramName}
+{#include base}
+    <!-- Content injected into {#insert}{/} slot -->
+{/include}
+```
+
+### URL Patterns
+| Pattern | Purpose |
+|---------|---------|
+| `/{resource}` | List (GET) |
+| `/{resource}/create` | Create form (GET) / Create action (POST) |
+| `/{resource}/{id}/edit` | Edit form (GET) |
+| `/{resource}/{id}/update` | Update action (POST) |
+| `/{resource}/{id}` | Delete (DELETE) |
+
+### Security
+- Use `@RolesAllowed({"user", "admin"})` for authorization
+- Get current user via `SecurityIdentity.getPrincipal().getName()`
+- Always filter data by current user's Person entity
+- Verify ownership on update/delete operations
+
+### Testing
+- Extend `BaseHtmxTest` for endpoint tests
+- Use `loginAndGetCookie(username, password)` for authentication
+- Key methods: `get()`, `htmxGet()`, `post()`, `htmxPost()`, `htmxDelete()`
+- Authenticated variants: `authenticatedGet()`, `authenticatedHtmxPost()`, etc.
+- Parse HTML responses with `parseHtml()` for Jsoup Document
+
+### Database Migrations
+- Location: `src/main/resources/db/migration/`
+- Naming: `V{major}.{minor}.{patch}__{Description}.sql`
+- Auto-run at startup (`quarkus.flyway.migrate-at-start=true`)
+- Hibernate schema management disabled
+
+### Adding Navigation Items
+Edit sidebar in `templates/base.html` - add `uk-active` class conditionally using `currentPage` variable:
+```html
+<li class="{#if currentPage?? == 'mypage'}uk-active{/if}">
+```
+
+## Configuration
+- `src/main/resources/application.properties` - Main config
+- Dev UI: http://localhost:9080/q/dev/
+- Dev Mode Credentials
+  - Username: `admin`
+  - Password: `Adminpassword@01`
