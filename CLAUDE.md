@@ -66,7 +66,9 @@ Test cases follow the same pattern as use cases: `TC-FFF-SS-NNN` (note the three
 
 ### Feature-based workflow
 
-This project will be implemented in a phased approach, one feature at a time:
+The project implementation is controlled by @specs/PROJECT-PLAN.md
+
+It will be implemented in a phased approach, one feature at a time:
 - Read `NNN-feature-name/tasks.md` for the status of the current phase and the use cases that must be implemented. 
 - Read `NNN-feature-name/spec.md` before implementing each use case to understand the technical requirements.
 - Implement the use case as per the technical specification and keep track of progress in `NNN-feature-name/tasks.md`
@@ -85,7 +87,7 @@ For the development and implementation of new features, use the spec workflow in
 
 ### Tracking Progress
 
-The `NNN-feature-name/tasks.md` file serves as the single source of truth for implementation progress for each . Update it as follows:
+The `NNN-feature-name/tasks.md` file serves as the single source of truth for implementation progress for each feature. Update it as follows:
 
 #### Status Badges
 Update the status field for each use case:
@@ -111,20 +113,6 @@ Status: ✅ Passed
 Notes: All assertions passed on 2025-12-27
 ```
 
-#### Current Status Section
-Always update this section to reflect current position:
-```markdown
-
-### Current Status
-
-**Current Phase:** Feature 001 - Identity and Access Management
-**Next Use Case:** UC-001-02-01 - Display Login Page
-**Blockers:** None
-```
-
-### Progress Summary Table
-Update counts after completing each use case.
-
 ### Workflow Checklist
 When starting a use case:
 1. Set status to `🔄 In Progress`
@@ -135,6 +123,11 @@ When starting a use case:
 6. Update **Progress Summary** counts
 7. Set **Next Use Case** to the next item
 8. **STOP** and ask for user feedback
+
+### Current Status
+Always update `Current Status Section` in @specs/PROJECT-PLAN.md to reflect current position after update the feature task list.
+
+Update counts in `Progress Summary Table` after completing each use case.
 
 ## Managing the backend server
 
