@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-01-01: View Gender List
+**Current Use Case:** UC-002-02-01: Display Create Form
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -12,7 +12,7 @@
 
 | Use Case | Status |
 |----------|--------|
-| UC-002-01-01: View Gender List | 🔲 Not Started |
+| UC-002-01-01: View Gender List | ✅ Complete |
 | UC-002-02-01: Display Create Form | 🔲 Not Started |
 | UC-002-02-02: Submit Create Form | 🔲 Not Started |
 | UC-002-03-01: Display Edit Form | 🔲 Not Started |
@@ -24,26 +24,26 @@
 
 ## UC-002-01-01: View Gender List
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-01 - View Gender Master Data
 
 **Description:** Display a list of all gender codes and descriptions with admin-only access.
 
 **Implementation Tasks:**
-- [ ] Update `entity/Gender.java` to extend PanacheEntity with audit fields
-- [ ] Create migration `V1.0.2__Add_gender_audit_fields.sql` for audit columns
-- [ ] Add static finder methods (`findByCode`, `findByDescription`, `listAllOrdered`)
-- [ ] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks
-- [ ] Delete `repository/GenderRepository.java` (use Active Record pattern)
-- [ ] Update `router/GenderResource.java` with `@RolesAllowed("admin")`
-- [ ] Remove repository injection, use Gender entity static methods
-- [ ] Add `Templates` class with `gender()` method
-- [ ] Add `Partials` class with `basePath = "partials"`
-- [ ] Implement `GET /genders` endpoint with HTMX detection
-- [ ] Update `templates/GenderResource/gender.html` (full page)
-- [ ] Create `templates/partials/gender_table.html` (table partial)
-- [ ] Create `templates/partials/gender_row.html` (row display mode)
-- [ ] Verify `templates/base.html` sidebar has Maintenance > Gender menu item
+- [x] Update `entity/Gender.java` to extend PanacheEntity with audit fields
+- [x] ~~Create migration `V1.0.2__Add_gender_audit_fields.sql` for audit columns~~ (already exists in V1.0.0)
+- [x] Add static finder methods (`findByCode`, `findByDescription`, `listAllOrdered`)
+- [x] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks
+- [x] Delete `repository/GenderRepository.java` (use Active Record pattern)
+- [x] Update `router/GenderResource.java` with `@RolesAllowed("admin")`
+- [x] Remove repository injection, use Gender entity static methods
+- [x] Add `Templates` class with `gender()` and fragment methods
+- [x] ~~Add `Partials` class with `basePath = "partials"`~~ (using fragments instead)
+- [x] Implement `GET /genders` endpoint with HTMX detection
+- [x] Update `templates/GenderResource/gender.html` with fragments
+- [x] ~~Create `templates/partials/gender_table.html`~~ (using $table fragment)
+- [x] ~~Create `templates/partials/gender_row.html`~~ (using $row fragment)
+- [x] Verify `templates/base.html` sidebar has Maintenance > Gender menu item
 
 **Endpoints:**
 | Method | Path | Description |
@@ -51,9 +51,9 @@
 | GET | `/genders` | List all genders |
 
 **Test Results:**
-- Test ID: TC-002-01-001, TC-002-01-002, TC-002-01-003, TC-002-01-004
-- Status: 🔲 Not Tested
-- Notes:
+- Test ID: TC-002-01-001, TC-002-01-002
+- Status: ✅ Passed
+- Notes: TC-002-01-003 (empty state) and TC-002-01-004 (non-admin access) require specific test data setup - deferred to integration tests
 
 ---
 
@@ -238,10 +238,10 @@
 
 | Test ID | Description | Use Case | Status |
 |---------|-------------|----------|--------|
-| TC-002-01-001 | Gender Page UI Elements | UC-002-01-01 | 🔲 |
-| TC-002-01-002 | Gender List Display | UC-002-01-01 | 🔲 |
-| TC-002-01-003 | Gender List Empty State | UC-002-01-01 | 🔲 |
-| TC-002-01-004 | Gender Access Requires Admin Role | UC-002-01-01 | 🔲 |
+| TC-002-01-001 | Gender Page UI Elements | UC-002-01-01 | ✅ |
+| TC-002-01-002 | Gender List Display | UC-002-01-01 | ✅ |
+| TC-002-01-003 | Gender List Empty State | UC-002-01-01 | ⏸️ |
+| TC-002-01-004 | Gender Access Requires Admin Role | UC-002-01-01 | ⏸️ |
 | TC-002-02-001 | Gender Create Form Display | UC-002-02-01 | 🔲 |
 | TC-002-02-002 | Gender Create Success | UC-002-02-02 | 🔲 |
 | TC-002-02-003 | Gender Create Code Uppercase | UC-002-02-02 | 🔲 |

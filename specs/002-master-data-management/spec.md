@@ -96,8 +96,8 @@ public class Gender extends PanacheEntity {
 **Security**: `@RolesAllowed("admin")` - Admin-only access
 
 **Pattern**: Follows ARCHITECTURE.md Section 4.2 with:
-- Full page `Templates` class for direct navigation
-- `Partials` class with `basePath = "partials"` for HTMX fragments
+- Single `Templates` class with type-safe fragment methods (`gender$row`, `gender$table`, etc.)
+- Qute `{#fragment}` sections for HTMX partial responses (compile-time validated)
 - Inline editing (no modals)
 - OOB swaps for table refresh after create
 
@@ -105,82 +105,118 @@ public class Gender extends PanacheEntity {
 
 | Method | Path | Handler | Description |
 |--------|------|---------|-------------|
-| GET | `/genders` | `list()` | List all genders (full page or table partial) |
+| GET | `/genders` | `list()` | List all genders (full page or table fragment) |
 | GET | `/genders/create` | `createForm()` | Display inline create form |
 | GET | `/genders/create/cancel` | `createFormCancel()` | Return Add button (cancel create) |
-| POST | `/genders/create` | `create()` | Submit create form |
-| GET | `/genders/{id}` | `getRow()` | Get single row partial (for cancel edit) |
+| POST | `/genders` | `create()` | Submit create form |
+| GET | `/genders/{id}` | `getRow()` | Get single row fragment (for cancel edit) |
 | GET | `/genders/{id}/edit` | `editForm()` | Display inline edit form in row |
-| POST | `/genders/{id}/update` | `update()` | Submit edit form |
+| PUT | `/genders/{id}` | `update()` | Submit edit form |
 | DELETE | `/genders/{id}` | `delete()` | Delete gender |
 
 ### 3.3 Request/Response Patterns
 
 **List (GET /genders)**:
 - Full page: Returns `Templates.gender(...)`
-- HTMX request: Returns `Partials.gender_table(...)`
+- HTMX request: Returns `Templates.gender$table(...)` fragment
 - Detection: Check `HX-Request` header
 
-**Create Submit (POST /genders/create)**:
-- Success: Returns `Partials.gender_success(message, genders)` with OOB table refresh
-- Validation error: Returns `Partials.gender_create_form(error)`
+**Create Submit (POST /genders)**:
+- Success: Returns `Templates.gender$success(message, genders)` with OOB table refresh
+- Validation error: Returns `Templates.gender$create_form(error)`
 
-**Edit Submit (POST /genders/{id}/update)**:
-- Success: Returns `Partials.gender_row(gender)`
-- Validation error: Returns `Partials.gender_row_edit(gender, error)`
+**Edit Submit (PUT /genders/{id})**:
+- Success: Returns `Templates.gender$row(gender)`
+- Validation error: Returns `Templates.gender$row_edit(gender, error)`
 
 **Delete (DELETE /genders/{id})**:
 - Success: Returns empty response (row removed via `hx-swap="delete"`)
-- In-use error: Returns `Partials.gender_row_edit(gender, error)`
+- In-use error: Returns `Templates.gender$row_edit(gender, error)`
 
 ---
 
 ## 4. Template Structure
 
-### 4.1 Full Page Template
+### 4.1 Single File with Fragments
 
 **File**: `templates/GenderResource/gender.html`
 
-```
+Uses Qute fragments (`{#fragment}`) for HTMX partial responses. All fragments are defined within the main template file for compile-time validation and maintainability.
+
+```html
 {#include base}
-- Page title: "Gender Management"
-- Create form container: #gender-create-container
-- Table container: #gender-table-container
+{#title}Gender Management{/title}
+
+<div id="gender-create-container">
+    {#include $create_button /}
+</div>
+
+<div id="gender-table-container">
+    {#include $table /}
+</div>
+
 {/include}
+
+{#fragment id=table}
+<table class="uk-table">
+    <thead>...</thead>
+    <tbody id="gender-table-body">
+        {#for gender in genders}
+        {#include $row gender=gender /}
+        {/for}
+    </tbody>
+</table>
+{/fragment}
+
+{#fragment id=row}
+<tr>...</tr>
+{/fragment}
+
+{#fragment id=row_edit}
+<tr class="editing">...</tr>
+{/fragment}
+
+{#fragment id=create_form}
+<div class="uk-card uk-card-body">...</div>
+{/fragment}
+
+{#fragment id=create_button}
+<button hx-get="/genders/create">Add Gender</button>
+{/fragment}
+
+{#fragment id=success}
+<!-- Primary swap content + OOB table refresh -->
+{/fragment}
 ```
 
-### 4.2 Partial Templates
+### 4.2 Type-Safe Fragment Methods
 
-**Directory**: `templates/partials/`
+```java
+@CheckedTemplate
+public static class Templates {
+    // Full page
+    public static native TemplateInstance gender(List<Gender> genders);
 
-| File | Description | Target |
-|------|-------------|--------|
-| `gender_table.html` | Table with all rows | `#gender-table-container` |
-| `gender_row.html` | Single row (display mode) | `closest tr` |
-| `gender_row_edit.html` | Single row (edit mode) | `closest tr` |
-| `gender_create_form.html` | Inline create form | `#gender-create-container` |
-| `gender_create_button.html` | Add button | `#gender-create-container` |
-| `gender_success.html` | Success message + OOB table | `#gender-create-container` |
-| `gender_error.html` | Error message | Context-dependent |
+    // Fragments (type-safe, compile-time validated)
+    public static native TemplateInstance gender$table(List<Gender> genders);
+    public static native TemplateInstance gender$row(Gender gender);
+    public static native TemplateInstance gender$row_edit(Gender gender, String error);
+    public static native TemplateInstance gender$create_form(String error);
+    public static native TemplateInstance gender$create_button();
+    public static native TemplateInstance gender$success(String message, List<Gender> genders);
+}
+```
 
-### 4.3 Template Parameters
+### 4.3 Fragment Parameters
 
-**gender_table.html**:
-- `genders`: List<Gender>
-
-**gender_row.html**:
-- `gender`: Gender
-
-**gender_row_edit.html**:
-- `gender`: Gender
-- `error`: String (nullable)
-
-**gender_create_form.html**:
-- `error`: String (nullable)
-
-**gender_success.html**:
-- `message`: String
-- `genders`: List<Gender>
+| Fragment | Parameters | Description |
+|----------|------------|-------------|
+| `gender$table` | `genders: List<Gender>` | Table with all rows |
+| `gender$row` | `gender: Gender` | Single row (display mode) |
+| `gender$row_edit` | `gender: Gender`, `error: String` | Single row (edit mode) |
+| `gender$create_form` | `error: String` | Inline create form |
+| `gender$create_button` | (none) | Add button |
+| `gender$success` | `message: String`, `genders: List<Gender>` | Success + OOB table |
 
 ---
 
@@ -189,7 +225,7 @@ public class Gender extends PanacheEntity {
 ### 5.1 Inline Row Editing
 
 ```html
-<!-- Display Row (gender_row.html) -->
+<!-- Display Row (row fragment) -->
 <tr>
     <td>{gender.code}</td>
     <td>{gender.description}</td>
@@ -204,7 +240,7 @@ public class Gender extends PanacheEntity {
     </td>
 </tr>
 
-<!-- Edit Row (gender_row_edit.html) -->
+<!-- Edit Row (row_edit fragment) -->
 <tr class="editing">
     <td><input name="code" value="{gender.code}"/></td>
     <td><input name="description" value="{gender.description}"/></td>
@@ -212,7 +248,7 @@ public class Gender extends PanacheEntity {
         <button hx-get="/genders/{gender.id}"
                 hx-target="closest tr"
                 hx-swap="outerHTML">Cancel</button>
-        <button hx-post="/genders/{gender.id}/update"
+        <button hx-put="/genders/{gender.id}"
                 hx-include="closest tr"
                 hx-target="closest tr"
                 hx-swap="outerHTML">Save</button>
@@ -223,14 +259,14 @@ public class Gender extends PanacheEntity {
 ### 5.2 Inline Create Form
 
 ```html
-<!-- Create Button (gender_create_button.html) -->
+<!-- Create Button (create_button fragment) -->
 <button hx-get="/genders/create"
         hx-target="#gender-create-container"
         hx-swap="innerHTML">Add Gender</button>
 
-<!-- Create Form (gender_create_form.html) -->
+<!-- Create Form (create_form fragment) -->
 <div class="uk-card uk-card-body">
-    <form hx-post="/genders/create"
+    <form hx-post="/genders"
           hx-target="#gender-create-container"
           hx-swap="innerHTML">
         <input name="code" placeholder="Code *" maxlength="1"/>
@@ -246,20 +282,25 @@ public class Gender extends PanacheEntity {
 ### 5.3 OOB Table Refresh (Success)
 
 ```html
-<!-- gender_success.html -->
-<!-- Main swap: Replace form with Add button -->
+<!-- success fragment -->
+<!-- Main swap: Replace form with Add button + success message -->
 <button hx-get="/genders/create"
         hx-target="#gender-create-container">Add Gender</button>
 
 <div class="uk-alert uk-alert-success">{message}</div>
 
 <!-- OOB swap: Refresh table body independently -->
-<tbody id="gender-table-body" hx-swap-oob="true">
-    {#for gender in genders}
-    {#include partials/gender_row gender=gender /}
-    {/for}
-</tbody>
+<!-- Note: <tbody> wrapped in <template> for HTML spec compliance -->
+<template>
+    <tbody id="gender-table-body" hx-swap-oob="true">
+        {#for gender in genders}
+        {#include $row gender=gender /}
+        {/for}
+    </tbody>
+</template>
 ```
+
+**Why `<template>` wrapper?** Per HTMX documentation, table elements like `<tbody>`, `<tr>`, `<td>` cannot stand alone in HTML responses. Wrapping in `<template>` ensures proper parsing while HTMX still processes the OOB swap correctly.
 
 ---
 
@@ -331,12 +372,12 @@ public class GenderResource { ... }
 
 | Use Case | Implementation Component |
 |----------|-------------------------|
-| UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender_table.html`, `gender_row.html` |
-| UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender_create_form.html` |
-| UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender_success.html` |
-| UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender_row_edit.html` |
-| UC-002-03-02: Submit Edit Form | `GenderResource.update()`, `gender_row.html` |
-| UC-002-03-03: Cancel Edit | `GenderResource.getRow()`, `gender_row.html` |
+| UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender$table`, `gender$row` fragments |
+| UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender$create_form` fragment |
+| UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender$success` fragment |
+| UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender$row_edit` fragment |
+| UC-002-03-02: Submit Edit Form | `GenderResource.update()`, `gender$row` fragment |
+| UC-002-03-03: Cancel Edit | `GenderResource.getRow()`, `gender$row` fragment |
 | UC-002-04-01: Delete Gender | `GenderResource.delete()` |
 
 ---
