@@ -53,3 +53,84 @@ cat /tmp/claude/-home-geraldo-quarkus-dd-mailer/tasks/<task-id>.output
 # Follow logs in real-time
 tail -f /tmp/claude/-home-geraldo-quarkus-dd-mailer/tasks/<task-id>.output
 ```
+
+## Technology Documentation Reference
+
+When you are asked to do web research for designing, reviewing or implementing anything, use the following web sites as the starting point and then supplement your search by using context7 MCP.
+
+### Core Framework & Language
+
+| Technology | Version | Documentation |
+|------------|---------|---------------|
+| Java | 21 LTS | https://docs.oracle.com/en/java/javase/21/ |
+| Eclipse Temurin | 21 | https://adoptium.net/docs/ |
+| Quarkus | 3.30.3 | https://quarkus.io/guides/ | 
+| Quarkus | 3.30.3 | https://quarkus.io/guides/getting-started |
+| Maven | 3.x | https://maven.apache.org/guides/ |
+| GraalVM (Native) | — | https://www.graalvm.org/latest/docs/ |
+
+---
+
+### Quarkus Extensions
+
+| Purpose | Extension | Documentation |
+|---------|-----------|---------------|
+| REST API | `quarkus-rest` | https://quarkus.io/guides/rest |
+| Templating | `quarkus-rest-qute` | https://quarkus.io/guides/qute |
+| Panache ORM | `quarkus-hibernate-orm-panache` | https://quarkus.io/guides/hibernate-orm-panache |
+| Database Driver | `quarkus-jdbc-postgresql` | https://quarkus.io/guides/datasource |
+| Migrations | `quarkus-flyway` | https://quarkus.io/guides/flyway |
+| Security | `quarkus-security-jpa` | https://quarkus.io/guides/security-jpa |
+| Security | `quarkus-security-jpa` | https://quarkus.io/guides/security-form-auth |
+| Validation | `quarkus-hibernate-validator` | https://quarkus.io/guides/validation |
+| CDI | `quarkus-arc` | https://quarkus.io/guides/cdi |
+| Testing | `quarkus-junit5` | https://quarkus.io/guides/getting-started-testing |
+
+---
+
+### Database
+
+| Technology | Version | Documentation |
+|------------|---------|---------------|
+| PostgreSQL | 17.7 | https://www.postgresql.org/docs/17/ |
+| PostgreSQL | 17.7 | https://www.postgresql.org/docs/17/tutorial.html |
+| Flyway | — | https://documentation.red-gate.com/fd |
+| Flyway | — | https://documentation.red-gate.com/fd/quickstart-how-flyway-works-184127223.html |
+| Hibernate ORM | — | https://hibernate.org/orm/documentation/ |
+| Jakarta Persistence (JPA) | — | https://jakarta.ee/specifications/persistence/ |
+
+---
+
+### Frontend Stack
+
+| Technology | Version | Documentation |
+|------------|---------|---------------|
+| HTMX | 2.0.8 | https://htmx.org/reference/ |
+| HTMX | 2.0.8 | https://htmx.org/examples/ |
+| HTMX | 2.0.8 | https://htmx.org/docs/ |
+| UIkit | 3.25 | https://getuikit.com/docs/introduction |
+
+---
+
+## Testing
+
+| Technology | Documentation |
+|------------|---------------|
+| JUnit 5 | https://junit.org/junit5/docs/current/user-guide/ |
+| REST Assured | https://rest-assured.io/ |
+| Jsoup | https://jsoup.org/ |
+| Jsoup | https://jsoup.org/cookbook/ |
+| Quarkus Testing | https://quarkus.io/guides/getting-started-testing |
+
+---
+
+## Security
+
+| Topic | Documentation |
+|-------|---------------|
+| Quarkus Security Overview | https://quarkus.io/guides/security-overview |
+| Quarkus Form Authentication | https://quarkus.io/guides/security-form-auth |
+| BCrypt Password Hashing | https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html#authentication-password-storage-bcrypt |
+| NIST SP 800-63B-4 (Password Guidelines) | https://pages.nist.gov/800-63-4/sp800-63b.html |
+
+---
