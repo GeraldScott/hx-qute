@@ -1,36 +1,6 @@
-# HX Qute - System Specification
+# HX Qute - Architecture
 
-This document provides a comprehensive technical specification for HX Qute, a reference application built with Quarkus, HTMX, and Qute templates. It serves as a blueprint for developers building similar applications or extending this one.
-
----
-
-## Table of Contents
-
-1. [Technology Stack](#1-technology-stack)
-2. [Project Structure](#2-project-structure)
-3. [Entity Layer](#3-entity-layer)
-4. [Resource Layer (Controllers)](#4-resource-layer-controllers)
-5. [Template System](#5-template-system)
-6. [HTMX Integration Patterns](#6-htmx-integration-patterns)
-   - [6.10 Progressive Enhancement with hx-boost](#610-progressive-enhancement-with-hx-boost)
-   - [6.11 Request Synchronization with hx-sync](#611-request-synchronization-with-hx-sync)
-   - [6.12 Attribute Inheritance Best Practices](#612-attribute-inheritance-best-practices)
-   - [6.13 Loading Indicators](#613-loading-indicators)
-   - [6.14 Response Status Code Standards](#614-response-status-code-standards)
-7. [Security Architecture](#7-security-architecture)
-8. [Query Filtering Pattern](#8-query-filtering-pattern)
-9. [Startup and Data Initialization](#9-startup-and-data-initialization)
-10. [Configuration](#10-configuration)
-11. [Static Resources](#11-static-resources)
-12. [Common Patterns Reference](#12-common-patterns-reference)
-13. [Use Case Traceability Matrix](#13-use-case-traceability-matrix)
-
-**Related Documents:**
-- [USER-STORIES.md](USER-STORIES.md) - Agile user stories
-- [USE-CASES.md](USE-CASES.md) - Detailed use case specifications
-- [TEST-CASES.md](TEST-CASES.md) - Test case documentation
-- [TEST-STRATEGY.md](TEST-STRATEGY.md) - Testing strategy
-- [LOGIN-PHASED.md](LOGIN-PHASED.md) - Phased authentication implementation plan
+This document describes the system architecture for HX Qute, a reference application built with Quarkus, HTMX, and Qute templates. It serves as a blueprint for developers building similar applications or extending this one.
 
 ---
 

@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Quarkus+HTMX application demonstrating server-rendered web apps with SPA-like interactions:
-- **Quarkus 3.30.3** with REST endpoints and Qute templating
-- **HTMX 2.0.8** for dynamic HTML updates without client-side JavaScript
-- **UIkit 3.25** CSS framework for styling
-- **Hibernate ORM Panache** with PostgreSQL and Flyway migrations
+This is a reference application that uses Quarkus and HTMX to build server-rendered web pages.
+- **[Java 21 LTS](https://adoptium.net/en-GB/temurin/releases?version=21)** Eclipse Temurin cross-platform, enterprise-ready, open-source Java runtime binaries
+- **[Quarkus 3.30.3](https://quarkus.io/)** Kubernetes Native Java stack tailored for OpenJDK HotSpot and GraalVM with REST endpoints and Qute templating
+- **[HTMX 2.0.8](https://htmx.org)** Dynamic HTML updates without client-side JavaScript
+- **[UIkit 3.25](https://getuikit.com/)** CSS framework for styling
+- **[Hibernate ORM](https://hibernate.org/orm/) with [Panache](https://quarkus.io/guides/hibernate-orm-panache)** Simplified Object Relational Mapper using Jakarta Persistence (formerly known as JPA)
+- **[PostgreSQL 17.7](https://www.postgresql.org/) with [Flyway](https://flywaydb.org/)** the world's most powerful open source object-relational database system with lightweight database migration tool
 
 ## Key Commands
 
@@ -24,101 +26,75 @@ Quarkus+HTMX application demonstrating server-rendered web apps with SPA-like in
 
 # Building
 ./mvnw package                                          # Layered JAR
-./mvnw package -Dquarkus.package.jar.type=uber-jar     # Uber JAR
+./mvnw package -Dquarkus.package.jar.type=uber-jar      # Uber JAR
 ./mvnw package -Dnative                                 # Native (GraalVM)
 ```
 
-## Architecture
+## Related Documentation
 
-### Package Structure
-```
-io.archton.scaffold
-├── entity/          # JPA entities (Panache public field style)
-├── repository/      # PanacheRepository implementations
-├── router/          # REST resources with @CheckedTemplate
-└── error/           # GlobalExceptionMapper (HTML/JSON content negotiation)
-```
+- @docs/ARCHITECTURE.md - Patterns and technical decisions
+- @docs/SECURITY.md - Security policies and implementation
+- @docs/API-CONVENTIONS.md - Routing and response formats
 
-### Template Conventions
+## Naming Conventions
 
-**Base template** (`templates/base.html`) requires three parameters:
-- `title` - Page title
-- `currentPage` - Navigation highlight key (`"home"`, `"gender"`, etc.)
-- `userName` - Display name or null
+### User Stories (US-FFF-SS)
+User stories in `docs/USER-STORIES.md` follow the format `US-FFF-SS` (to cater for 999 features, each with 99 user stories. That is enough for any hefty system):
+- `FFF` - 3-digit feature number (001, 002, 003)
+- `SS` - 2-digit story number within feature (01, 02, 03)
 
-**Resource templates** follow `templates/{ResourceClass}/{methodName}.html` pattern:
-```html
-{@Type paramName}
-{#include base}
-    <!-- Content injected into {#insert}{/} slot -->
-{/include}
-```
+Examples:
+- `US-001-01` - Feature 001, Story 01 (User Registration)
+- `US-001-02` - Feature 001, Story 02 (User Login)
+- `US-002-01` - Feature 002, Story 01 (View Gender Master Data)
 
-**Type-safe templates** use `@CheckedTemplate` with native methods:
-```java
-@CheckedTemplate
-public static class Templates {
-    public static native TemplateInstance gender(
-        String title, String currentPage, String userName, List<Gender> genders);
-}
-```
+### Use Cases (UC-FFF-SS-NN)
+Use cases in `specs/*/use-cases.md` follow the format `UC-FFF-SS-NN` (each user story can have up to 99 use cases, which would be an insane number for one user story):
+- `FFF` - 3-digit feature number matching the parent user story
+- `SS` - 2-digit story number matching the parent user story
+- `NN` - 2-digit use case number within the story (01, 02, 03)
 
-### Database Migrations
-- Location: `src/main/resources/db/migration/`
-- Naming: `V{major}.{minor}.{patch}__{Description}.sql`
-- Auto-run at startup (`quarkus.flyway.migrate-at-start=true`)
-- Hibernate schema management disabled
+Examples:
+- `UC-001-01-01` - Display Signup Page (under US-001-01)
+- `UC-001-01-02` - Register New User (under US-001-01)
+- `UC-001-02-01` - Display Login Page (under US-001-02)
 
-### Entity Pattern
-```java
-@Entity
-public class MyEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    public String field;  // Public fields, no getters/setters
-}
-```
-
-### Adding Navigation Items
-Edit sidebar in `templates/base.html` - add `uk-active` class conditionally using `currentPage` variable:
-```html
-<li class="{#if currentPage?? == 'mypage'}uk-active{/if}">
-```
-
-## Configuration
-- `src/main/resources/application.properties` - Main config
-- Dev UI: http://localhost:9080/q/dev/
+### Test Cases (TC-FFF-SS-NNN)
+Test cases follow the same pattern as use cases: `TC-FFF-SS-NNN` (note the three digits, in case we need a thousand tests for a user story. Surely that's enough.)
 
 ## Development Workflow
 
-This project will be implemented in a phased approach, one use case at a time.
+### Feature-based workflow
 
-Read `PROJECT-PLAN.md` for the status of the current phase and the use case that must be implemented. 
+This project will be implemented in a phased approach, one feature at a time:
+- Read `NNN-feature-name/tasks.md` for the status of the current phase and the use cases that must be implemented. 
+- Read `NNN-feature-name/spec.md` before implementing each use case to understand the technical requirements.
+- Implement the use case as per the technical specification and keep track of progress in `NNN-feature-name/tasks.md`
+- Issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
 
-Read `specs/SYSTEM-SPECIFICATION.md` before implementing each use case to understand the technical requirements.
-
-Note that the spec file is too large, so search for the relevant section using the use case number.
-
-Implement the use case as per the technical specification.
-
-Issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.
-
-After completing each use case, find the corresponding test file in `specs/TEST-CASES.md` and run the test using chrome-devtools MCP in a sub-agent. After each test has completed, the sub-agent must update the relevant use case in `PROJECT-PLAN.md` with the test results.
+For the development and implementation of new features, use the spec workflow in `specs/`:
+1. Create a new folder `NNN-feature-name/`
+2. Fill in `use-cases.md` to describe the feature requirements from the user perspective where each use case relates back to a User Story in `docs/USER-STORIES.md` for traceability
+3. Describe the technical specification of the feature in `spec.md`, including data models, routing, navbar, security, and so on where the specification relates back to `docs/ARCHITECTURE.md`
+4. Generate the test cases for verification of use cases in `test-cases.md` to guide the browser-based testing by chrome-devtools MCP as well as the CI/CD tests in `src/test` 
+5. Generate the task breakdown and todo list in `tasks.md`
+6. Implement the feature by working through tasks, checking each task as completed
+7. After completing each use case, find the corresponding test file in `test-cases.md` and run the test using chrome-devtools MCP in a sub-agent. After each test has completed, the sub-agent must update the relevant use case in `tasks.md` with the test results.
 
 **IMPORTANT**: After completing the tests for each use case, STOP and ask for user feedback before proceeding.
 
-## Tracking Progress in PROJECT-PLAN.md
+### Tracking Progress
 
-The `PROJECT-PLAN.md` file serves as the single source of truth for implementation progress. Update it as follows:
+The `NNN-feature-name/tasks.md` file serves as the single source of truth for implementation progress for each . Update it as follows:
 
-### Status Badges
+#### Status Badges
 Update the status field for each use case:
 - `🔲 Not Started` - Work has not begun
 - `🔄 In Progress` - Currently being implemented
 - `✅ Complete` - Implementation and tests passed
 - `❌ Blocked` - Cannot proceed due to dependency or issue
 
-### Implementation Checkboxes
+#### Implementation Checkboxes
 Mark tasks complete as you finish them:
 ```markdown
 - [x] Create entity class
@@ -126,22 +102,23 @@ Mark tasks complete as you finish them:
 - [ ] Create resource endpoint  ← currently working on
 ```
 
-### Test Results Block
+#### Test Results Block
 After running chrome-devtools tests, update:
 ```markdown
 **Test Results:**
-Test ID: TC-1.3
+Test ID: TC-001-02-01
 Status: ✅ Passed
 Notes: All assertions passed on 2025-12-27
 ```
 
-### Current Status Section
+#### Current Status Section
 Always update this section to reflect current position:
 ```markdown
-## Current Status
 
-**Current Phase:** Phase 1 - Authentication
-**Next Use Case:** UC-1.3 - Display Login Page
+### Current Status
+
+**Current Phase:** Feature 001 - Identity and Access Management
+**Next Use Case:** UC-001-02-01 - Display Login Page
 **Blockers:** None
 ```
 

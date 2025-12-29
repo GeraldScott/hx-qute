@@ -12,6 +12,8 @@ This is a reference application designed to provide a base for Quarkus/HTMX appl
 
 This document outlines the user stories that define the application's functionality from an end-user perspective.
 
+The user stories are grouped into domain-specific features that deliver business value.
+
 ---
 
 ## Stakeholder Personas
@@ -22,9 +24,9 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-## Epic 1: User Authentication & Account Management
+## Feature 001: Identity and Access Management
 
-### US-1.1: User Registration
+### US-001-01: User Registration
 **As a** new user
 **I want to** create an account with my email and a password
 **So that** I can securely access and manage my data
@@ -43,7 +45,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-1.2: User Login
+### US-001-02: User Login
 **As a** registered user
 **I want to** log in with my email and password
 **So that** I can access my dashboard
@@ -60,7 +62,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-1.3: User Logout
+### US-001-03: User Logout
 **As an** authenticated user
 **I want to** log out of my account
 **So that** I can secure my data when I'm done using the application
@@ -76,9 +78,9 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-## Epic 2: Master Data Management
+## Feature 002: Master Data Management
 
-### US-2.1: View Gender Master Data
+### US-002-01: View Gender Master Data
 **As an** authenticated system administrator
 **I want to** view a list of all codes and descriptions that describe a person's gender (Female, Male, Not specified)
 **So that** I can view and update the list
@@ -95,7 +97,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-2.2: Create New Gender
+### US-002-02: Create New Gender
 **As an** authenticated system administrator
 **I want to** add a new entry
 **So that** I can add new entries
@@ -115,7 +117,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-2.3: Edit Existing Gender
+### US-002-03: Edit Existing Gender
 **As an** authenticated system administrator
 **I want to** modify an existing entry
 **So that** I can correct errors or update details
@@ -135,7 +137,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-2.4: Delete Gender
+### US-002-04: Delete Gender
 **As an** authenticated system administrator
 **I want to** delete an entry
 **So that** I can remove incorrect or duplicate entries
@@ -151,9 +153,9 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-## Epic 3: Persons Management
+## Feature 003: Person Management
 
-### US-3.1: View Persons List
+### US-003-01: View Persons List
 **As an** authenticated user
 **I want to** view a list of all the people that have been captured in the system
 **So that** I can see all the people on the system and search by filtering the data
@@ -170,7 +172,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-3.2: Create New Person
+### US-003-02: Create New Person
 **As an** authenticated user
 **I want to** add a new Person
 **So that** I can record the person's details
@@ -191,7 +193,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-3.3: Edit Existing Person
+### US-003-03: Edit Existing Person
 **As an** authenticated user
 **I want to** modify an existing person
 **So that** I can correct errors or update personal details
@@ -212,7 +214,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-3.4: Delete Person
+### US-003-04: Delete Person
 **As an** authenticated user
 **I want to** delete a person
 **So that** I can remove incorrect or duplicate entries
@@ -227,7 +229,7 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-### US-3.5: Filter People
+### US-003-05: Filter People
 **As an** authenticated user
 **I want to** filter the people by name
 **So that** I can find and display people's details
@@ -245,22 +247,18 @@ This document outlines the user stories that define the application's functional
 
 ---
 
-## Non-Functional Requirements
+### US-003-06: Sort People
+**As an** authenticated user
+**I want to** sort the people by name
+**So that** I can organize and display people's details
 
-### NFR-1: Performance
-- Page load time should be under 2 seconds
-- HTMX partial updates should be near-instantaneous
+**Acceptance Criteria:**
+- Sort panel is visible on the people page above the table of people
+- Sort: lastName or firstName
+- Sort button applies all selected sorts
+- Sorted results update the persons table
+- Sorts persist during the session
+- The sort criteria can be cleared
 
-### NFR-2: Security
-- User passwords must be securely hashed
-- Sessions must expire after period of inactivity
-- Role-based access control (user/admin roles)
-
-### NFR-3: Usability
-- Responsive design for mobile and desktop
-- Intuitive navigation with clear labels
-
-### NFR-4: Browser Compatibility
-- Support for modern browsers (Chrome, Firefox, Safari, Edge)
-- Graceful degradation for older browsers
-
+**Priority:** Medium
+**Story Points:** 3
