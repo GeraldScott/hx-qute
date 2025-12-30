@@ -50,7 +50,7 @@ package io.archton.scaffold.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -70,11 +70,11 @@ public class Gender extends PanacheEntityBase {
     @Column(name = "description", nullable = false, unique = true, length = 255)
     public String description;
 
-    @Column(name = "created_at")
-    public OffsetDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    public Instant createdAt;
 
-    @Column(name = "updated_at")
-    public OffsetDateTime updatedAt;
+    @Column(name = "updated_at", nullable = false)
+    public Instant updatedAt;
 
     @Column(name = "created_by")
     public String createdBy;
@@ -98,13 +98,13 @@ public class Gender extends PanacheEntityBase {
     // Lifecycle callbacks
     @PrePersist
     public void prePersist() {
-        createdAt = OffsetDateTime.now();
-        updatedAt = OffsetDateTime.now();
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-        updatedAt = OffsetDateTime.now();
+        updatedAt = Instant.now();
     }
 }
 ```
@@ -638,7 +638,7 @@ Same as create, but uniqueness checks exclude current record.
 
 **application.properties**:
 ```properties
-quarkus.http.auth.permission.admin.paths=/genders,/genders/*
+quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 ```
@@ -710,10 +710,10 @@ public class GenderResource { ... }
 ### 10.2 Frontend Dependencies (CDN)
 
 - HTMX 2.0.8
-- UIkit 3.25
+- UIkit 3.25.4
 
 ---
 
-*Document Version: 2.1*
+*Document Version: 2.2*
 *Last Updated: December 2025*
-*Changes: Updated to reflect actual implementation. Added `rendered=false` for modal fragments, null-safe error checking with `{#if error??}`, button group styling, full table container OOB swap pattern. Marked delete functionality as TODO.*
+*Changes: Aligned with ARCHITECTURE.md patterns - changed timestamp type from OffsetDateTime to Instant, updated security paths to match implementation, updated UIkit version to 3.25.4.*
