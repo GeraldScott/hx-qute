@@ -1,80 +1,128 @@
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
-{#include base}
-{#title}Gender Management{/title}
+{@java.util.List<io.archton.scaffold.entity.Gender>
+    genders} {#include base} {#title}Gender Management{/title}
 
-<h2 class="uk-heading-small">Gender Code Maintenance</h2>
+    <h2 class="uk-heading-small">Gender Code Maintenance</h2>
 
-<!-- Add Button - triggers modal AND loads content via HTMX -->
-<button class="uk-button uk-button-primary uk-margin-bottom"
+    <!-- Add Button - triggers modal AND loads content via HTMX -->
+    <button
+        class="uk-button uk-button-primary uk-margin-bottom"
         type="button"
         hx-get="/genders/create"
         hx-target="#gender-modal-body"
-        hx-on::after-request="UIkit.modal('#gender-modal').show()">
-    <span uk-icon="plus"></span> Add Gender
-</button>
+        hx-on::after-request="UIkit.modal('#gender-modal').show()"
+    >
+        <span uk-icon="plus"></span> Add
+    </button>
 
-<div id="gender-table-container">
-    {#include $table /}
-</div>
+    <div id="gender-table-container">{#include $table /}</div>
 
-<!-- Static Modal Shell (always present in DOM) -->
-<div id="gender-modal" uk-modal="bg-close: false">
-    <div class="uk-modal-dialog">
-        <div id="gender-modal-body" class="uk-modal-body">
-            <!-- Content loaded dynamically via HTMX -->
+    <!-- Static Modal Shell (always present in DOM) -->
+    <div id="gender-modal" uk-modal="bg-close: false">
+        <div class="uk-modal-dialog">
+            <div id="gender-modal-body" class="uk-modal-body">
+                <!-- Content loaded dynamically via HTMX -->
+            </div>
         </div>
     </div>
-</div>
 
-{/include}
+    {/include} {#fragment id=table} {#if genders.isEmpty()}
+    <p class="uk-text-muted">No genders found.</p>
+    {#else}
+    <div class="uk-overflow-auto">
+        <table
+            id="gender-table"
+            class="uk-table uk-table-hover uk-table-divider"
+        >
+            <thead>
+                <tr>
+                    <th class="uk-table-shrink">Code</th>
+                    <th class="uk-table-expand">Description</th>
+                </tr>
+            </thead>
+            <tbody id="gender-table-body">
+                {#for g in genders}
+                <tr id="gender-row-{g.id}">
+                    <td>{g.code}</td>
+                    <td>{g.description}</td>
+                </tr>
+                {/for}
+            </tbody>
+        </table>
+    </div>
+    {/if} {/fragment} {! Create Form Modal Content !} {#fragment
+    id=modal_create} {@io.archton.scaffold.entity.Gender gender} {@String error}
+    <h2 class="uk-modal-title">Add Gender</h2>
+    {#if error??}
+    <div class="uk-alert uk-alert-danger">{error}</div>
+    {/if}
+    <form hx-post="/genders" hx-target="#gender-modal-body">
+        <div class="uk-margin">
+            <label class="uk-form-label">Code *</label>
+            <input
+                class="uk-input"
+                type="text"
+                name="code"
+                maxlength="1"
+                value="{gender.code ?: ''}"
+                required
+            />
+        </div>
+        <div class="uk-margin">
+            <label class="uk-form-label">Description *</label>
+            <input
+                class="uk-input"
+                type="text"
+                name="description"
+                value="{gender.description ?: ''}"
+                required
+            />
+        </div>
+        <div class="uk-margin uk-text-right">
+            <button
+                class="uk-button uk-button-default uk-modal-close"
+                type="button"
+            >
+                Cancel
+            </button>
+            <button class="uk-button uk-button-primary" type="submit">
+                Save
+            </button>
+        </div>
+    </form>
+    {/fragment} {! Success Response (closes modal + OOB table refresh) !}
+    {#fragment id=modal_success} {@String message}
+    {@java.util.List<io.archton.scaffold.entity.Gender>
+        genders} {! Empty modal body - will be hidden after load !}
+        <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
 
-{#fragment id=table}
-{#if genders.isEmpty()}
-<p class="uk-text-muted">No genders found.</p>
-{#else}
-<div class="uk-overflow-auto">
-    <table id="gender-table" class="uk-table uk-table-hover uk-table-divider">
-        <thead>
-            <tr>
-                <th class="uk-table-shrink">Code</th>
-                <th class="uk-table-expand">Description</th>
-            </tr>
-        </thead>
-        <tbody id="gender-table-body">
-            {#for g in genders}
-            <tr id="gender-row-{g.id}">
-                <td>{g.code}</td>
-                <td>{g.description}</td>
-            </tr>
-            {/for}
-        </tbody>
-    </table>
-</div>
-{/if}
-{/fragment}
-
-{! Create Form Modal Content !}
-{#fragment id=modal_create}
-{@io.archton.scaffold.entity.Gender gender}
-{@String error}
-<h2 class="uk-modal-title">Add Gender</h2>
-{#if error??}
-<div class="uk-alert uk-alert-danger">{error}</div>
-{/if}
-<form hx-post="/genders" hx-target="#gender-modal-body">
-    <div class="uk-margin">
-        <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="1"
-               value="{gender.code ?: ''}" required />
-    </div>
-    <div class="uk-margin">
-        <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description"
-               value="{gender.description ?: ''}" required />
-    </div>
-    <div class="uk-margin uk-text-right">
-        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
-        <button class="uk-button uk-button-primary" type="submit">Save</button>
-    </div>
-</form>
-{/fragment}
+        {! OOB: Refresh entire table container !}
+        <div id="gender-table-container" hx-swap-oob="innerHTML">
+            {#if genders.isEmpty()}
+            <p class="uk-text-muted">No genders found.</p>
+            {#else}
+            <div class="uk-overflow-auto">
+                <table
+                    id="gender-table"
+                    class="uk-table uk-table-hover uk-table-divider"
+                >
+                    <thead>
+                        <tr>
+                            <th class="uk-table-shrink">Code</th>
+                            <th class="uk-table-expand">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gender-table-body">
+                        {#for g in genders}
+                        <tr id="gender-row-{g.id}">
+                            <td>{g.code}</td>
+                            <td>{g.description}</td>
+                        </tr>
+                        {/for}
+                    </tbody>
+                </table>
+            </div>
+            {/if}
+        </div>
+        {/fragment}
+    </io.archton.scaffold.entity.Gender></io.archton.scaffold.entity.Gender
+>

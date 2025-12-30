@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-02-02: Submit Create Form
+**Current Use Case:** UC-002-03-01: Display Edit Form
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -14,7 +14,7 @@
 |----------|--------|
 | UC-002-01-01: View Gender List | ✅ Complete |
 | UC-002-02-01: Display Create Form | ✅ Complete |
-| UC-002-02-02: Submit Create Form | 🔲 Not Started |
+| UC-002-02-02: Submit Create Form | ✅ Complete |
 | UC-002-03-01: Display Edit Form | 🔲 Not Started |
 | UC-002-03-02: Submit Edit Form | 🔲 Not Started |
 | UC-002-03-03: Cancel Edit | 🔲 Not Started |
@@ -85,22 +85,22 @@
 
 ## UC-002-02-02: Submit Create Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-02 - Create New Gender
 
 **Description:** Validate and create new gender record.
 
 **Implementation Tasks:**
-- [ ] Implement `POST /genders/create` endpoint
-- [ ] Validate code is not empty
-- [ ] Validate description is not empty
-- [ ] Validate code max length (1 char)
-- [ ] Validate code uniqueness
-- [ ] Validate description uniqueness
-- [ ] Coerce code to uppercase
-- [ ] Set audit fields (createdBy, updatedBy from SecurityIdentity)
-- [ ] Create `templates/partials/gender_success.html` with OOB table refresh
-- [ ] Create `templates/partials/gender_error.html`
+- [x] Implement `POST /genders` endpoint
+- [x] Validate code is not empty
+- [x] Validate description is not empty
+- [x] Validate code max length (1 char)
+- [x] Validate code uniqueness
+- [x] Validate description uniqueness
+- [x] Coerce code to uppercase
+- [x] Set audit fields (createdBy, updatedBy from SecurityIdentity)
+- [x] Add `modal_success` fragment with OOB table refresh
+- [x] Add `Templates.gender$modal_success()` template method
 
 **Validation Rules:**
 | Field | Rule | Error Message |
@@ -118,8 +118,8 @@
 
 **Test Results:**
 - Test ID: TC-002-02-002, TC-002-02-003, TC-002-02-004, TC-002-02-005, TC-002-02-006
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ All Passed
+- Notes: All validation rules working correctly. Uppercase coercion, uniqueness checks, and max length validation all functioning as expected.
 
 ---
 
@@ -240,11 +240,11 @@
 | TC-002-01-003 | Gender List Empty State | UC-002-01-01 | ⏸️ |
 | TC-002-01-004 | Gender Access Requires Admin Role | UC-002-01-01 | ⏸️ |
 | TC-002-02-001 | Gender Create Form Display | UC-002-02-01 | ✅ |
-| TC-002-02-002 | Gender Create Success | UC-002-02-02 | 🔲 |
-| TC-002-02-003 | Gender Create Code Uppercase | UC-002-02-02 | 🔲 |
-| TC-002-02-004 | Gender Create Duplicate Code Prevention | UC-002-02-02 | 🔲 |
-| TC-002-02-005 | Gender Create Duplicate Description Prevention | UC-002-02-02 | 🔲 |
-| TC-002-02-006 | Gender Create Code Max Length | UC-002-02-02 | 🔲 |
+| TC-002-02-002 | Gender Create Success | UC-002-02-02 | ✅ |
+| TC-002-02-003 | Gender Create Code Uppercase | UC-002-02-02 | ✅ |
+| TC-002-02-004 | Gender Create Duplicate Code Prevention | UC-002-02-02 | ✅ |
+| TC-002-02-005 | Gender Create Duplicate Description Prevention | UC-002-02-02 | ✅ |
+| TC-002-02-006 | Gender Create Code Max Length | UC-002-02-02 | ✅ |
 | TC-002-03-001 | Gender Edit Form Display | UC-002-03-01 | 🔲 |
 | TC-002-03-002 | Gender Edit Success | UC-002-03-02 | 🔲 |
 | TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | 🔲 |
