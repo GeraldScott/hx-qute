@@ -30,4 +30,6 @@ Validate the current feature's spec files before implementation:
 
 7. Verify specs/PROJECT-PLAN.md references this feature's tasks.md
 
+8. Compare the technical details in spec.md with docs/ARCHITECTURE.md and report any mismatches between the two.
+
 Report any validation errors found, or confirm all checks passed.
