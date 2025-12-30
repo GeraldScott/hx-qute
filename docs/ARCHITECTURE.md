@@ -1276,14 +1276,14 @@ quarkus.http.auth.form.new-cookie-interval=PT1M
 quarkus.http.same-site-cookie.quarkus-credential.value=strict
 
 # Route Protection
-quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*
+quarkus.http.auth.permission.authenticated.paths=/dashboard/*,/api/*,/persons/*,/profile/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
 
-quarkus.http.auth.permission.admin.paths=/genders,/genders/*
+quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 
-quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/style.css
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*,/img/*,/style.css
 quarkus.http.auth.permission.public.policy=permit
 ```
 
@@ -1379,14 +1379,14 @@ quarkus.http.same-site-cookie.quarkus-credential.value=strict
 # =============================================================================
 # Route Protection
 # =============================================================================
-quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/profile/*
+quarkus.http.auth.permission.authenticated.paths=/dashboard/*,/api/*,/persons/*,/profile/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
 
-quarkus.http.auth.permission.admin.paths=/genders,/genders/*,/admin/*
+quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 
-quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/img/*,/style.css,/webjars/*
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*,/img/*,/style.css
 quarkus.http.auth.permission.public.policy=permit
 
 # =============================================================================

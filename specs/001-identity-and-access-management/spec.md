@@ -48,14 +48,14 @@ quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 
-quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*,/img/*
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*,/img/*,/style.css
 quarkus.http.auth.permission.public.policy=permit
+
+# --- Session Security ---
+quarkus.http.auth.form.new-cookie-interval=PT1M
+quarkus.http.same-site-cookie.quarkus-credential.value=strict
 
 # --- Password Policy (NIST SP 800-63B-4) ---
 app.security.password.min-length=15
 app.security.password.max-length=128
-
-# --- Session Security ---
-quarkus.http.auth.form.new-cookie-interval=PT1M
-quarkus.http.same-site-cookie.quarkus-credential=strict
 ```
