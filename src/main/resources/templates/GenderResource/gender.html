@@ -9,13 +9,14 @@
 
 <!-- Add Button - triggers modal AND loads content via HTMX -->
 <button
-    class="uk-button uk-button-primary uk-margin-bottom"
+    class="uk-button uk-button-primary uk-button-small uk-margin-bottom"
     type="button"
     hx-get="/genders/create"
     hx-target="#gender-modal-body"
     hx-on::after-request="UIkit.modal('#gender-modal').show()"
+    uk-tooltip="Add Gender"
 >
-    <span uk-icon="plus"></span> Add
+    <span uk-icon="plus"></span>
 </button>
 
 <div id="gender-table-container">{#include $table /}</div>

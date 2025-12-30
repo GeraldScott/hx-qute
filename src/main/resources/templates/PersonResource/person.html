@@ -14,13 +14,14 @@
 
 <!-- Add Button - triggers modal AND loads content via HTMX -->
 <button
-    class="uk-button uk-button-primary uk-margin-bottom"
+    class="uk-button uk-button-primary uk-button-small uk-margin-bottom"
     type="button"
     hx-get="/persons/create"
     hx-target="#person-modal-body"
     hx-on::after-request="UIkit.modal('#person-modal').show()"
+    uk-tooltip="Add Person"
 >
-    <span uk-icon="plus"></span> Add
+    <span uk-icon="plus"></span>
 </button>
 
 <!-- Filter Bar - Above Table -->
