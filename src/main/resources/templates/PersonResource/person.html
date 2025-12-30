@@ -10,7 +10,7 @@
 {#include base}
 {#title}{title}{/title}
 
-<h2 class="uk-heading-small">Person Management</h2>
+<h2 class="uk-heading-small">People Management</h2>
 
 <!-- Add Button - triggers modal AND loads content via HTMX -->
 <button
@@ -116,16 +116,18 @@
                             hx-get="/persons/{p.id}/edit"
                             hx-target="#person-modal-body"
                             hx-on::after-request="UIkit.modal('#person-modal').show()"
+                            uk-tooltip="Edit Person"
                         >
-                            Edit
+                            <span uk-icon="pencil"></span>
                         </button>
                         <button
                             class="uk-button uk-button-small uk-button-danger"
                             hx-get="/persons/{p.id}/delete"
                             hx-target="#person-modal-body"
                             hx-on::after-request="UIkit.modal('#person-modal').show()"
+                            uk-tooltip="Delete Person"
                         >
-                            Delete
+                            <span uk-icon="trash"></span>
                         </button>
                     </div>
                 </td>
@@ -300,14 +302,16 @@
                             <button class="uk-button uk-button-small uk-button-primary"
                                     hx-get="/persons/{p.id}/edit"
                                     hx-target="#person-modal-body"
-                                    hx-on::after-request="UIkit.modal('#person-modal').show()">
-                                Edit
+                                    hx-on::after-request="UIkit.modal('#person-modal').show()"
+                                    uk-tooltip="Edit Person">
+                                <span uk-icon="pencil"></span>
                             </button>
                             <button class="uk-button uk-button-small uk-button-danger"
                                     hx-get="/persons/{p.id}/delete"
                                     hx-target="#person-modal-body"
-                                    hx-on::after-request="UIkit.modal('#person-modal').show()">
-                                Delete
+                                    hx-on::after-request="UIkit.modal('#person-modal').show()"
+                                    uk-tooltip="Delete Person">
+                                <span uk-icon="trash"></span>
                             </button>
                         </div>
                     </td>
@@ -336,14 +340,16 @@
             <button class="uk-button uk-button-small uk-button-primary"
                     hx-get="/persons/{person.id}/edit"
                     hx-target="#person-modal-body"
-                    hx-on::after-request="UIkit.modal('#person-modal').show()">
-                Edit
+                    hx-on::after-request="UIkit.modal('#person-modal').show()"
+                    uk-tooltip="Edit Person">
+                <span uk-icon="pencil"></span>
             </button>
             <button class="uk-button uk-button-small uk-button-danger"
                     hx-get="/persons/{person.id}/delete"
                     hx-target="#person-modal-body"
-                    hx-on::after-request="UIkit.modal('#person-modal').show()">
-                Delete
+                    hx-on::after-request="UIkit.modal('#person-modal').show()"
+                    uk-tooltip="Delete Person">
+                <span uk-icon="trash"></span>
             </button>
         </div>
     </td>
