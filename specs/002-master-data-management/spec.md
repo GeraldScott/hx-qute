@@ -122,55 +122,55 @@ public class Gender extends PanacheEntityBase {
 **Security**: `@RolesAllowed("admin")` - Admin-only access
 
 **Pattern**: Follows ARCHITECTURE.md Section 4.2 with:
-- Single `Templates` class with type-safe fragment methods (`gender$row`, `gender$table`, etc.)
+- Single `Templates` class with type-safe fragment methods (`gender$table`, etc.)
 - Qute `{#fragment}` sections for HTMX partial responses (compile-time validated)
 - **Modal-based CRUD** using UIkit modals for Create, Edit, and Delete operations
 - OOB swaps for table/row updates after modal form submission
 
 ### 3.2 Endpoints
 
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/genders` | `list()` | List all genders (full page or table fragment) |
-| GET | `/genders/create` | `createForm()` | Return create form modal content |
-| POST | `/genders` | `create()` | Submit create form from modal |
-| GET | `/genders/{id}/edit` | `editForm()` | Return edit form modal content with entity data |
-| PUT | `/genders/{id}` | `update()` | Submit edit form from modal |
-| GET | `/genders/{id}/delete` | `deleteConfirm()` | Return delete confirmation modal content |
-| DELETE | `/genders/{id}` | `delete()` | Execute deletion after modal confirmation |
+| Method | Path | Handler | Description | Status |
+|--------|------|---------|-------------|--------|
+| GET | `/genders` | `list()` | List all genders (full page or table fragment) | ✅ Implemented |
+| GET | `/genders/create` | `createForm()` | Return create form modal content | ✅ Implemented |
+| POST | `/genders` | `create()` | Submit create form from modal | ✅ Implemented |
+| GET | `/genders/{id}/edit` | `editForm()` | Return edit form modal content with entity data | ✅ Implemented |
+| PUT | `/genders/{id}` | `update()` | Submit edit form from modal | ✅ Implemented |
+| GET | `/genders/{id}/delete` | `deleteConfirm()` | Return delete confirmation modal content | ⏳ TODO |
+| DELETE | `/genders/{id}` | `delete()` | Execute deletion after modal confirmation | ⏳ TODO |
 
 ### 3.3 Request/Response Patterns
 
 **List (GET /genders)**:
-- Full page: Returns `Templates.gender(...)` (includes static modal shell)
-- HTMX request: Returns `Templates.gender$table(...)` fragment
+- Full page: Returns `Templates.gender(title, currentPage, userName, genders)` (includes static modal shell)
+- HTMX request: Returns `Templates.gender$table(genders)` fragment
 - Detection: Check `HX-Request` header
 
 **Create Form (GET /genders/create)**:
-- Returns `Templates.gender$modal_create()` - modal body content for create form
+- Returns `Templates.gender$modal_create(new Gender(), null)` - modal body content for create form
 - Modal is shown via UIkit after HTMX swap
 
 **Create Submit (POST /genders)**:
 - Success: Returns `Templates.gender$modal_success(message, genders)` with:
-  - Script to close modal
-  - OOB table refresh
+  - Script to close modal via `hx-on::load`
+  - OOB table container refresh
 - Validation error: Returns `Templates.gender$modal_create(gender, error)` - re-renders form with error
 
 **Edit Form (GET /genders/{id}/edit)**:
-- Returns `Templates.gender$modal_edit(gender)` - modal body content with pre-populated form
+- Returns `Templates.gender$modal_edit(gender, null)` - modal body content with pre-populated form
 - Modal is shown via UIkit after HTMX swap
 
 **Edit Submit (PUT /genders/{id})**:
 - Success: Returns `Templates.gender$modal_success_row(message, gender)` with:
-  - Script to close modal
+  - Script to close modal via `hx-on::load`
   - OOB row update for the edited gender
 - Validation error: Returns `Templates.gender$modal_edit(gender, error)` - re-renders form with error
 
-**Delete Confirm (GET /genders/{id}/delete)**:
-- Returns `Templates.gender$modal_delete(gender)` - confirmation modal content
+**Delete Confirm (GET /genders/{id}/delete)** *(TODO)*:
+- Returns `Templates.gender$modal_delete(gender, null)` - confirmation modal content
 
-**Delete Execute (DELETE /genders/{id})**:
-- Success: Returns empty body with `HX-Trigger: closeModal` header + OOB row removal
+**Delete Execute (DELETE /genders/{id})** *(TODO)*:
+- Success: Returns modal close + OOB row removal
 - In-use error: Returns `Templates.gender$modal_delete(gender, error)` - shows error in modal
 
 ---
@@ -183,34 +183,43 @@ public class Gender extends PanacheEntityBase {
 
 Uses Qute fragments (`{#fragment}`) for HTMX partial responses. All fragments are defined within the main template file for compile-time validation and maintainability.
 
+**Important - Fragment Rendering Control:**
+Modal fragments use `rendered=false` attribute to prevent them from being rendered as part of the main page. They are only rendered when explicitly called as standalone fragments.
+
+**Important - Null-Safe Error Checking:**
+Use `{#if error??}` syntax (double question mark) for null-safe checking of optional String parameters. This ensures the condition evaluates correctly when error is null.
+
 **Important - Type-Safe Template Limitations:**
 With `@CheckedTemplate`, Qute validates ALL expressions at compile time against the template's parameter list. This means:
 - Loop variables (e.g., `gender` from `{#for gender in genders}`) cannot be passed to included fragments
 - `{#include $row gender=gender /}` does NOT work - the fragment's parameter is not in the main template's parameter list
 - **Solution**: Inline row content directly in the for loop within `$table` fragment
-- Standalone fragments (like `$row` for edit/cancel) must declare their own parameters with `{@...}` syntax
+- Standalone fragments must declare their own parameters with `{@...}` syntax
 
 ### 4.2 Main Page Structure
 
 ```html
+{@String title}
+{@String currentPage}
+{@String userName}
 {@java.util.List<io.archton.scaffold.entity.Gender> genders}
 {#include base}
-{#title}Gender Management{/title}
+{#title}{title}{/title}
 
 <h2 class="uk-heading-small">Gender Code Maintenance</h2>
 
-<!-- Add Button - triggers modal AND loads content -->
-<button class="uk-button uk-button-primary uk-margin-bottom"
-        type="button"
-        hx-get="/genders/create"
-        hx-target="#gender-modal-body"
-        hx-on::after-request="UIkit.modal('#gender-modal').show()">
-    <span uk-icon="plus"></span> Add Gender
+<!-- Add Button - triggers modal AND loads content via HTMX -->
+<button
+    class="uk-button uk-button-primary uk-margin-bottom"
+    type="button"
+    hx-get="/genders/create"
+    hx-target="#gender-modal-body"
+    hx-on::after-request="UIkit.modal('#gender-modal').show()"
+>
+    <span uk-icon="plus"></span> Add
 </button>
 
-<div id="gender-table-container">
-    {#include $table /}
-</div>
+<div id="gender-table-container">{#include $table /}</div>
 
 <!-- Static Modal Shell (always present in DOM) -->
 <div id="gender-modal" uk-modal="bg-close: false">
@@ -233,7 +242,7 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
 <p class="uk-text-muted">No genders found.</p>
 {#else}
 <div class="uk-overflow-auto">
-    <table class="uk-table uk-table-hover uk-table-divider">
+    <table id="gender-table" class="uk-table uk-table-hover uk-table-divider">
         <thead>
             <tr>
                 <th class="uk-table-shrink">Code</th>
@@ -247,18 +256,24 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
                 <td>{g.code}</td>
                 <td>{g.description}</td>
                 <td>
-                    <button class="uk-button uk-button-small uk-button-default"
+                    <div class="uk-button-group">
+                        <button
+                            class="uk-button uk-button-small uk-button-primary"
                             hx-get="/genders/{g.id}/edit"
                             hx-target="#gender-modal-body"
-                            hx-on::after-request="UIkit.modal('#gender-modal').show()">
-                        Edit
-                    </button>
-                    <button class="uk-button uk-button-small uk-button-danger"
+                            hx-on::after-request="UIkit.modal('#gender-modal').show()"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            class="uk-button uk-button-small uk-button-danger"
                             hx-get="/genders/{g.id}/delete"
                             hx-target="#gender-modal-body"
-                            hx-on::after-request="UIkit.modal('#gender-modal').show()">
-                        Delete
-                    </button>
+                            hx-on::after-request="UIkit.modal('#gender-modal').show()"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </td>
             </tr>
             {/for}
@@ -268,47 +283,22 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
 {/if}
 {/fragment}
 
-{!-- Standalone row fragment for OOB updates after edit --}
-{#fragment id=row}
-{@io.archton.scaffold.entity.Gender gender}
-<tr id="gender-row-{gender.id}">
-    <td>{gender.code}</td>
-    <td>{gender.description}</td>
-    <td>
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/genders/{gender.id}/edit"
-                hx-target="#gender-modal-body"
-                hx-on::after-request="UIkit.modal('#gender-modal').show()">
-            Edit
-        </button>
-        <button class="uk-button uk-button-small uk-button-danger"
-                hx-get="/genders/{gender.id}/delete"
-                hx-target="#gender-modal-body"
-                hx-on::after-request="UIkit.modal('#gender-modal').show()">
-            Delete
-        </button>
-    </td>
-</tr>
-{/fragment}
-
 {!-- Create Form Modal Content --}
-{#fragment id=modal_create}
+{#fragment id=modal_create rendered=false}
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
 <h2 class="uk-modal-title">Add Gender</h2>
-{#if error}
+{#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
 <form hx-post="/genders" hx-target="#gender-modal-body">
     <div class="uk-margin">
         <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="1"
-               value="{gender.code ?: ''}" required />
+        <input class="uk-input" type="text" name="code" maxlength="1" value="{gender.code ?: ''}" required />
     </div>
     <div class="uk-margin">
         <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description"
-               value="{gender.description ?: ''}" required />
+        <input class="uk-input" type="text" name="description" value="{gender.description ?: ''}" required />
     </div>
     <div class="uk-margin uk-text-right">
         <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
@@ -318,23 +308,21 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
 {/fragment}
 
 {!-- Edit Form Modal Content --}
-{#fragment id=modal_edit}
+{#fragment id=modal_edit rendered=false}
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
 <h2 class="uk-modal-title">Edit Gender</h2>
-{#if error}
+{#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
 <form hx-put="/genders/{gender.id}" hx-target="#gender-modal-body">
     <div class="uk-margin">
         <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="1"
-               value="{gender.code}" required />
+        <input class="uk-input" type="text" name="code" maxlength="1" value="{gender.code ?: ''}" required />
     </div>
     <div class="uk-margin">
         <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description"
-               value="{gender.description}" required />
+        <input class="uk-input" type="text" name="description" value="{gender.description ?: ''}" required />
     </div>
     <details class="uk-margin">
         <summary class="uk-text-muted">Audit Information</summary>
@@ -350,93 +338,83 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
 </form>
 {/fragment}
 
-{!-- Delete Confirmation Modal Content --}
-{#fragment id=modal_delete}
-{@io.archton.scaffold.entity.Gender gender}
-{@String error}
-<h2 class="uk-modal-title">Delete Gender</h2>
-{#if error}
-<div class="uk-alert uk-alert-danger">{error}</div>
-{/if}
-<p>Are you sure you want to delete <strong>{gender.code} - {gender.description}</strong>?</p>
-<p class="uk-text-muted">This action cannot be undone.</p>
-<div class="uk-margin uk-text-right">
-    <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
-    <button class="uk-button uk-button-danger"
-            hx-delete="/genders/{gender.id}"
-            hx-target="#gender-modal-body">Delete</button>
+{!-- Success Response (closes modal + OOB table container refresh) --}
+{#fragment id=modal_success rendered=false}
+{@String message}
+{@java.util.List<io.archton.scaffold.entity.Gender> genders}
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+<div id="gender-table-container" hx-swap-oob="innerHTML">
+    {#if genders.isEmpty()}
+    <p class="uk-text-muted">No genders found.</p>
+    {#else}
+    <div class="uk-overflow-auto">
+        <table id="gender-table" class="uk-table uk-table-hover uk-table-divider">
+            <thead>
+                <tr>
+                    <th class="uk-table-shrink">Code</th>
+                    <th class="uk-table-expand">Description</th>
+                    <th class="uk-width-small">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="gender-table-body">
+                {#for g in genders}
+                <tr id="gender-row-{g.id}">
+                    <td>{g.code}</td>
+                    <td>{g.description}</td>
+                    <td>
+                        <div class="uk-button-group">
+                            <button class="uk-button uk-button-small uk-button-primary"
+                                    hx-get="/genders/{g.id}/edit"
+                                    hx-target="#gender-modal-body"
+                                    hx-on::after-request="UIkit.modal('#gender-modal').show()">
+                                Edit
+                            </button>
+                            <button class="uk-button uk-button-small uk-button-danger"
+                                    hx-get="/genders/{g.id}/delete"
+                                    hx-target="#gender-modal-body"
+                                    hx-on::after-request="UIkit.modal('#gender-modal').show()">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {/for}
+            </tbody>
+        </table>
+    </div>
+    {/if}
 </div>
 {/fragment}
 
-{!-- Success Response (closes modal + OOB table refresh) --}
-{#fragment id=modal_success}
+{!-- Success Response for Edit (closes modal + OOB single row update) --}
+{#fragment id=modal_success_row rendered=false}
 {@String message}
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
-<!-- Empty modal body (will be hidden) -->
+{@io.archton.scaffold.entity.Gender gender}
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
-
-<!-- OOB: Refresh entire table body -->
-<tbody id="gender-table-body" hx-swap-oob="innerHTML">
-    {#for g in genders}
-    <tr id="gender-row-{g.id}">
-        <td>{g.code}</td>
-        <td>{g.description}</td>
-        <td>
-            <button class="uk-button uk-button-small uk-button-default"
-                    hx-get="/genders/{g.id}/edit"
+<tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
+    <td>{gender.code}</td>
+    <td>{gender.description}</td>
+    <td>
+        <div class="uk-button-group">
+            <button class="uk-button uk-button-small uk-button-primary"
+                    hx-get="/genders/{gender.id}/edit"
                     hx-target="#gender-modal-body"
                     hx-on::after-request="UIkit.modal('#gender-modal').show()">
                 Edit
             </button>
             <button class="uk-button uk-button-small uk-button-danger"
-                    hx-get="/genders/{g.id}/delete"
+                    hx-get="/genders/{gender.id}/delete"
                     hx-target="#gender-modal-body"
                     hx-on::after-request="UIkit.modal('#gender-modal').show()">
                 Delete
             </button>
-        </td>
-    </tr>
-    {/for}
-</tbody>
-{/fragment}
-
-{!-- Success Response for Edit (closes modal + OOB single row update) --}
-{#fragment id=modal_success_row}
-{@String message}
-{@io.archton.scaffold.entity.Gender gender}
-<!-- Empty modal body (will be hidden) -->
-<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
-
-<!-- OOB: Update single row -->
-<tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
-    <td>{gender.code}</td>
-    <td>{gender.description}</td>
-    <td>
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/genders/{gender.id}/edit"
-                hx-target="#gender-modal-body"
-                hx-on::after-request="UIkit.modal('#gender-modal').show()">
-            Edit
-        </button>
-        <button class="uk-button uk-button-small uk-button-danger"
-                hx-get="/genders/{gender.id}/delete"
-                hx-target="#gender-modal-body"
-                hx-on::after-request="UIkit.modal('#gender-modal').show()">
-            Delete
-        </button>
+        </div>
     </td>
 </tr>
 {/fragment}
 
-{!-- Delete Success Response (closes modal + OOB row removal) --}
-{#fragment id=modal_delete_success}
-{@Long deletedId}
-<!-- Empty modal body (will be hidden) -->
-<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
-
-<!-- OOB: Remove the deleted row -->
-<tr id="gender-row-{deletedId}" hx-swap-oob="delete"></tr>
-{/fragment}
+{!-- TODO: Delete Confirmation Modal Content --}
+{!-- TODO: Delete Success Response --}
 ```
 
 ### 4.4 Type-Safe Fragment Methods
@@ -444,37 +422,42 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
 ```java
 @CheckedTemplate
 public static class Templates {
-    // Full page
-    public static native TemplateInstance gender(List<Gender> genders);
+    // Full page (with base template parameters)
+    public static native TemplateInstance gender(
+        String title,
+        String currentPage,
+        String userName,
+        List<Gender> genders
+    );
 
-    // Table fragments
+    // Table fragment
     public static native TemplateInstance gender$table(List<Gender> genders);
-    public static native TemplateInstance gender$row(Gender gender);
-
+    
     // Modal content fragments
     public static native TemplateInstance gender$modal_create(Gender gender, String error);
     public static native TemplateInstance gender$modal_edit(Gender gender, String error);
-    public static native TemplateInstance gender$modal_delete(Gender gender, String error);
 
     // Success response fragments (close modal + OOB updates)
     public static native TemplateInstance gender$modal_success(String message, List<Gender> genders);
     public static native TemplateInstance gender$modal_success_row(String message, Gender gender);
-    public static native TemplateInstance gender$modal_delete_success(Long deletedId);
+
+    // TODO: Delete fragments
+    // public static native TemplateInstance gender$modal_delete(Gender gender, String error);
+    // public static native TemplateInstance gender$modal_delete_success(Long deletedId);
 }
 ```
 
 ### 4.5 Fragment Parameters
 
-| Fragment | Parameters | Description |
-|----------|------------|-------------|
-| `gender$table` | `genders: List<Gender>` | Table with all rows (inlined) |
-| `gender$row` | `gender: Gender` | Single row for OOB updates |
-| `gender$modal_create` | `gender: Gender`, `error: String` | Create form modal content |
-| `gender$modal_edit` | `gender: Gender`, `error: String` | Edit form modal content |
-| `gender$modal_delete` | `gender: Gender`, `error: String` | Delete confirmation modal content |
-| `gender$modal_success` | `message: String`, `genders: List<Gender>` | Success + close modal + OOB table refresh |
-| `gender$modal_success_row` | `message: String`, `gender: Gender` | Success + close modal + OOB single row update |
-| `gender$modal_delete_success` | `deletedId: Long` | Close modal + OOB row removal |
+| Fragment | Parameters | Description | Status |
+|----------|------------|-------------|--------|
+| `gender$table` | `genders: List<Gender>` | Table with all rows (inlined) | ✅ |
+| `gender$modal_create` | `gender: Gender`, `error: String` | Create form modal content | ✅ |
+| `gender$modal_edit` | `gender: Gender`, `error: String` | Edit form modal content | ✅ |
+| `gender$modal_success` | `message: String`, `genders: List<Gender>` | Success + close modal + OOB table container refresh | ✅ |
+| `gender$modal_success_row` | `message: String`, `gender: Gender` | Success + close modal + OOB single row update | ✅ |
+| `gender$modal_delete` | `gender: Gender`, `error: String` | Delete confirmation modal content | ⏳ TODO |
+| `gender$modal_delete_success` | `deletedId: Long` | Close modal + OOB row removal | ⏳ TODO |
 
 ---
 
@@ -499,12 +482,12 @@ The application uses a **single static modal shell** that is always present in t
         hx-get="/genders/create"
         hx-target="#gender-modal-body"
         hx-on::after-request="UIkit.modal('#gender-modal').show()">
-    <span uk-icon="plus"></span> Add Gender
+    <span uk-icon="plus"></span> Add
 </button>
 
 <!-- Edit Button: Load edit form with entity data, then show modal -->
-<button class="uk-button uk-button-small uk-button-default"
-        hx-get="/genders/{gender.id}/edit"
+<button class="uk-button uk-button-small uk-button-primary"
+        hx-get="/genders/{g.id}/edit"
         hx-target="#gender-modal-body"
         hx-on::after-request="UIkit.modal('#gender-modal').show()">
     Edit
@@ -512,7 +495,7 @@ The application uses a **single static modal shell** that is always present in t
 
 <!-- Delete Button: Load confirmation, then show modal -->
 <button class="uk-button uk-button-small uk-button-danger"
-        hx-get="/genders/{gender.id}/delete"
+        hx-get="/genders/{g.id}/delete"
         hx-target="#gender-modal-body"
         hx-on::after-request="UIkit.modal('#gender-modal').show()">
     Delete
@@ -538,7 +521,7 @@ The application uses a **single static modal shell** that is always present in t
     <button type="submit">Save</button>
 </form>
 
-<!-- Delete confirmation button -->
+<!-- Delete confirmation button (TODO) -->
 <button hx-delete="/genders/{gender.id}" hx-target="#gender-modal-body">
     Delete
 </button>
@@ -550,17 +533,15 @@ On successful form submission, the server returns a response that:
 1. Closes the modal via `hx-on::load` inline handler
 2. Updates the table via OOB swap
 
+**For Create Success (full table container refresh):**
 ```html
-<!-- Success response fragment -->
 <!-- Empty div that closes modal when loaded -->
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
 
-<!-- OOB swap: Update table body -->
-<tbody id="gender-table-body" hx-swap-oob="innerHTML">
-    {#for g in genders}
-    <tr id="gender-row-{g.id}">...</tr>
-    {/for}
-</tbody>
+<!-- OOB swap: Replace entire table container content -->
+<div id="gender-table-container" hx-swap-oob="innerHTML">
+    <!-- Full table with all rows -->
+</div>
 ```
 
 **For Edit Success (single row update):**
@@ -575,7 +556,7 @@ On successful form submission, the server returns a response that:
 </tr>
 ```
 
-**For Delete Success (row removal):**
+**For Delete Success (row removal) - TODO:**
 ```html
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
 
@@ -598,7 +579,7 @@ The Cancel button uses UIkit's `uk-modal-close` class which automatically closes
 On validation errors, the server re-renders the form with error message. The modal stays open:
 
 ```html
-{#if error}
+{#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
 <form ...>
@@ -620,6 +601,11 @@ On validation errors, the server re-renders the form with error message. The mod
 - `bg-close: false` prevents accidental closure when clicking backdrop
 - Users must explicitly click Cancel or press Escape to close
 
+**Button styling:**
+- Action buttons use `uk-button-group` wrapper for visual grouping
+- Edit button uses `uk-button-primary` (blue) for positive action
+- Delete button uses `uk-button-danger` (red) for destructive action
+
 ---
 
 ## 6. Validation Rules
@@ -638,7 +624,7 @@ On validation errors, the server re-renders the form with error message. The mod
 
 Same as create, but uniqueness checks exclude current record.
 
-### 6.3 Delete Validation
+### 6.3 Delete Validation (TODO)
 
 | Condition | Error Message |
 |-----------|---------------|
@@ -688,15 +674,16 @@ public class GenderResource { ... }
 
 ## 9. Traceability
 
-| Use Case | Implementation Component |
-|----------|-------------------------|
-| UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender$table` fragment (rows inlined) |
-| UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender$modal_create` fragment |
-| UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender$modal_success` fragment |
-| UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender$modal_edit` fragment |
-| UC-002-03-02: Submit Edit Form | `GenderResource.update()`, `gender$modal_success_row` fragment |
-| UC-002-03-03: Cancel Edit | UIkit `uk-modal-close` class (no server request) |
-| UC-002-04-01: Delete Gender | `GenderResource.deleteConfirm()`, `GenderResource.delete()`, `gender$modal_delete`, `gender$modal_delete_success` fragments |
+| Use Case | Implementation Component | Status |
+|----------|-------------------------|--------|
+| UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender$table` fragment | ✅ |
+| UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender$modal_create` fragment | ✅ |
+| UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender$modal_success` fragment | ✅ |
+| UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender$modal_edit` fragment | ✅ |
+| UC-002-03-02: Submit Edit Form | `GenderResource.update()`, `gender$modal_success_row` fragment | ✅ |
+| UC-002-03-03: Cancel Edit | UIkit `uk-modal-close` class (no server request) | ✅ |
+| UC-002-04-01: Display Delete Confirmation | `GenderResource.deleteConfirm()`, `gender$modal_delete` fragment | ⏳ TODO |
+| UC-002-04-02: Execute Delete | `GenderResource.delete()`, `gender$modal_delete_success` fragment | ⏳ TODO |
 
 ---
 
@@ -727,6 +714,6 @@ public class GenderResource { ... }
 
 ---
 
-*Document Version: 2.0*
+*Document Version: 2.1*
 *Last Updated: December 2025*
-*Changes: Redesigned from inline editing to modal-based CRUD using UIkit modals with HTMX integration. Added modal fragments, OOB swap patterns for table/row updates, and inline JavaScript via hx-on attributes.*
+*Changes: Updated to reflect actual implementation. Added `rendered=false` for modal fragments, null-safe error checking with `{#if error??}`, button group styling, full table container OOB swap pattern. Marked delete functionality as TODO.*

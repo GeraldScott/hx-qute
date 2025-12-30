@@ -1685,6 +1685,117 @@ Success partial returns the Add button and uses OOB swap to refresh the table bo
 
 ---
 
+### 5.8 Qute Fragments with `rendered=false`
+
+When using Qute's `{#fragment}` directive to define multiple template fragments in a single file, fragments that have their own parameter declarations **must** use `rendered=false` to prevent rendering errors.
+
+#### The Problem
+
+By default, Qute evaluates **all fragments** in a template file when the parent template is rendered. If a fragment declares parameters that aren't provided to the parent template, Qute throws a rendering error.
+
+**Example Error**:
+```
+Rendering error in template [GenderResource/gender.html:189]: 
+Key "gender" not found in the template data map with keys 
+[genders, title, currentPage, userName] in expression {gender.id}
+```
+
+This occurs when:
+1. The main page is rendered with `genders` (List), `title`, `currentPage`, `userName`
+2. A fragment in the same file declares `{@io.archton.scaffold.entity.Gender gender}` (singular)
+3. Qute tries to evaluate `{gender.id}` but `gender` doesn't exist in the data map
+
+#### The Solution
+
+Add `rendered=false` to fragments that have their own parameters:
+
+```html
+{#fragment id=modal_success_row rendered=false}
+{@String message}
+{@io.archton.scaffold.entity.Gender gender}
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+<tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
+    <td>{gender.code}</td>
+    <td>{gender.description}</td>
+    <!-- ... -->
+</tr>
+{/fragment}
+```
+
+The `rendered=false` attribute tells Qute: **"Don't render this fragment when the parent template is rendered. Only render it when explicitly called from Java code."**
+
+#### Fragment Rendering Rules
+
+| Fragment Type | `rendered=false` | Reason |
+|---------------|------------------|--------|
+| Uses parent template data only | No | Fragment uses same data as parent (e.g., `genders` list) |
+| Has own parameter declarations | **Yes** | Fragment requires data not provided to parent |
+| Called only from Java code | **Yes** | Fragment is standalone, never rendered with parent |
+
+#### Example: Single-File Template with Multiple Fragments
+
+```html
+{@String currentPage}
+{@String userName}
+{@java.util.List<io.archton.scaffold.entity.Gender> genders}
+{#include base}
+<!-- Main page content using genders, currentPage, userName -->
+{/include}
+
+{#fragment id=table}
+<!-- Uses genders from parent - NO rendered=false needed -->
+{#for g in genders}
+<tr id="gender-row-{g.id}">...</tr>
+{/for}
+{/fragment}
+
+{#fragment id=modal_create rendered=false}
+{@String error}
+<!-- Has own parameter - rendered=false REQUIRED -->
+{/fragment}
+
+{#fragment id=modal_edit rendered=false}
+{@io.archton.scaffold.entity.Gender gender}
+{@String error}
+<!-- Has own parameters - rendered=false REQUIRED -->
+{/fragment}
+
+{#fragment id=modal_success_row rendered=false}
+{@String message}
+{@io.archton.scaffold.entity.Gender gender}
+<!-- Has own parameters - rendered=false REQUIRED -->
+{/fragment}
+```
+
+#### Java Code Calling Fragments
+
+Fragments are called using the `$` syntax in `@CheckedTemplate`:
+
+```java
+@CheckedTemplate
+public static class Templates {
+    // Main page template
+    public static native TemplateInstance gender(
+        String title, String currentPage, String userName,
+        List<Gender> genders
+    );
+    
+    // Fragment templates (note the $ syntax: templateName$fragmentId)
+    public static native TemplateInstance gender$modal_edit(
+        Gender gender, String error
+    );
+    
+    public static native TemplateInstance gender$modal_success_row(
+        String message, Gender gender
+    );
+}
+
+// Usage
+return Templates.gender$modal_success_row("Gender updated.", gender);
+```
+
+---
+
 ## 6. HTMX Integration Patterns
 
 ### 6.1 Core HTMX Attributes
