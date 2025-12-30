@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-03-01: Display Edit Form
+**Current Use Case:** UC-002-03-03: Cancel Edit
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -15,8 +15,8 @@
 | UC-002-01-01: View Gender List | ✅ Complete |
 | UC-002-02-01: Display Create Form | ✅ Complete |
 | UC-002-02-02: Submit Create Form | ✅ Complete |
-| UC-002-03-01: Display Edit Form | 🔲 Not Started |
-| UC-002-03-02: Submit Edit Form | 🔲 Not Started |
+| UC-002-03-01: Display Edit Form | ✅ Complete |
+| UC-002-03-02: Submit Edit Form | ✅ Complete |
 | UC-002-03-03: Cancel Edit | 🔲 Not Started |
 | UC-002-04-01: Delete Gender | 🔲 Not Started |
 
@@ -125,57 +125,59 @@
 
 ## UC-002-03-01: Display Edit Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-03 - Edit Existing Gender
 
-**Description:** Display inline edit form in place of row when Edit button is clicked.
+**Description:** Display edit form modal with pre-populated data when Edit button is clicked.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /genders/{id}/edit` endpoint
-- [ ] Add `Partials.gender_row_edit()` template method
-- [ ] Create `templates/partials/gender_row_edit.html`
-- [ ] Pre-populate form with current values
-- [ ] Display audit fields (read-only)
+- [x] Implement `GET /genders/{id}/edit` endpoint
+- [x] Add `Templates.gender$modal_edit()` template method
+- [x] Add `modal_edit` fragment to `gender.html`
+- [x] Pre-populate form with current values
+- [x] Display audit fields (read-only) in expandable section
+- [x] Add Edit and Delete buttons to table rows
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/genders/{id}/edit` | Display edit form |
+| GET | `/genders/{id}/edit` | Display edit form modal content |
 
 **Test Results:**
 - Test ID: TC-002-03-001
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: Edit modal opens with title "Edit Gender", Code and Description fields pre-populated with current values, Audit Information section (expandable), Save and Cancel buttons visible.
 
 ---
 
 ## UC-002-03-02: Submit Edit Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-03 - Edit Existing Gender
 
 **Description:** Validate and update existing gender record.
 
 **Implementation Tasks:**
-- [ ] Implement `POST /genders/{id}/update` endpoint
-- [ ] Validate code is not empty
-- [ ] Validate description is not empty
-- [ ] Validate code uniqueness (excluding current record)
-- [ ] Validate description uniqueness (excluding current record)
-- [ ] Coerce code to uppercase
-- [ ] Update audit fields (updatedBy, updatedAt)
-- [ ] Return updated `gender_row.html` on success
-- [ ] Return `gender_row_edit.html` with error on validation failure
+- [x] Implement `PUT /genders/{id}` endpoint
+- [x] Validate code is not empty
+- [x] Validate description is not empty
+- [x] Validate code uniqueness (excluding current record)
+- [x] Validate description uniqueness (excluding current record)
+- [x] Coerce code to uppercase
+- [x] Update audit fields (updatedBy, updatedAt)
+- [x] Add `modal_success_row` fragment with OOB row update
+- [x] Add `Templates.gender$modal_success_row()` template method
+- [x] Fix template fragments with `rendered=false` for standalone fragments
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/genders/{id}/update` | Update gender |
+| PUT | `/genders/{id}` | Update gender |
 
 **Test Results:**
 - Test ID: TC-002-03-002
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: Edit modal opens with pre-populated data, description can be modified, Save button submits form via PUT request, modal closes automatically, data persisted to database correctly.
 
 ---
 
@@ -245,8 +247,8 @@
 | TC-002-02-004 | Gender Create Duplicate Code Prevention | UC-002-02-02 | ✅ |
 | TC-002-02-005 | Gender Create Duplicate Description Prevention | UC-002-02-02 | ✅ |
 | TC-002-02-006 | Gender Create Code Max Length | UC-002-02-02 | ✅ |
-| TC-002-03-001 | Gender Edit Form Display | UC-002-03-01 | 🔲 |
-| TC-002-03-002 | Gender Edit Success | UC-002-03-02 | 🔲 |
+| TC-002-03-001 | Gender Edit Form Display | UC-002-03-01 | ✅ |
+| TC-002-03-002 | Gender Edit Success | UC-002-03-02 | ✅ |
 | TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | 🔲 |
 | TC-002-04-001 | Gender Delete Confirmation | UC-002-04-01 | 🔲 |
 | TC-002-04-002 | Gender Delete Success | UC-002-04-01 | 🔲 |

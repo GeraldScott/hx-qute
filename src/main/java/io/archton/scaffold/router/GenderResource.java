@@ -11,7 +11,9 @@ import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
@@ -39,9 +41,11 @@ public class GenderResource {
         
         // Modal content fragments
         public static native TemplateInstance gender$modal_create(Gender gender, String error);
-        
+        public static native TemplateInstance gender$modal_edit(Gender gender, String error);
+
         // Success response fragments (close modal + OOB updates)
         public static native TemplateInstance gender$modal_success(String message, List<Gender> genders);
+        public static native TemplateInstance gender$modal_success_row(String message, Gender gender);
     }
 
     @GET
@@ -66,6 +70,20 @@ public class GenderResource {
     public TemplateInstance createForm() {
         // Return empty gender object for form binding
         return Templates.gender$modal_create(new Gender(), null);
+    }
+
+    @GET
+    @Path("/{id}/edit")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance editForm(@PathParam("id") Long id) {
+        Gender gender = Gender.findById(id);
+        if (gender == null) {
+            // Return error in modal if gender not found
+            Gender emptyGender = new Gender();
+            emptyGender.id = id;
+            return Templates.gender$modal_edit(emptyGender, "Gender not found.");
+        }
+        return Templates.gender$modal_edit(gender, null);
     }
 
 
@@ -118,5 +136,66 @@ public class GenderResource {
         // Return success with OOB table refresh
         List<Gender> genders = Gender.listAllOrdered();
         return Templates.gender$modal_success("Gender created successfully.", genders);
+    }
+
+    @PUT
+    @Path("/{id}")
+    @Transactional
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance update(
+            @PathParam("id") Long id,
+            @FormParam("code") String code,
+            @FormParam("description") String description) {
+
+        Gender gender = Gender.findById(id);
+        if (gender == null) {
+            Gender emptyGender = new Gender();
+            emptyGender.id = id;
+            return Templates.gender$modal_edit(emptyGender, "Gender not found.");
+        }
+
+        // Store original values for validation
+        String originalCode = gender.code;
+        String originalDescription = gender.description;
+
+        // Update gender object with form values for re-display
+        gender.code = code;
+        gender.description = description;
+
+        // Validation
+        if (code == null || code.isBlank()) {
+            return Templates.gender$modal_edit(gender, "Code is required.");
+        }
+
+        if (code.length() > 1) {
+            return Templates.gender$modal_edit(gender, "Code must be 1 character.");
+        }
+
+        if (description == null || description.isBlank()) {
+            return Templates.gender$modal_edit(gender, "Description is required.");
+        }
+
+        // Coerce code to uppercase
+        gender.code = code.toUpperCase();
+
+        // Check uniqueness (excluding current record)
+        Gender existingByCode = Gender.findByCode(gender.code);
+        if (existingByCode != null && !existingByCode.id.equals(id)) {
+            return Templates.gender$modal_edit(gender, "Code already exists.");
+        }
+
+        Gender existingByDescription = Gender.findByDescription(description);
+        if (existingByDescription != null && !existingByDescription.id.equals(id)) {
+            return Templates.gender$modal_edit(gender, "Description already exists.");
+        }
+
+        // Set audit fields
+        String userName = securityIdentity.isAnonymous() ? "system" : securityIdentity.getPrincipal().getName();
+        gender.updatedBy = userName;
+
+        // Persist changes (entity is already managed, changes will be flushed)
+
+        // Return success with OOB single row update
+        return Templates.gender$modal_success_row("Gender updated successfully.", gender);
     }
 }
