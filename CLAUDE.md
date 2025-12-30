@@ -36,6 +36,31 @@ This is a reference application that uses Quarkus and HTMX to build server-rende
 - `docs/SECURITY.md` - Security policies and implementation
 - `docs/WORKFLOW.md` - Spec-driven development workflow and naming conventions
 
+## Slash Commands and Subagents
+
+### Available Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/implement-feature` | Implement the next use case from current feature |
+| `/validate-feature` | Validate spec files before implementation |
+
+### Subagents
+
+| Subagent | Location | Purpose |
+|----------|----------|---------|
+| `e2e-test-runner` | `.claude/agents/e2e-test-runner.md` | Browser-based E2E testing via chrome-devtools MCP |
+
+### Implementation Workflow
+
+The `/implement-feature` command orchestrates:
+1. Reading specs to identify next UC
+2. Implementing the use case
+3. Triggering dev server reload
+4. Spawning `e2e-test-runner` subagent for automated testing
+5. Updating tasks.md with test results
+6. Stopping for user feedback
+
 ## Managing the Backend Server
 
 This project uses the Quarkus dev server which runs all the time, so issue a `curl http://127.0.0.1:9080/q/health` after a code update to trigger a server refresh.

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-03-03: Cancel Edit
+**Current Use Case:** UC-002-04-01: Delete Gender
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -17,7 +17,7 @@
 | UC-002-02-02: Submit Create Form | ✅ Complete |
 | UC-002-03-01: Display Edit Form | ✅ Complete |
 | UC-002-03-02: Submit Edit Form | ✅ Complete |
-| UC-002-03-03: Cancel Edit | 🔲 Not Started |
+| UC-002-03-03: Cancel Edit | ✅ Complete |
 | UC-002-04-01: Delete Gender | 🔲 Not Started |
 
 ---
@@ -183,24 +183,29 @@
 
 ## UC-002-03-03: Cancel Edit
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-03 - Edit Existing Gender
 
-**Description:** Cancel edit and return to display row.
+**Description:** Cancel edit and close modal, discarding any unsaved changes.
+
+**Implementation Notes:**
+With the modal-based architecture, Cancel is handled entirely client-side using UIkit's `uk-modal-close` class. No server endpoint is needed because:
+- The original row data is never modified until Save is clicked
+- Clicking Cancel simply closes the modal via UIkit
+- The table row remains unchanged
 
 **Implementation Tasks:**
-- [ ] Implement `GET /genders/{id}` endpoint to return row partial
-- [ ] Return `gender_row.html` with original values
+- [x] Cancel button uses `uk-modal-close` class in `modal_edit` fragment
+- [x] Modal closes without server request
+- [x] Original table row data preserved (no modification until Save)
 
 **Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/genders/{id}` | Get row partial (cancel) |
+None required - handled client-side via UIkit modal close.
 
 **Test Results:**
 - Test ID: TC-002-03-003
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: Modal closes correctly after Cancel. Original value "Female" preserved after modifying to "Female Modified for Test" and clicking Cancel. No notifications displayed.
 
 ---
 
@@ -249,7 +254,7 @@
 | TC-002-02-006 | Gender Create Code Max Length | UC-002-02-02 | ✅ |
 | TC-002-03-001 | Gender Edit Form Display | UC-002-03-01 | ✅ |
 | TC-002-03-002 | Gender Edit Success | UC-002-03-02 | ✅ |
-| TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | 🔲 |
+| TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | ✅ |
 | TC-002-04-001 | Gender Delete Confirmation | UC-002-04-01 | 🔲 |
 | TC-002-04-002 | Gender Delete Success | UC-002-04-01 | 🔲 |
 | TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | 🔲 |

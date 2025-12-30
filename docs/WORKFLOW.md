@@ -79,6 +79,44 @@ For the development and implementation of new features, use the spec workflow in
 
 **IMPORTANT**: After completing the tests for each use case, STOP and ask for user feedback before proceeding.
 
+---
+
+## E2E Test Runner Subagent
+
+The project includes an `e2e-test-runner` subagent (`.claude/agents/e2e-test-runner.md`) that automates browser-based testing using chrome-devtools MCP.
+
+### When It's Used
+
+The `/implement-feature` skill automatically invokes the `e2e-test-runner` subagent after implementation is complete. The subagent:
+
+1. Parses `test-cases.md` to find tests matching the implemented UC
+2. Opens a browser and logs in as admin
+3. Executes each test case step using chrome-devtools MCP
+4. Verifies expected results
+5. Returns structured test results for tasks.md
+
+### Test Case Naming Convention
+
+Test cases are matched to use cases by ID prefix:
+- `UC-002-03-02` → Tests starting with `TC-002-03-0XX`
+- `UC-001-01-01` → Tests starting with `TC-001-01-0XX`
+
+### Test Credentials
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@example.com | AdminPassword123 | admin |
+
+### Manual Invocation
+
+To run tests manually, use the Task tool with:
+```
+Use the e2e-test-runner subagent:
+Feature folder: specs/002-master-data-management
+Use case: UC-002-03-02
+Application URL: http://localhost:9080
+```
+
 ### Pre-Implementation Checklist
 
 Before starting implementation, verify:
@@ -111,12 +149,17 @@ Mark tasks complete as you finish them:
 ```
 
 ### Test Results Block
-After running chrome-devtools tests, update:
+After running E2E tests via the `e2e-test-runner` subagent, update with the structured format:
 ```markdown
 **Test Results:**
-Test ID: TC-001-02-01
-Status: ✅ Passed
-Notes: All assertions passed on 2025-12-27
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-001-02-001 | ✅ | All assertions passed |
+| TC-001-02-002 | ✅ | Form validation working |
+| TC-001-02-003 | ❌ | Expected "X" but found "Y" |
+
+**Run Date:** 2025-12-27
+**Summary:** 2/3 tests passed
 ```
 
 ---
