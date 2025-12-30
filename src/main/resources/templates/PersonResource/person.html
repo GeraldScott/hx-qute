@@ -1,0 +1,381 @@
+{@String title}
+{@String currentPage}
+{@String userName}
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
+{@java.util.List<io.archton.scaffold.entity.Title> titleChoices}
+{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
+{@String filterText}
+{@String sortField}
+{@String sortDir}
+{#include base}
+{#title}{title}{/title}
+
+<h2 class="uk-heading-small">Person Management</h2>
+
+<!-- Filter Bar - Above Table -->
+<form class="uk-grid-small uk-flex-middle uk-margin-bottom" uk-grid
+      hx-get="/persons"
+      hx-target="#person-table-container"
+      hx-push-url="true">
+
+    <!-- Search Input -->
+    <div class="uk-width-expand@s uk-width-1-1">
+        <input class="uk-input" type="search" name="filter"
+               value="{filterText ?: ''}"
+               placeholder="Search name or email..."
+               hx-get="/persons"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#person-table-container"
+               hx-include="closest form" />
+    </div>
+
+    <!-- Sort Field -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="sortField">
+            <option value="">Sort by...</option>
+            <option value="lastName" {#if sortField == 'lastName'}selected{/if}>Last Name</option>
+            <option value="firstName" {#if sortField == 'firstName'}selected{/if}>First Name</option>
+            <option value="email" {#if sortField == 'email'}selected{/if}>Email</option>
+        </select>
+    </div>
+
+    <!-- Sort Direction -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="sortDir">
+            <option value="asc" {#if sortDir != 'desc'}selected{/if}>Ascending</option>
+            <option value="desc" {#if sortDir == 'desc'}selected{/if}>Descending</option>
+        </select>
+    </div>
+
+    <!-- Buttons -->
+    <div class="uk-width-auto@s">
+        <button type="submit" class="uk-button uk-button-primary">Filter</button>
+        <a href="/persons" class="uk-button uk-button-default">Clear</a>
+    </div>
+</form>
+
+<!-- Add Button - triggers modal AND loads content via HTMX -->
+<button
+    class="uk-button uk-button-primary uk-margin-bottom"
+    type="button"
+    hx-get="/persons/create"
+    hx-target="#person-modal-body"
+    hx-on::after-request="UIkit.modal('#person-modal').show()"
+>
+    <span uk-icon="plus"></span> Add
+</button>
+
+<div id="person-table-container">{#include $table /}</div>
+
+<!-- Static Modal Shell (always present in DOM) -->
+<div id="person-modal" uk-modal="bg-close: false">
+    <div class="uk-modal-dialog uk-modal-dialog-large">
+        <div id="person-modal-body" class="uk-modal-body">
+            <!-- Content loaded dynamically via HTMX -->
+        </div>
+    </div>
+</div>
+
+{/include}
+
+{#fragment id=table}
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
+{@String filterText}
+{#if persons.isEmpty()}
+{#if filterText??}
+<p class="uk-text-muted">No persons match the filter criteria.</p>
+{#else}
+<p class="uk-text-muted">No persons found.</p>
+{/if}
+{#else}
+<div class="uk-overflow-auto">
+    <table id="person-table" class="uk-table uk-table-hover uk-table-divider">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Date of Birth</th>
+                <th>Gender</th>
+                <th class="uk-width-small">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="person-table-body">
+            {#for p in persons}
+            <tr id="person-row-{p.id}">
+                <td>{p.getDisplayName()}</td>
+                <td>{p.email}</td>
+                <td>{p.phone ?: ''}</td>
+                <td>{p.dateOfBirth ?: ''}</td>
+                <td>{#if p.gender??}{p.gender.description}{/if}</td>
+                <td>
+                    <div class="uk-button-group">
+                        <button
+                            class="uk-button uk-button-small uk-button-primary"
+                            hx-get="/persons/{p.id}/edit"
+                            hx-target="#person-modal-body"
+                            hx-on::after-request="UIkit.modal('#person-modal').show()"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            class="uk-button uk-button-small uk-button-danger"
+                            hx-get="/persons/{p.id}/delete"
+                            hx-target="#person-modal-body"
+                            hx-on::after-request="UIkit.modal('#person-modal').show()"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {/for}
+        </tbody>
+    </table>
+</div>
+{/if}
+{/fragment}
+
+{#fragment id=modal_create rendered=false}
+{@io.archton.scaffold.entity.Person person}
+{@java.util.List<io.archton.scaffold.entity.Title> titleChoices}
+{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
+{@String error}
+<h2 class="uk-modal-title">Add Person</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-post="/persons" hx-target="#person-modal-body">
+    <div class="uk-grid-small" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">First Name *</label>
+            <input class="uk-input" type="text" name="firstName" maxlength="100" value="{person.firstName ?: ''}" required />
+        </div>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">Last Name *</label>
+            <input class="uk-input" type="text" name="lastName" maxlength="100" value="{person.lastName ?: ''}" required />
+        </div>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Title</label>
+        <select class="uk-select" name="titleId">
+            <option value="">-- Select Title --</option>
+            {#for t in titleChoices}
+            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.code} - {t.description}</option>
+            {/for}
+        </select>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Email *</label>
+        <input class="uk-input" type="email" name="email" maxlength="255" value="{person.email ?: ''}" required />
+    </div>
+    <div class="uk-grid-small" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">Phone</label>
+            <input class="uk-input" type="tel" name="phone" maxlength="50" value="{person.phone ?: ''}" />
+        </div>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">Date of Birth</label>
+            <input class="uk-input" type="date" name="dateOfBirth" value="{person.dateOfBirth ?: ''}" />
+        </div>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Gender</label>
+        <select class="uk-select" name="genderId">
+            <option value="">-- Select Gender --</option>
+            {#for g in genderChoices}
+            <option value="{g.id}" {#if person.gender?? && person.gender.id == g.id}selected{/if}>{g.description}</option>
+            {/for}
+        </select>
+    </div>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
+{/fragment}
+
+{#fragment id=modal_edit rendered=false}
+{@io.archton.scaffold.entity.Person person}
+{@java.util.List<io.archton.scaffold.entity.Title> titleChoices}
+{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
+{@String error}
+<h2 class="uk-modal-title">Edit Person</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-put="/persons/{person.id}" hx-target="#person-modal-body">
+    <div class="uk-grid-small" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">First Name *</label>
+            <input class="uk-input" type="text" name="firstName" maxlength="100" value="{person.firstName ?: ''}" required />
+        </div>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">Last Name *</label>
+            <input class="uk-input" type="text" name="lastName" maxlength="100" value="{person.lastName ?: ''}" required />
+        </div>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Title</label>
+        <select class="uk-select" name="titleId">
+            <option value="">-- Select Title --</option>
+            {#for t in titleChoices}
+            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.code} - {t.description}</option>
+            {/for}
+        </select>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Email *</label>
+        <input class="uk-input" type="email" name="email" maxlength="255" value="{person.email ?: ''}" required />
+    </div>
+    <div class="uk-grid-small" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">Phone</label>
+            <input class="uk-input" type="tel" name="phone" maxlength="50" value="{person.phone ?: ''}" />
+        </div>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label">Date of Birth</label>
+            <input class="uk-input" type="date" name="dateOfBirth" value="{person.dateOfBirth ?: ''}" />
+        </div>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Gender</label>
+        <select class="uk-select" name="genderId">
+            <option value="">-- Select Gender --</option>
+            {#for g in genderChoices}
+            <option value="{g.id}" {#if person.gender?? && person.gender.id == g.id}selected{/if}>{g.description}</option>
+            {/for}
+        </select>
+    </div>
+    <details class="uk-margin">
+        <summary class="uk-text-muted">Audit Information</summary>
+        <div class="uk-text-small uk-text-muted uk-margin-small-top">
+            <div>Created: {person.createdAt} by {person.createdBy}</div>
+            <div>Updated: {person.updatedAt} by {person.updatedBy}</div>
+        </div>
+    </details>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
+{/fragment}
+
+{#fragment id=modal_success rendered=false}
+{@String message}
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
+{@String filterText}
+<div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
+<div id="person-table-container" hx-swap-oob="innerHTML">
+    {#if persons.isEmpty()}
+    {#if filterText??}
+    <p class="uk-text-muted">No persons match the filter criteria.</p>
+    {#else}
+    <p class="uk-text-muted">No persons found.</p>
+    {/if}
+    {#else}
+    <div class="uk-overflow-auto">
+        <table id="person-table" class="uk-table uk-table-hover uk-table-divider">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Date of Birth</th>
+                    <th>Gender</th>
+                    <th class="uk-width-small">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="person-table-body">
+                {#for p in persons}
+                <tr id="person-row-{p.id}">
+                    <td>{p.getDisplayName()}</td>
+                    <td>{p.email}</td>
+                    <td>{p.phone ?: ''}</td>
+                    <td>{p.dateOfBirth ?: ''}</td>
+                    <td>{#if p.gender??}{p.gender.description}{/if}</td>
+                    <td>
+                        <div class="uk-button-group">
+                            <button class="uk-button uk-button-small uk-button-primary"
+                                    hx-get="/persons/{p.id}/edit"
+                                    hx-target="#person-modal-body"
+                                    hx-on::after-request="UIkit.modal('#person-modal').show()">
+                                Edit
+                            </button>
+                            <button class="uk-button uk-button-small uk-button-danger"
+                                    hx-get="/persons/{p.id}/delete"
+                                    hx-target="#person-modal-body"
+                                    hx-on::after-request="UIkit.modal('#person-modal').show()">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {/for}
+            </tbody>
+        </table>
+    </div>
+    {/if}
+</div>
+{/fragment}
+
+{#fragment id=modal_success_row rendered=false}
+{@String message}
+{@io.archton.scaffold.entity.Person person}
+<div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
+<template>
+<tr id="person-row-{person.id}" hx-swap-oob="outerHTML">
+    <td>{person.getDisplayName()}</td>
+    <td>{person.email}</td>
+    <td>{person.phone ?: ''}</td>
+    <td>{person.dateOfBirth ?: ''}</td>
+    <td>{#if person.gender??}{person.gender.description}{/if}</td>
+    <td>
+        <div class="uk-button-group">
+            <button class="uk-button uk-button-small uk-button-primary"
+                    hx-get="/persons/{person.id}/edit"
+                    hx-target="#person-modal-body"
+                    hx-on::after-request="UIkit.modal('#person-modal').show()">
+                Edit
+            </button>
+            <button class="uk-button uk-button-small uk-button-danger"
+                    hx-get="/persons/{person.id}/delete"
+                    hx-target="#person-modal-body"
+                    hx-on::after-request="UIkit.modal('#person-modal').show()">
+                Delete
+            </button>
+        </div>
+    </td>
+</tr>
+</template>
+{/fragment}
+
+{#fragment id=modal_delete rendered=false}
+{@io.archton.scaffold.entity.Person person}
+{@String error}
+<h2 class="uk-modal-title">Delete Person</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{#else}
+<div class="uk-alert uk-alert-warning">
+    Are you sure you want to delete <strong>{person.getDisplayName()}</strong>?
+</div>
+<p class="uk-text-muted">This action cannot be undone.</p>
+{/if}
+<div class="uk-margin uk-text-right">
+    <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+    {#if !error??}
+    <button class="uk-button uk-button-danger"
+            hx-delete="/persons/{person.id}"
+            hx-target="#person-modal-body">
+        Delete
+    </button>
+    {/if}
+</div>
+{/fragment}
+
+{#fragment id=modal_delete_success rendered=false}
+{@Long deletedId}
+<div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
+<template><tr id="person-row-{deletedId}" hx-swap-oob="delete"></tr></template>
+{/fragment}

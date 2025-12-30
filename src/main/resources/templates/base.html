@@ -1,179 +1,279 @@
-{@String title}
-{@String currentPage}
-{@String userName}
+{@String title} {@String currentPage} {@String userName}
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{title??}</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title??}</title>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 
-    <!-- UIkit CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/css/uikit.min.css"/>
+        <!-- UIkit CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/css/uikit.min.css"
+        />
 
-    <!-- UIkit JS -->
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit-icons.min.js"></script>
+        <!-- UIkit JS -->
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit-icons.min.js"></script>
 
-    <!-- HTMX 2.0.8 -->
-    <script
+        <!-- HTMX 2.0.8 -->
+        <script
             src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
             integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
             crossorigin="anonymous"
-    ></script>
+        ></script>
 
-    <link rel="stylesheet" href="/style.css"/>
-</head>
-<body>
-<div class="uk-offcanvas-content">
-    <!-- Mobile Header -->
-    <div class="uk-navbar-container uk-hidden@l" uk-navbar>
-        <div class="uk-navbar-left">
-            <a class="uk-navbar-toggle" uk-navbar-toggle-icon href="#mobile-sidebar" uk-toggle></a>
-            <span class="uk-navbar-item uk-logo">HX-Qute</span>
-        </div>
-    </div>
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <div class="uk-offcanvas-content">
+            <!-- Mobile Header -->
+            <div class="uk-navbar-container uk-hidden@l" uk-navbar>
+                <div class="uk-navbar-left">
+                    <a
+                        class="uk-navbar-toggle"
+                        uk-navbar-toggle-icon
+                        href="#mobile-sidebar"
+                        uk-toggle
+                    ></a>
+                    <span class="uk-navbar-item uk-logo">HX-Qute</span>
+                </div>
+            </div>
 
-    <!-- Main Layout Container -->
-    <div class="uk-grid-collapse" uk-grid>
-        <!-- Sidebar (visible on large screens) -->
-        <div class="uk-width-auto@l uk-visible@l sidebar-container">
-            <aside class="sidebar uk-height-viewport">
-                <!-- Logo -->
-                <div class="uk-padding-small">
-                    <a href="/" class="uk-flex uk-flex-middle logo-link">
-                        <img
+            <!-- Main Layout Container -->
+            <div class="uk-grid-collapse" uk-grid>
+                <!-- Sidebar (visible on large screens) -->
+                <div class="uk-width-auto@l uk-visible@l sidebar-container">
+                    <aside class="sidebar uk-height-viewport">
+                        <!-- Logo -->
+                        <div class="uk-padding-small">
+                            <a
+                                href="/"
+                                class="uk-flex uk-flex-middle logo-link"
+                            >
+                                <img
+                                    src="/img/logo-scaffold.png"
+                                    width="40"
+                                    height="40"
+                                    alt="HX-Qute Logo"
+                                />
+                                <span
+                                    class="uk-margin-small-left uk-text-bold uk-text-large"
+                                    >HX-Qute</span
+                                >
+                            </a>
+                        </div>
+
+                        <!-- Navigation -->
+                        <ul
+                            class="uk-nav uk-nav-default uk-padding-small"
+                            uk-nav
+                        >
+                            <li
+                                class="{#if currentPage?? == 'home'}uk-active{/if}"
+                            >
+                                <a href="/">
+                                    <span
+                                        uk-icon="icon: home; ratio: 1.2"
+                                    ></span>
+                                    <span class="uk-margin-small-left"
+                                        >Home</span
+                                    >
+                                </a>
+                            </li>
+                            <li
+                                class="{#if currentPage?? == 'persons'}uk-active{/if}"
+                            >
+                                <a href="/persons">
+                                    <span
+                                        uk-icon="icon: users; ratio: 1.2"
+                                    ></span>
+                                    <span class="uk-margin-small-left"
+                                        >People</span
+                                    >
+                                </a>
+                            </li>
+                            <li
+                                class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}"
+                            >
+                                <a href="#">
+                                    <span
+                                        uk-icon="icon: settings; ratio: 1.2"
+                                    ></span>
+                                    <span class="uk-margin-small-left"
+                                        >Maintenance</span
+                                    >
+                                </a>
+                                <ul class="uk-nav-sub">
+                                    <li
+                                        class="{#if currentPage?? == 'gender'}uk-active{/if}"
+                                    >
+                                        <a href="/genders">
+                                            <span
+                                                uk-icon="icon: users; ratio: 1"
+                                            ></span>
+                                            <span class="uk-margin-small-left"
+                                                >Gender</span
+                                            >
+                                        </a>
+                                    </li>
+                                    <li
+                                        class="{#if currentPage?? == 'title'}uk-active{/if}"
+                                    >
+                                        <a href="/titles">
+                                            <span
+                                                uk-icon="icon: bookmark; ratio: 1"
+                                            ></span>
+                                            <span class="uk-margin-small-left"
+                                                >Title</span
+                                            >
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            {#if userName}
+                            <li>
+                                <a href="/logout">
+                                    <span
+                                        uk-icon="icon: sign-out; ratio: 1.2"
+                                    ></span>
+                                    <span class="uk-margin-small-left"
+                                        >Logout ({userName})</span
+                                    >
+                                </a>
+                            </li>
+                            {#else}
+                            <li>
+                                <a href="/login">
+                                    <span
+                                        uk-icon="icon: sign-in; ratio: 1.2"
+                                    ></span>
+                                    <span class="uk-margin-small-left"
+                                        >Login</span
+                                    >
+                                </a>
+                            </li>
+                            {/if}
+                        </ul>
+                    </aside>
+                </div>
+
+                <!-- Main Content -->
+                <div class="uk-width-expand@l main-content-area">
+                    <div class="uk-padding">
+                        <div id="main-content" class="uk-container">
+                            {#insert}Default content{/}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Sidebar (Offcanvas) -->
+            <div id="mobile-sidebar" uk-offcanvas="overlay: true">
+                <div class="uk-offcanvas-bar sidebar">
+                    <button
+                        class="uk-offcanvas-close"
+                        type="button"
+                        uk-close
+                    ></button>
+
+                    <!-- Logo -->
+                    <div class="uk-padding-small">
+                        <a href="/" class="uk-flex uk-flex-middle logo-link">
+                            <img
                                 src="/img/logo-scaffold.png"
                                 width="40"
                                 height="40"
                                 alt="HX-Qute Logo"
-                        />
-                        <span class="uk-margin-small-left uk-text-bold uk-text-large">HX-Qute</span>
-                    </a>
-                </div>
-
-                <!-- Navigation -->
-                <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
-                    <li class="{#if currentPage?? == 'home'}uk-active{/if}">
-                        <a href="/">
-                            <span uk-icon="icon: home; ratio: 1.2"></span>
-                            <span class="uk-margin-small-left">Home</span>
+                            />
+                            <span
+                                class="uk-margin-small-left uk-text-bold uk-text-large"
+                                >HX-Qute</span
+                            >
                         </a>
-                    </li>
-                    <li class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}">
-                        <a href="#">
-                            <span uk-icon="icon: settings; ratio: 1.2"></span>
-                            <span class="uk-margin-small-left">Maintenance</span>
-                        </a>
-                        <ul class="uk-nav-sub">
-                            <li class="{#if currentPage?? == 'gender'}uk-active{/if}">
-                                <a href="/genders">
-                                    <span uk-icon="icon: users; ratio: 1"></span>
-                                    <span class="uk-margin-small-left">Gender</span>
-                                </a>
-                            </li>
-                            <li class="{#if currentPage?? == 'title'}uk-active{/if}">
-                                <a href="/titles">
-                                    <span uk-icon="icon: bookmark; ratio: 1"></span>
-                                    <span class="uk-margin-small-left">Title</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {#if userName}
-                    <li>
-                        <a href="/logout">
-                            <span uk-icon="icon: sign-out; ratio: 1.2"></span>
-                            <span class="uk-margin-small-left">Logout ({userName})</span>
-                        </a>
-                    </li>
-                    {#else}
-                    <li>
-                        <a href="/login">
-                            <span uk-icon="icon: sign-in; ratio: 1.2"></span>
-                            <span class="uk-margin-small-left">Login</span>
-                        </a>
-                    </li>
-                    {/if}
-                </ul>
-            </aside>
-        </div>
+                    </div>
 
-        <!-- Main Content -->
-        <div class="uk-width-expand@l main-content-area">
-            <div class="uk-padding">
-                <div id="main-content" class="uk-container">
-                    {#insert}Default content{/}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Sidebar (Offcanvas) -->
-    <div id="mobile-sidebar" uk-offcanvas="overlay: true">
-        <div class="uk-offcanvas-bar sidebar">
-            <button class="uk-offcanvas-close" type="button" uk-close></button>
-
-            <!-- Logo -->
-            <div class="uk-padding-small">
-                <a href="/" class="uk-flex uk-flex-middle logo-link">
-                    <img
-                            src="/img/logo-scaffold.png"
-                            width="40"
-                            height="40"
-                            alt="HX-Qute Logo"
-                    />
-                    <span class="uk-margin-small-left uk-text-bold uk-text-large">HX-Qute</span>
-                </a>
-            </div>
-
-            <!-- Mobile Navigation -->
-            <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
-                <li class="{#if currentPage?? == 'home'}uk-active{/if}">
-                    <a href="/">
-                        <span uk-icon="icon: home; ratio: 1.2"></span>
-                        <span class="uk-margin-small-left">Home</span>
-                    </a>
-                </li>
-                <li class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}">
-                    <a href="#">
-                        <span uk-icon="icon: settings; ratio: 1.2"></span>
-                        <span class="uk-margin-small-left">Maintenance</span>
-                    </a>
-                    <ul class="uk-nav-sub">
-                        <li class="{#if currentPage?? == 'gender'}uk-active{/if}">
-                            <a href="/genders">
-                                <span uk-icon="icon: users; ratio: 1"></span>
-                                <span class="uk-margin-small-left">Gender</span>
+                    <!-- Mobile Navigation -->
+                    <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
+                        <li class="{#if currentPage?? == 'home'}uk-active{/if}">
+                            <a href="/">
+                                <span uk-icon="icon: home; ratio: 1.2"></span>
+                                <span class="uk-margin-small-left">Home</span>
                             </a>
                         </li>
-                        <li class="{#if currentPage?? == 'title'}uk-active{/if}">
-                            <a href="/titles">
-                                <span uk-icon="icon: bookmark; ratio: 1"></span>
-                                <span class="uk-margin-small-left">Title</span>
+                        <li
+                            class="{#if currentPage?? == 'persons'}uk-active{/if}"
+                        >
+                            <a href="/persons">
+                                <span uk-icon="icon: users; ratio: 1.2"></span>
+                                <span class="uk-margin-small-left"
+                                    >Persons</span
+                                >
                             </a>
                         </li>
+                        <li
+                            class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}"
+                        >
+                            <a href="#">
+                                <span
+                                    uk-icon="icon: settings; ratio: 1.2"
+                                ></span>
+                                <span class="uk-margin-small-left"
+                                    >Maintenance</span
+                                >
+                            </a>
+                            <ul class="uk-nav-sub">
+                                <li
+                                    class="{#if currentPage?? == 'gender'}uk-active{/if}"
+                                >
+                                    <a href="/genders">
+                                        <span
+                                            uk-icon="icon: users; ratio: 1"
+                                        ></span>
+                                        <span class="uk-margin-small-left"
+                                            >Gender</span
+                                        >
+                                    </a>
+                                </li>
+                                <li
+                                    class="{#if currentPage?? == 'title'}uk-active{/if}"
+                                >
+                                    <a href="/titles">
+                                        <span
+                                            uk-icon="icon: bookmark; ratio: 1"
+                                        ></span>
+                                        <span class="uk-margin-small-left"
+                                            >Title</span
+                                        >
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        {#if userName}
+                        <li>
+                            <a href="/logout">
+                                <span
+                                    uk-icon="icon: sign-out; ratio: 1.2"
+                                ></span>
+                                <span class="uk-margin-small-left"
+                                    >Logout ({userName})</span
+                                >
+                            </a>
+                        </li>
+                        {#else}
+                        <li>
+                            <a href="/login">
+                                <span
+                                    uk-icon="icon: sign-in; ratio: 1.2"
+                                ></span>
+                                <span class="uk-margin-small-left">Login</span>
+                            </a>
+                        </li>
+                        {/if}
                     </ul>
-                </li>
-                {#if userName}
-                <li>
-                    <a href="/logout">
-                        <span uk-icon="icon: sign-out; ratio: 1.2"></span>
-                        <span class="uk-margin-small-left">Logout ({userName})</span>
-                    </a>
-                </li>
-                {#else}
-                <li>
-                    <a href="/login">
-                        <span uk-icon="icon: sign-in; ratio: 1.2"></span>
-                        <span class="uk-margin-small-left">Login</span>
-                    </a>
-                </li>
-                {/if}
-            </ul>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-</body>
+    </body>
 </html>
