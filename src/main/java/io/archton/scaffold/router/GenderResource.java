@@ -33,6 +33,9 @@ public class GenderResource {
 
         // Fragments (type-safe, compile-time validated)
         public static native TemplateInstance gender$table(List<Gender> genders);
+        
+        // Modal content fragments
+        public static native TemplateInstance gender$modal_create(Gender gender, String error);
     }
 
     @GET
@@ -48,5 +51,14 @@ public class GenderResource {
         // Full page request
         String userName = securityIdentity.isAnonymous() ? null : securityIdentity.getPrincipal().getName();
         return Templates.gender("Gender Management", "gender", userName, genders);
+    }
+
+
+    @GET
+    @Path("/create")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance createForm() {
+        // Return empty gender object for form binding
+        return Templates.gender$modal_create(new Gender(), null);
     }
 }

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-02-01: Display Create Form
+**Current Use Case:** UC-002-02-02: Submit Create Form
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -13,7 +13,7 @@
 | Use Case | Status |
 |----------|--------|
 | UC-002-01-01: View Gender List | ✅ Complete |
-| UC-002-02-01: Display Create Form | 🔲 Not Started |
+| UC-002-02-01: Display Create Form | ✅ Complete |
 | UC-002-02-02: Submit Create Form | 🔲 Not Started |
 | UC-002-03-01: Display Edit Form | 🔲 Not Started |
 | UC-002-03-02: Submit Edit Form | 🔲 Not Started |
@@ -59,19 +59,16 @@
 
 ## UC-002-02-01: Display Create Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-02 - Create New Gender
 
 **Description:** Display inline create form when Add button is clicked.
 
 **Implementation Tasks:**
-- [ ] Add `createForm()` endpoint to GenderResource
-- [ ] Add `createFormCancel()` endpoint to GenderResource
-- [ ] Add `Partials.gender_create_form()` template method
-- [ ] Add `Partials.gender_create_button()` template method
-- [ ] Create `templates/partials/gender_create_form.html`
-- [ ] Create `templates/partials/gender_create_button.html`
-- [ ] Add `#gender-create-container` to `gender.html`
+- [x] Add `createForm()` endpoint to GenderResource
+- [x] Add `Templates.gender$modal_create()` template method
+- [x] Add `modal_create` fragment to `gender.html`
+- [x] Update main page with static modal shell and HTMX dynamic loading
 
 **Endpoints:**
 | Method | Path | Description |
@@ -81,8 +78,8 @@
 
 **Test Results:**
 - Test ID: TC-002-02-001
-- Status: 🔲 Not Tested
-- Notes:
+- Status: ✅ Passed
+- Notes: Modal displays correctly with title "Add Gender", Code and Description input fields, Save and Cancel buttons. Modal backdrop configured with bg-close: false.
 
 ---
 
@@ -242,7 +239,7 @@
 | TC-002-01-002 | Gender List Display | UC-002-01-01 | ✅ |
 | TC-002-01-003 | Gender List Empty State | UC-002-01-01 | ⏸️ |
 | TC-002-01-004 | Gender Access Requires Admin Role | UC-002-01-01 | ⏸️ |
-| TC-002-02-001 | Gender Create Form Display | UC-002-02-01 | 🔲 |
+| TC-002-02-001 | Gender Create Form Display | UC-002-02-01 | ✅ |
 | TC-002-02-002 | Gender Create Success | UC-002-02-02 | 🔲 |
 | TC-002-02-003 | Gender Create Code Uppercase | UC-002-02-02 | 🔲 |
 | TC-002-02-004 | Gender Create Duplicate Code Prevention | UC-002-02-02 | 🔲 |

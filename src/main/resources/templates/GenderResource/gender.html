@@ -4,7 +4,12 @@
 
 <h2 class="uk-heading-small">Gender Code Maintenance</h2>
 
-<button class="uk-button uk-button-primary uk-margin-bottom" type="button" uk-toggle="target: #add-gender-modal">
+<!-- Add Button - triggers modal AND loads content via HTMX -->
+<button class="uk-button uk-button-primary uk-margin-bottom"
+        type="button"
+        hx-get="/genders/create"
+        hx-target="#gender-modal-body"
+        hx-on::after-request="UIkit.modal('#gender-modal').show()">
     <span uk-icon="plus"></span> Add Gender
 </button>
 
@@ -12,13 +17,11 @@
     {#include $table /}
 </div>
 
-<!-- Add Gender Modal -->
-<div id="add-gender-modal" uk-modal>
-    <div class="uk-modal-dialog uk-modal-body">
-        <h2 class="uk-modal-title">Add Gender</h2>
-        <p>Form content will go here.</p>
-        <div class="uk-margin-top uk-text-right">
-            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+<!-- Static Modal Shell (always present in DOM) -->
+<div id="gender-modal" uk-modal="bg-close: false">
+    <div class="uk-modal-dialog">
+        <div id="gender-modal-body" class="uk-modal-body">
+            <!-- Content loaded dynamically via HTMX -->
         </div>
     </div>
 </div>
@@ -48,4 +51,30 @@
     </table>
 </div>
 {/if}
+{/fragment}
+
+{! Create Form Modal Content !}
+{#fragment id=modal_create}
+{@io.archton.scaffold.entity.Gender gender}
+{@String error}
+<h2 class="uk-modal-title">Add Gender</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-post="/genders" hx-target="#gender-modal-body">
+    <div class="uk-margin">
+        <label class="uk-form-label">Code *</label>
+        <input class="uk-input" type="text" name="code" maxlength="1"
+               value="{gender.code ?: ''}" required />
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Description *</label>
+        <input class="uk-input" type="text" name="description"
+               value="{gender.description ?: ''}" required />
+    </div>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
 {/fragment}
