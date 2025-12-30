@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-07-01: Display Edit Form
-**Status:** 🔲 Not Started
+**Current Use Case:** Feature Complete! 🎉
+**Status:** ✅ All Use Cases Complete
 **Blockers:** None
 
 ---
@@ -29,10 +29,10 @@
 | UC-002-05-01: View Title List | ✅ Complete |
 | UC-002-06-01: Display Create Form | ✅ Complete |
 | UC-002-06-02: Submit Create Form | ✅ Complete |
-| UC-002-07-01: Display Edit Form | 🔲 Not Started |
-| UC-002-07-02: Submit Edit Form | 🔲 Not Started |
-| UC-002-07-03: Cancel Edit | 🔲 Not Started |
-| UC-002-08-01: Delete Title | 🔲 Not Started |
+| UC-002-07-01: Display Edit Form | ✅ Complete |
+| UC-002-07-02: Submit Edit Form | ✅ Complete |
+| UC-002-07-03: Cancel Edit | ✅ Complete |
+| UC-002-08-01: Delete Title | ✅ Complete |
 
 ---
 
@@ -372,18 +372,18 @@ None required - handled client-side via UIkit modal close.
 
 ## UC-002-07-01: Display Edit Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-07 - Edit Existing Title
 
 **Description:** Display edit form modal with pre-populated data when Edit button is clicked.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /titles/{id}/edit` endpoint
-- [ ] Add `Templates.title$modal_edit()` template method
-- [ ] Add `modal_edit` fragment to `title.html`
-- [ ] Pre-populate form with current values
-- [ ] Display audit fields (read-only) in expandable section
-- [ ] Add Edit and Delete buttons to table rows
+- [x] Implement `GET /titles/{id}/edit` endpoint
+- [x] Add `Templates.title$modal_edit()` template method
+- [x] Add `modal_edit` fragment to `title.html`
+- [x] Pre-populate form with current values
+- [x] Display audit fields (read-only) in expandable section
+- [x] Add Edit and Delete buttons to table rows
 
 **Endpoints:**
 | Method | Path | Description |
@@ -391,27 +391,32 @@ None required - handled client-side via UIkit modal close.
 | GET | `/titles/{id}/edit` | Display edit form modal content |
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-07-001 | ✅ | Modal displays with title "Edit Title", Code field pre-populated (MR), Description field pre-populated (Mister), Audit Information expandable section shows created/updated timestamps and user, Save and Cancel buttons visible |
+
+**Run Date:** 2025-12-30
+**Summary:** 1/1 tests passed
 
 ---
 
 ## UC-002-07-02: Submit Edit Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-07 - Edit Existing Title
 
 **Description:** Validate and update existing title record.
 
 **Implementation Tasks:**
-- [ ] Implement `PUT /titles/{id}` endpoint
-- [ ] Validate code is not empty
-- [ ] Validate description is not empty
-- [ ] Validate code uniqueness (excluding current record)
-- [ ] Validate description uniqueness (excluding current record)
-- [ ] Coerce code to uppercase
-- [ ] Update audit fields (updatedBy, updatedAt)
-- [ ] Add `modal_success_row` fragment with OOB row update
-- [ ] Add `Templates.title$modal_success_row()` template method
+- [x] Implement `PUT /titles/{id}` endpoint
+- [x] Validate code is not empty
+- [x] Validate description is not empty
+- [x] Validate code uniqueness (excluding current record)
+- [x] Validate description uniqueness (excluding current record)
+- [x] Coerce code to uppercase
+- [x] Update audit fields (updatedBy, updatedAt)
+- [x] Add `modal_success_row` fragment with OOB row update
+- [x] Add `Templates.title$modal_success_row()` template method
 
 **Endpoints:**
 | Method | Path | Description |
@@ -419,13 +424,18 @@ None required - handled client-side via UIkit modal close.
 | PUT | `/titles/{id}` | Update title |
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-07-002 | ✅ | Modified MS description to "Updated Description", modal closed automatically, table row updated via OOB swap |
+
+**Run Date:** 2025-12-30
+**Summary:** 1/1 tests passed
 
 ---
 
 ## UC-002-07-03: Cancel Edit
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-07 - Edit Existing Title
 
 **Description:** Cancel edit and close modal, discarding any unsaved changes.
@@ -437,31 +447,36 @@ With the modal-based architecture, Cancel is handled entirely client-side using 
 - The table row remains unchanged
 
 **Implementation Tasks:**
-- [ ] Cancel button uses `uk-modal-close` class in `modal_edit` fragment
-- [ ] Modal closes without server request
-- [ ] Original table row data preserved (no modification until Save)
+- [x] Cancel button uses `uk-modal-close` class in `modal_edit` fragment
+- [x] Modal closes without server request
+- [x] Original table row data preserved (no modification until Save)
 
 **Endpoints:**
 None required - handled client-side via UIkit modal close.
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-07-003 | ✅ | Modified MR description to "Modified for Cancel Test", clicked Cancel, modal closed, original value "Mister" preserved |
+
+**Run Date:** 2025-12-30
+**Summary:** 1/1 tests passed
 
 ---
 
 ## UC-002-08-01: Delete Title
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-08 - Delete Title
 
 **Description:** Delete title record with confirmation modal.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /titles/{id}/delete` endpoint (confirmation modal)
-- [ ] Implement `DELETE /titles/{id}` endpoint
-- [ ] Add `modal_delete` fragment for confirmation dialog
-- [ ] Add `modal_delete_success` fragment for OOB row removal
-- [ ] Add `Templates.title$modal_delete()` and `Templates.title$modal_delete_success()` methods
+- [x] Implement `GET /titles/{id}/delete` endpoint (confirmation modal)
+- [x] Implement `DELETE /titles/{id}` endpoint
+- [x] Add `modal_delete` fragment for confirmation dialog
+- [x] Add `modal_delete_success` fragment for OOB row removal
+- [x] Add `Templates.title$modal_delete()` and `Templates.title$modal_delete_success()` methods
 - [ ] Check if title is in use by Person records (deferred - Person entity may not have title field yet)
 
 **Endpoints:**
@@ -471,7 +486,14 @@ None required - handled client-side via UIkit modal close.
 | DELETE | `/titles/{id}` | Execute deletion |
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-08-001 | ✅ | Modal displays with title "Delete Title", warning "Are you sure you want to delete TEST - Test Title for Deletion?", Delete and Cancel buttons visible |
+| TC-002-08-002 | ✅ | Clicked Delete, modal closed, TEST row removed from table via OOB swap |
+| TC-002-08-003 | ✅ | Clicked Cancel, modal closed, TEST record preserved in table |
+
+**Run Date:** 2025-12-30
+**Summary:** 3/3 tests passed
 
 ---
 
@@ -512,11 +534,11 @@ None required - handled client-side via UIkit modal close.
 | TC-002-06-004 | Title Create Duplicate Code Prevention | UC-002-06-02 | ✅ |
 | TC-002-06-005 | Title Create Duplicate Description Prevention | UC-002-06-02 | ✅ |
 | TC-002-06-006 | Title Create Code Max Length (5 chars) | UC-002-06-02 | ✅ |
-| TC-002-07-001 | Title Edit Form Display | UC-002-07-01 | 🔲 |
-| TC-002-07-002 | Title Edit Success | UC-002-07-02 | 🔲 |
-| TC-002-07-003 | Title Edit Cancel | UC-002-07-03 | 🔲 |
-| TC-002-08-001 | Title Delete Confirmation | UC-002-08-01 | 🔲 |
-| TC-002-08-002 | Title Delete Success | UC-002-08-01 | 🔲 |
-| TC-002-08-003 | Title Delete Cancel | UC-002-08-01 | 🔲 |
+| TC-002-07-001 | Title Edit Form Display | UC-002-07-01 | ✅ |
+| TC-002-07-002 | Title Edit Success | UC-002-07-02 | ✅ |
+| TC-002-07-003 | Title Edit Cancel | UC-002-07-03 | ✅ |
+| TC-002-08-001 | Title Delete Confirmation | UC-002-08-01 | ✅ |
+| TC-002-08-002 | Title Delete Success | UC-002-08-01 | ✅ |
+| TC-002-08-003 | Title Delete Cancel | UC-002-08-01 | ✅ |
 
 ---

@@ -273,7 +273,7 @@ The user stories are grouped into domain-specific features that deliver business
 
 **Acceptance Criteria:**
 - Add person button is visible on the persons page
-- Form includes: firstName, lastName, email, phone, dateOfBirth
+- Form includes: firstName, lastName, email, phone, dateOfBirth, gender, title
 - Date of birth field uses a date picker
 - Email field requires valid email format
 - Email must be unique
