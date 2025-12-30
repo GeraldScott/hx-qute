@@ -8,16 +8,17 @@ This document describes the technical implementation requirements for the Person
 
 ### 1.1 Person Table
 
-**Migration**: `V1.1.0__Create_person_table.sql`
+**Migration**: `V1.3.0__Create_person_table.sql`
 
 ```sql
 CREATE TABLE person (
     id BIGSERIAL PRIMARY KEY,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     date_of_birth DATE,
+    title_id BIGINT REFERENCES title(id),
     gender_id BIGINT REFERENCES gender(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -29,12 +30,15 @@ CREATE TABLE person (
 CREATE INDEX idx_person_email ON person(email);
 CREATE INDEX idx_person_last_name ON person(last_name);
 CREATE INDEX idx_person_first_name ON person(first_name);
+CREATE INDEX idx_person_title ON person(title_id);
 CREATE INDEX idx_person_gender ON person(gender_id);
 ```
 
 **Key Constraints:**
+- `first_name`: Required, max 100 characters
+- `last_name`: Required, max 100 characters
 - `email`: Unique, not null, normalized to lowercase
-- `first_name`, `last_name`: Optional, max 100 characters
+- `title_id`: Foreign key to title table (optional)
 - `gender_id`: Foreign key to gender table (optional)
 - Audit fields track creation and modification metadata
 
@@ -49,7 +53,7 @@ CREATE INDEX idx_person_gender ON person(gender_id);
 ```java
 package io.archton.scaffold.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -59,12 +63,16 @@ import java.util.List;
 @Table(name = "person", uniqueConstraints = {
     @UniqueConstraint(columnNames = "email")
 })
-public class Person extends PanacheEntity {
+public class Person extends PanacheEntityBase {
 
-    @Column(name = "first_name", length = 100)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
+    @Column(name = "first_name", nullable = false, length = 100)
     public String firstName;
 
-    @Column(name = "last_name", length = 100)
+    @Column(name = "last_name", nullable = false, length = 100)
     public String lastName;
 
     @Column(name = "email", nullable = false, unique = true, length = 255)
@@ -75,6 +83,10 @@ public class Person extends PanacheEntity {
 
     @Column(name = "date_of_birth")
     public LocalDate dateOfBirth;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "title_id")
+    public Title title;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gender_id")
@@ -94,39 +106,46 @@ public class Person extends PanacheEntity {
 
     // Display name helper
     public String getDisplayName() {
-        if (firstName != null && lastName != null) {
-            return firstName + " " + lastName;
-        } else if (firstName != null) {
-            return firstName;
-        } else if (lastName != null) {
-            return lastName;
+        StringBuilder sb = new StringBuilder();
+        if (title != null) {
+            sb.append(title.code).append(" ");
         }
-        return email;
+        sb.append(firstName).append(" ").append(lastName);
+        return sb.toString().trim();
     }
 
     // Static finder methods
     public static Person findByEmail(String email) {
-        return find("LOWER(email)", email.toLowerCase()).firstResult();
+        return find("LOWER(email)", email.toLowerCase().trim()).firstResult();
     }
 
     public static List<Person> listAllOrdered() {
         return list("ORDER BY lastName ASC, firstName ASC");
     }
 
-    public static List<Person> findByNameContaining(String searchText) {
-        String pattern = "%" + searchText.toLowerCase() + "%";
-        return list("LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?1 ORDER BY lastName ASC, firstName ASC", pattern);
+    public static List<Person> findByFilter(String filterText, String sortField, String sortDir) {
+        StringBuilder query = new StringBuilder();
+        String orderBy = buildOrderBy(sortField, sortDir);
+
+        if (filterText != null && !filterText.isBlank()) {
+            String pattern = "%" + filterText.toLowerCase().trim() + "%";
+            return list(
+                "LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?1 OR LOWER(email) LIKE ?1 " + orderBy,
+                pattern
+            );
+        }
+        return list(orderBy.replace("ORDER BY ", ""));
     }
 
-    public static List<Person> listOrderedBy(String field, String direction) {
-        String order = "ASC".equalsIgnoreCase(direction) ? "ASC" : "DESC";
-        String orderBy = switch (field) {
-            case "firstName" -> "firstName " + order + ", lastName ASC";
-            case "lastName" -> "lastName " + order + ", firstName ASC";
-            case "email" -> "email " + order;
+    private static String buildOrderBy(String sortField, String sortDir) {
+        String direction = "desc".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
+        String orderBy = switch (sortField != null ? sortField : "") {
+            case "firstName" -> "firstName " + direction + ", lastName ASC";
+            case "lastName" -> "lastName " + direction + ", firstName ASC";
+            case "email" -> "email " + direction;
             default -> "lastName ASC, firstName ASC";
         };
-        return list("ORDER BY " + orderBy);
+        return "ORDER BY " + orderBy;
     }
 
     // Lifecycle callbacks
@@ -159,211 +178,228 @@ public class Person extends PanacheEntity {
 
 **Security**: `@RolesAllowed({"user", "admin"})` - All authenticated users
 
-**Pattern**: Follows ARCHITECTURE.md Section 4.3 with:
-- Full page `Templates` class for direct navigation
-- `Partials` class with `basePath = "partials"` for HTMX fragments
-- Inline editing (no modals)
-- Filter and sort persistence in session
-- OOB swaps for table refresh after create
+**Pattern**: Follows ARCHITECTURE.md Section 7.5 Modal-Based CRUD with:
+- Single `@CheckedTemplate` class with fragment methods using `$` separator
+- Modal dialogs for create, edit, and delete operations
+- Qute fragments within `person.html` template
+- Query parameter-based filtering (no session storage)
+- OOB swaps for table refresh after mutations
 
 ### 3.2 Endpoints
 
 | Method | Path | Handler | Description |
 |--------|------|---------|-------------|
-| GET | `/persons` | `list()` | List persons (with filter/sort) |
-| GET | `/persons/create` | `createForm()` | Display inline create form |
-| GET | `/persons/create/cancel` | `createFormCancel()` | Return Add button |
-| POST | `/persons/create` | `create()` | Submit create form |
-| GET | `/persons/{id}` | `getRow()` | Get single row partial |
-| GET | `/persons/{id}/edit` | `editForm()` | Display inline edit form |
-| POST | `/persons/{id}/update` | `update()` | Submit edit form |
+| GET | `/persons` | `list()` | List persons (with filter/sort via query params) |
+| GET | `/persons/create` | `createForm()` | Display create modal content |
+| POST | `/persons` | `create()` | Submit create form |
+| GET | `/persons/{id}/edit` | `editForm()` | Display edit modal content |
+| PUT | `/persons/{id}` | `update()` | Submit edit form |
+| GET | `/persons/{id}/delete` | `deleteConfirm()` | Display delete confirmation modal |
 | DELETE | `/persons/{id}` | `delete()` | Delete person |
 
 ### 3.3 Query Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `filter` | String | Search text for firstName/lastName |
-| `sortField` | String | Field to sort by (firstName, lastName) |
+| `filter` | String | Search text for firstName/lastName/email |
+| `sortField` | String | Field to sort by (firstName, lastName, email) |
 | `sortDir` | String | Sort direction (asc, desc) |
-| `clear` | String | Set to "true" to clear filter |
-| `clearSort` | String | Set to "true" to clear sort |
 
-### 3.4 Session Storage Keys
+### 3.4 Template Methods
 
-| Key | Description |
-|-----|-------------|
-| `persons.filter` | Persisted filter text |
-| `persons.sortField` | Persisted sort field |
-| `persons.sortDir` | Persisted sort direction |
+```java
+@CheckedTemplate
+public static class Templates {
+    // Full page
+    public static native TemplateInstance person(
+        String title,
+        String currentPage,
+        String userName,
+        List<Person> persons,
+        List<Title> titleChoices,
+        List<Gender> genderChoices,
+        String filterText,
+        String sortField,
+        String sortDir
+    );
+
+    // Fragments (note $ separator matching fragment id)
+    public static native TemplateInstance person$table(
+        List<Person> persons,
+        String filterText
+    );
+    public static native TemplateInstance person$modal_create(
+        Person person,
+        List<Title> titleChoices,
+        List<Gender> genderChoices,
+        String error
+    );
+    public static native TemplateInstance person$modal_edit(
+        Person person,
+        List<Title> titleChoices,
+        List<Gender> genderChoices,
+        String error
+    );
+    public static native TemplateInstance person$modal_delete(
+        Person person,
+        String error
+    );
+    public static native TemplateInstance person$modal_success(
+        String message,
+        List<Person> persons,
+        String filterText
+    );
+    public static native TemplateInstance person$modal_success_row(
+        String message,
+        Person person
+    );
+    public static native TemplateInstance person$modal_delete_success(
+        Long deletedId
+    );
+}
+```
 
 ---
 
 ## 4. Template Structure
 
-### 4.1 Full Page Template
+### 4.1 Template File
 
-**File**: `templates/PersonResource/persons.html`
+**File**: `templates/PersonResource/person.html`
+
+The template contains:
+1. **Main page content** with filter bar, Add button, table container, and modal shell
+2. **Fragment: `table`** - Table with all person rows
+3. **Fragment: `modal_create`** - Create form modal content
+4. **Fragment: `modal_edit`** - Edit form modal content
+5. **Fragment: `modal_delete`** - Delete confirmation modal content
+6. **Fragment: `modal_success`** - Success response with OOB table refresh
+7. **Fragment: `modal_success_row`** - Success response with OOB single row update
+8. **Fragment: `modal_delete_success`** - Success response with OOB row removal
+
+### 4.2 Page Layout
 
 ```
-{#include base}
-- Page title: "Persons"
-- Filter form (hx-get="/persons" hx-target="#persons-table-container")
-- Sort panel (hx-get="/persons" hx-target="#persons-table-container")
-- Create form container: #person-create-container
-- Table container: #persons-table-container
-{/include}
+┌─────────────────────────────────────────────────────────────┐
+│ Person Management                                            │
+├─────────────────────────────────────────────────────────────┤
+│ Filter Bar (above table)                                     │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ [Search Input] [Sort Field ▼] [Sort Dir ▼] [Filter] [Clear] │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                                [+ Add Button] │
+├─────────────────────────────────────────────────────────────┤
+│ Table Container (#person-table-container)                    │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ Name | Email | Phone | DOB | Title | Gender | Actions   │ │
+│ │ Row 1: [Data] [Edit] [Delete]                           │ │
+│ │ Row 2: [Data] [Edit] [Delete]                           │ │
+│ └─────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│ Static Modal Shell (#person-modal)                           │
+│ ← Content loaded dynamically via HTMX                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Partial Templates
+### 4.3 Filter Bar HTML
 
-**Directory**: `templates/partials/`
+```html
+<!-- Filter Bar - Above Table -->
+<form class="uk-grid-small uk-flex-middle uk-margin-bottom" uk-grid
+      hx-get="/persons"
+      hx-target="#person-table-container"
+      hx-push-url="true">
 
-| File | Description | Target |
-|------|-------------|--------|
-| `persons_table.html` | Table with all rows | `#persons-table-container` |
-| `person_row.html` | Single row (display mode) | `closest tr` |
-| `person_row_edit.html` | Single row (edit mode) | `closest tr` |
-| `person_create_form.html` | Inline create form | `#person-create-container` |
-| `person_create_button.html` | Add button | `#person-create-container` |
-| `person_success.html` | Success message + OOB table | `#person-create-container` |
-| `person_error.html` | Error message | Context-dependent |
+    <!-- Search Input -->
+    <div class="uk-width-expand@s uk-width-1-1">
+        <input class="uk-input" type="search" name="filter"
+               value="{filterText ?: ''}"
+               placeholder="Search name or email..."
+               hx-get="/persons"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#person-table-container"
+               hx-include="closest form" />
+    </div>
 
-### 4.3 Template Parameters
+    <!-- Sort Field -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="sortField">
+            <option value="">Sort by...</option>
+            <option value="lastName" {#if sortField == 'lastName'}selected{/if}>Last Name</option>
+            <option value="firstName" {#if sortField == 'firstName'}selected{/if}>First Name</option>
+            <option value="email" {#if sortField == 'email'}selected{/if}>Email</option>
+        </select>
+    </div>
 
-**persons.html**:
-- `title`: String
-- `currentPage`: String ("persons")
-- `userName`: String (nullable)
-- `persons`: List<Person>
-- `filterText`: String (nullable)
-- `genderChoices`: List<Gender>
-- `sortField`: String (nullable)
-- `sortDir`: String (nullable)
+    <!-- Sort Direction -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="sortDir">
+            <option value="asc" {#if sortDir != 'desc'}selected{/if}>Ascending</option>
+            <option value="desc" {#if sortDir == 'desc'}selected{/if}>Descending</option>
+        </select>
+    </div>
 
-**persons_table.html**:
-- `persons`: List<Person>
-- `filterText`: String (nullable)
-
-**person_row.html**:
-- `person`: Person
-
-**person_row_edit.html**:
-- `person`: Person
-- `genderChoices`: List<Gender>
-- `error`: String (nullable)
-
-**person_create_form.html**:
-- `genderChoices`: List<Gender>
-- `error`: String (nullable)
-
-**person_success.html**:
-- `message`: String
-- `persons`: List<Person>
+    <!-- Buttons -->
+    <div class="uk-width-auto@s">
+        <button type="submit" class="uk-button uk-button-primary">Filter</button>
+        <a href="/persons" class="uk-button uk-button-default">Clear</a>
+    </div>
+</form>
+```
 
 ---
 
 ## 5. HTMX Patterns
 
-### 5.1 Filter Form
+### 5.1 Add Button (Opens Modal)
 
 ```html
-<form hx-get="/persons"
-      hx-target="#persons-table-container"
-      hx-push-url="true"
-      hx-sync="this:replace">
-    <input type="search" name="filter" value="{filterText ?: ''}"
-           hx-get="/persons"
-           hx-trigger="input changed delay:300ms, search"
-           hx-target="#persons-table-container"
-           hx-sync="closest form:abort"/>
-    <button type="submit">Filter</button>
-    <a hx-get="/persons?clear=true"
-       hx-target="#persons-table-container">Clear</a>
-</form>
+<button class="uk-button uk-button-primary uk-margin-bottom"
+        hx-get="/persons/create"
+        hx-target="#person-modal-body"
+        hx-on::after-request="UIkit.modal('#person-modal').show()">
+    <span uk-icon="plus"></span> Add
+</button>
 ```
 
-### 5.2 Sort Panel
+### 5.2 Edit Button (Opens Modal)
 
 ```html
-<form hx-get="/persons"
-      hx-target="#persons-table-container"
-      hx-push-url="true">
-    <select name="sortField">
-        <option value="">Sort by...</option>
-        <option value="firstName" {#if sortField == 'firstName'}selected{/if}>First Name</option>
-        <option value="lastName" {#if sortField == 'lastName'}selected{/if}>Last Name</option>
-    </select>
-    <select name="sortDir">
-        <option value="asc" {#if sortDir == 'asc'}selected{/if}>Ascending</option>
-        <option value="desc" {#if sortDir == 'desc'}selected{/if}>Descending</option>
-    </select>
-    <button type="submit">Sort</button>
-    <a hx-get="/persons?clearSort=true"
-       hx-target="#persons-table-container">Clear</a>
-</form>
+<button class="uk-button uk-button-small uk-button-primary"
+        hx-get="/persons/{p.id}/edit"
+        hx-target="#person-modal-body"
+        hx-on::after-request="UIkit.modal('#person-modal').show()">
+    Edit
+</button>
 ```
 
-### 5.3 Inline Row Editing
+### 5.3 Delete Button (Opens Confirmation Modal)
 
 ```html
-<!-- Display Row (person_row.html) -->
-<tr>
-    <td>{person.firstName ?: ''}</td>
-    <td>{person.lastName ?: ''}</td>
-    <td>{person.email}</td>
-    <td>{person.phone ?: ''}</td>
-    <td>{person.dateOfBirth}</td>
-    <td>{person.gender.description ?: ''}</td>
-    <td>
-        <button hx-get="/persons/{person.id}/edit"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Edit</button>
-        <button hx-delete="/persons/{person.id}"
-                hx-confirm="Are you sure?"
-                hx-target="closest tr"
-                hx-swap="delete swap:300ms">Delete</button>
-    </td>
-</tr>
-
-<!-- Edit Row (person_row_edit.html) -->
-<tr class="editing">
-    <td><input name="firstName" value="{person.firstName ?: ''}"/></td>
-    <td><input name="lastName" value="{person.lastName ?: ''}"/></td>
-    <td><input name="email" type="email" value="{person.email}"/></td>
-    <td><input name="phone" value="{person.phone ?: ''}"/></td>
-    <td><input name="dateOfBirth" type="date" value="{person.dateOfBirth}"/></td>
-    <td>
-        <select name="genderId">
-            <option value="">-- Select --</option>
-            {#for gender in genderChoices}
-            <option value="{gender.id}" {#if person.gender?? && person.gender.id == gender.id}selected{/if}>
-                {gender.description}
-            </option>
-            {/for}
-        </select>
-    </td>
-    <td>
-        <button hx-get="/persons/{person.id}"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Cancel</button>
-        <button hx-post="/persons/{person.id}/update"
-                hx-include="closest tr"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Save</button>
-    </td>
-</tr>
+<button class="uk-button uk-button-small uk-button-danger"
+        hx-get="/persons/{p.id}/delete"
+        hx-target="#person-modal-body"
+        hx-on::after-request="UIkit.modal('#person-modal').show()">
+    Delete
+</button>
 ```
 
-### 5.4 Attribute Inheritance
+### 5.4 Modal Success Response (Close + OOB Update)
 
 ```html
-<!-- Table body with inherited attributes -->
-<tbody id="persons-table-body" hx-target="closest tr" hx-swap="outerHTML">
-    {#for person in persons}
-    {#include partials/person_row person=person /}
-    {/for}
-</tbody>
+{#fragment id=modal_success rendered=false}
+{@String message}
+{@java.util.List<io.archton.scaffold.entity.Person> persons}
+{@String filterText}
+
+<!-- Close modal when loaded -->
+<div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
+
+<!-- OOB swap: Replace table container content -->
+<div id="person-table-container" hx-swap-oob="innerHTML">
+    {#include $table persons=persons filterText=filterText /}
+</div>
+{/fragment}
 ```
 
 ---
@@ -374,6 +410,8 @@ public class Person extends PanacheEntity {
 
 | Field | Rule | Error Message |
 |-------|------|---------------|
+| firstName | Required | "First name is required." |
+| lastName | Required | "Last name is required." |
 | email | Required | "Email is required." |
 | email | Valid format | "Invalid email format." |
 | email | Unique | "Email already registered." |
@@ -422,79 +460,34 @@ public class PersonResource { ... }
 <li class="{#if currentPage == 'persons'}uk-active{/if}">
     <a href="/persons">
         <span uk-icon="icon: users"></span>
-        <span>Persons</span>
+        <span class="uk-margin-small-left">Persons</span>
     </a>
 </li>
 ```
 
 ---
 
-## 9. Session-Based Filter/Sort Persistence
-
-### 9.1 Implementation Pattern
-
-```java
-@Inject
-io.vertx.ext.web.RoutingContext routingContext;
-
-private static final String FILTER_SESSION_KEY = "persons.filter";
-private static final String SORT_FIELD_KEY = "persons.sortField";
-private static final String SORT_DIR_KEY = "persons.sortDir";
-
-@GET
-public TemplateInstance list(
-        @QueryParam("filter") String filterText,
-        @QueryParam("sortField") String sortField,
-        @QueryParam("sortDir") String sortDir,
-        @QueryParam("clear") String clear,
-        @QueryParam("clearSort") String clearSort) {
-
-    // Handle clear actions
-    if ("true".equals(clear)) {
-        routingContext.session().remove(FILTER_SESSION_KEY);
-        filterText = null;
-    }
-    if ("true".equals(clearSort)) {
-        routingContext.session().remove(SORT_FIELD_KEY);
-        routingContext.session().remove(SORT_DIR_KEY);
-        sortField = null;
-        sortDir = null;
-    }
-
-    // Persist or restore from session
-    if (filterText == null) {
-        filterText = routingContext.session().get(FILTER_SESSION_KEY);
-    } else {
-        routingContext.session().put(FILTER_SESSION_KEY, filterText.trim());
-    }
-
-    // ... similar for sort fields
-}
-```
-
----
-
-## 10. Traceability
+## 9. Traceability
 
 | Use Case | Implementation Component |
 |----------|-------------------------|
-| UC-003-01-01: View Persons List | `PersonResource.list()`, `persons.html`, `persons_table.html`, `person_row.html` |
-| UC-003-02-01: Display Create Form | `PersonResource.createForm()`, `person_create_form.html` |
-| UC-003-02-02: Submit Create Form | `PersonResource.create()`, `person_success.html` |
-| UC-003-03-01: Display Edit Form | `PersonResource.editForm()`, `person_row_edit.html` |
-| UC-003-03-02: Submit Edit Form | `PersonResource.update()`, `person_row.html` |
-| UC-003-03-03: Cancel Edit | `PersonResource.getRow()`, `person_row.html` |
-| UC-003-04-01: Delete Person | `PersonResource.delete()` |
-| UC-003-05-01: Apply Filter | `PersonResource.list()`, filter form in `persons.html` |
-| UC-003-05-02: Clear Filter | `PersonResource.list()` with `clear=true` |
-| UC-003-06-01: Apply Sort | `PersonResource.list()`, sort panel in `persons.html` |
-| UC-003-06-02: Clear Sort | `PersonResource.list()` with `clearSort=true` |
+| UC-003-01-01: View Persons List | `PersonResource.list()`, `person.html`, `$table` fragment |
+| UC-003-02-01: Display Create Form | `PersonResource.createForm()`, `$modal_create` fragment |
+| UC-003-02-02: Submit Create Form | `PersonResource.create()`, `$modal_success` fragment |
+| UC-003-03-01: Display Edit Form | `PersonResource.editForm()`, `$modal_edit` fragment |
+| UC-003-03-02: Submit Edit Form | `PersonResource.update()`, `$modal_success_row` fragment |
+| UC-003-03-03: Cancel Edit | Cancel button with `uk-modal-close` class |
+| UC-003-04-01: Delete Person | `PersonResource.delete()`, `$modal_delete`, `$modal_delete_success` fragments |
+| UC-003-05-01: Apply Filter | `PersonResource.list()` with `filter` query param |
+| UC-003-05-02: Clear Filter | Link to `/persons` (clears all params) |
+| UC-003-06-01: Apply Sort | `PersonResource.list()` with `sortField`, `sortDir` query params |
+| UC-003-06-02: Clear Sort | Link to `/persons` (clears all params) |
 
 ---
 
-## 11. Dependencies
+## 10. Dependencies
 
-### 11.1 Required Extensions
+### 10.1 Required Extensions
 
 ```xml
 <!-- Already included in project -->
@@ -512,16 +505,17 @@ public TemplateInstance list(
 </dependency>
 ```
 
-### 11.2 Entity Dependencies
+### 10.2 Entity Dependencies
 
-- `Gender` entity must exist (Feature 002)
+- `Gender` entity must exist (Feature 002) ✅
+- `Title` entity must exist (Feature 002) ✅
 
-### 11.3 Frontend Dependencies (CDN)
+### 10.3 Frontend Dependencies (CDN)
 
 - HTMX 2.0.8
 - UIkit 3.25
 
 ---
 
-*Document Version: 1.0*
+*Document Version: 2.0*
 *Last Updated: December 2025*

@@ -257,7 +257,7 @@ The user stories are grouped into domain-specific features that deliver business
 **Acceptance Criteria:**
 - List of people page is accessible from the navigation bar
 - People are displayed in a table format
-- Each entry shows: firstName, lastName, email, phone, dateOfBirth
+- Each entry shows: lastName, firstName, email
 - People are sorted by lastName then firstName
 - Empty state message displays when no people exist
 
@@ -273,8 +273,10 @@ The user stories are grouped into domain-specific features that deliver business
 
 **Acceptance Criteria:**
 - Add person button is visible on the persons page
-- Form includes: firstName, lastName, email, phone, dateOfBirth, gender, title
+- Form includes: lastName, firstName, title, email, phone, dateOfBirth, gender
 - Date of birth field uses a date picker
+- Gender and Title have dropdown select lists
+- lastName and firstName are required
 - Email field requires valid email format
 - Email must be unique
 - Form validates all required fields before submission
@@ -295,7 +297,9 @@ The user stories are grouped into domain-specific features that deliver business
 **Acceptance Criteria:**
 - Edit button is visible for each person in the list
 - Edit form pre-populates with existing data
-- User can modify firstName, lastName, email, phone, dateOfBirth
+- User can modify lastName, firstName, title, email, phone, dateOfBirth, gender
+- Gender and Title have dropdown select lists
+- lastName and firstName are required
 - Email must remain unique
 - Audit fields are visible but cannot be amended
 - Entry has audit fields to record who updated the entry and when
@@ -325,12 +329,12 @@ The user stories are grouped into domain-specific features that deliver business
 
 ### US-003-05: Filter People
 **As an** authenticated user
-**I want to** filter the people by name
+**I want to** filter the people by name or email
 **So that** I can find and display people's details
 
 **Acceptance Criteria:**
 - Filter panel is visible on the people page above the table of people
-- Filter: lastName or firstName
+- Filter: lastName, firstName, or email
 - Filter button applies all selected filters
 - Filtered results update the persons table
 - Filters persist during the session

@@ -49,11 +49,13 @@ This feature provides CRUD operations for managing Person records.
 | Trigger | User clicks Add button |
 
 **Main Flow:**
-1. System displays inline create form above table
-2. Form includes fields: firstName, lastName, email, phone, dateOfBirth, gender
+1. System displays create form in modal dialog
+2. Form includes fields: firstName, lastName, title (dropdown), email, phone, dateOfBirth, gender (dropdown)
 3. Form includes Save and Cancel buttons
+4. Title dropdown populated from Title.listAllOrdered()
+5. Gender dropdown populated from Gender.listAllOrdered()
 
-**Postcondition:** Create form is displayed
+**Postcondition:** Create modal is displayed
 
 ---
 
@@ -66,24 +68,30 @@ This feature provides CRUD operations for managing Person records.
 | Trigger | User clicks Save button |
 
 **Main Flow:**
-1. System validates email is not empty
-2. System validates email format
-3. System normalizes email to lowercase
-4. System validates email uniqueness
-5. System sets audit fields (createdBy, createdAt, updatedBy, updatedAt)
-6. System persists new Person record
-7. System displays success message
-8. System refreshes Persons list
+1. System validates firstName is not empty
+2. System validates lastName is not empty
+3. System validates email is not empty
+4. System validates email format
+5. System normalizes email to lowercase
+6. System validates email uniqueness
+7. System links title if titleId provided
+8. System links gender if genderId provided
+9. System sets audit fields (createdBy, createdAt, updatedBy, updatedAt)
+10. System persists new Person record
+11. System closes modal
+12. System refreshes Persons table via OOB swap
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 1a | Email empty | Display "Email is required." error |
-| 2a | Email invalid format | Display "Invalid email format." error |
-| 4a | Email already exists | Display "Email already registered." error |
+| 1a | firstName empty | Display "First name is required." error |
+| 2a | lastName empty | Display "Last name is required." error |
+| 3a | Email empty | Display "Email is required." error |
+| 4a | Email invalid format | Display "Invalid email format." error |
+| 6a | Email already exists | Display "Email already registered." error |
 
-**Postcondition:** New Person record created; list updated
+**Postcondition:** New Person record created; modal closed; table updated
 
 ---
 
@@ -99,18 +107,20 @@ This feature provides CRUD operations for managing Person records.
 
 **Main Flow:**
 1. System retrieves Person record by ID
-2. System replaces table row with inline edit form
-3. Form pre-populates all fields
-4. Form displays audit fields (read-only)
-5. Form includes Save and Cancel buttons
+2. System displays edit form in modal dialog
+3. Form pre-populates all fields with current values
+4. Title dropdown shows current selection
+5. Gender dropdown shows current selection
+6. Form displays audit fields (read-only, in collapsible section)
+7. Form includes Save and Cancel buttons
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 1a | Person not found | Display error; refresh list |
+| 1a | Person not found | Display error message in modal |
 
-**Postcondition:** Edit form displayed in place of row
+**Postcondition:** Edit modal displayed with pre-populated data
 
 ---
 
@@ -123,23 +133,30 @@ This feature provides CRUD operations for managing Person records.
 | Trigger | User clicks Save button |
 
 **Main Flow:**
-1. System validates email is not empty
-2. System validates email format
-3. System normalizes email to lowercase
-4. System validates email uniqueness (excluding current record)
-5. System updates audit fields (updatedBy, updatedAt)
-6. System persists updated Person record
-7. System replaces edit form with updated display row
+1. System validates firstName is not empty
+2. System validates lastName is not empty
+3. System validates email is not empty
+4. System validates email format
+5. System normalizes email to lowercase
+6. System validates email uniqueness (excluding current record)
+7. System updates title link if changed
+8. System updates gender link if changed
+9. System updates audit fields (updatedBy, updatedAt)
+10. System persists updated Person record
+11. System closes modal
+12. System updates table row via OOB swap
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 1a | Email empty | Display "Email is required." error |
-| 2a | Email invalid format | Display "Invalid email format." error |
-| 4a | Email conflicts with another record | Display "Email already registered." error |
+| 1a | firstName empty | Display "First name is required." error |
+| 2a | lastName empty | Display "Last name is required." error |
+| 3a | Email empty | Display "Email is required." error |
+| 4a | Email invalid format | Display "Invalid email format." error |
+| 6a | Email conflicts with another record | Display "Email already registered." error |
 
-**Postcondition:** Person record updated; row reflects changes
+**Postcondition:** Person record updated; modal closed; row reflects changes
 
 ---
 
@@ -148,14 +165,14 @@ This feature provides CRUD operations for managing Person records.
 | Attribute | Value |
 |-----------|-------|
 | Actor | User, Administrator |
-| Precondition | User is in edit mode for a Person entry |
+| Precondition | User is viewing edit modal for a Person entry |
 | Trigger | User clicks Cancel button |
 
 **Main Flow:**
-1. System discards any changes
-2. System replaces edit form with original display row
+1. Modal closes (via uk-modal-close class)
+2. No changes are saved
 
-**Postcondition:** Original values preserved; edit mode exited
+**Postcondition:** Modal closed; original values preserved
 
 ---
 
@@ -170,18 +187,20 @@ This feature provides CRUD operations for managing Person records.
 | Trigger | User clicks Delete button for a Person entry |
 
 **Main Flow:**
-1. System displays browser confirmation dialog
-2. User confirms deletion
-3. System deletes Person record
-4. System removes row from list with animation
+1. System displays delete confirmation modal with person's name
+2. Modal shows warning message and Delete/Cancel buttons
+3. User clicks Delete button
+4. System deletes Person record
+5. System closes modal
+6. System removes row from list via OOB swap
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 2a | User cancels | Close dialog; no action taken |
+| 3a | User clicks Cancel | Modal closes; no action taken |
 
-**Postcondition:** Person record deleted; list updated
+**Postcondition:** Person record deleted; modal closed; row removed from list
 
 ---
 
@@ -193,22 +212,22 @@ This feature provides CRUD operations for managing Person records.
 |-----------|-------|
 | Actor | User, Administrator |
 | Precondition | User is on Persons list page |
-| Trigger | User enters filter criteria and clicks Filter button |
+| Trigger | User enters filter criteria and clicks Filter button (or types with 300ms debounce) |
 
 **Main Flow:**
 1. User enters search text in filter field
-2. User clicks Filter button
-3. System queries Person records matching criteria (firstName or lastName contains search text)
+2. User clicks Filter button (or waits for debounce)
+3. System queries Person records matching criteria (firstName, lastName, or email contains search text)
 4. System displays filtered results
-5. System persists filter criteria in session
+5. URL is updated with filter query parameter (hx-push-url)
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 3a | No matching records | Display "No persons match the filter criteria" |
+| 3a | No matching records | Display "No persons match the filter criteria" message |
 
-**Postcondition:** Filtered list displayed; filter criteria persisted
+**Postcondition:** Filtered list displayed; URL reflects filter state
 
 ---
 
@@ -221,11 +240,11 @@ This feature provides CRUD operations for managing Person records.
 | Trigger | User clicks Clear button |
 
 **Main Flow:**
-1. System clears filter criteria from session
-2. System retrieves all Person records
+1. Browser navigates to `/persons` (no query parameters)
+2. System retrieves all Person records with default sort
 3. System displays full list
 
-**Postcondition:** Filter cleared; full list displayed
+**Postcondition:** Filter cleared; full list displayed; URL clean
 
 ---
 
@@ -237,17 +256,17 @@ This feature provides CRUD operations for managing Person records.
 |-----------|-------|
 | Actor | User, Administrator |
 | Precondition | User is on Persons list page |
-| Trigger | User selects sort option |
+| Trigger | User selects sort option and clicks Filter button |
 
 **Main Flow:**
-1. User selects sort field (lastName or firstName)
+1. User selects sort field (lastName, firstName, or email)
 2. User selects sort direction (ascending or descending)
-3. User clicks Sort button
+3. User clicks Filter button
 4. System reorders Person records by selected criteria
 5. System displays sorted results
-6. System persists sort criteria in session
+6. URL is updated with sort query parameters (hx-push-url)
 
-**Postcondition:** Sorted list displayed; sort criteria persisted
+**Postcondition:** Sorted list displayed; URL reflects sort state
 
 ---
 
@@ -256,15 +275,15 @@ This feature provides CRUD operations for managing Person records.
 | Attribute | Value |
 |-----------|-------|
 | Actor | User, Administrator |
-| Precondition | User has applied a sort |
-| Trigger | User clicks Clear Sort button |
+| Precondition | User has applied a custom sort |
+| Trigger | User clicks Clear button |
 
 **Main Flow:**
-1. System clears sort criteria from session
+1. Browser navigates to `/persons` (no query parameters)
 2. System applies default sort (lastName, firstName ascending)
 3. System displays sorted list
 
-**Postcondition:** Sort cleared; default sort applied
+**Postcondition:** Sort cleared; default sort applied; URL clean
 
 ---
 
