@@ -181,6 +181,7 @@
 {@String message}
 {@io.archton.scaffold.entity.Gender gender}
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+<template>
 <tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
     <td>{gender.code}</td>
     <td>{gender.description}</td>
@@ -201,4 +202,35 @@
         </div>
     </td>
 </tr>
+</template>
+{/fragment}
+
+{#fragment id=modal_delete rendered=false}
+{@io.archton.scaffold.entity.Gender gender}
+{@String error}
+<h2 class="uk-modal-title">Delete Gender</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{#else}
+<div class="uk-alert uk-alert-warning">
+    Are you sure you want to delete <strong>{gender.code}</strong> - <strong>{gender.description}</strong>?
+</div>
+<p class="uk-text-muted">This action cannot be undone.</p>
+{/if}
+<div class="uk-margin uk-text-right">
+    <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+    {#if !error??}
+    <button class="uk-button uk-button-danger"
+            hx-delete="/genders/{gender.id}"
+            hx-target="#gender-modal-body">
+        Delete
+    </button>
+    {/if}
+</div>
+{/fragment}
+
+{#fragment id=modal_delete_success rendered=false}
+{@Long deletedId}
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+<template><tr id="gender-row-{deletedId}" hx-swap-oob="delete"></tr></template>
 {/fragment}

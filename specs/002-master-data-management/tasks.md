@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-04-01: Delete Gender
-**Status:** 🔲 Not Started
+**Current Use Case:** Feature 002 Complete
+**Status:** ✅ All Use Cases Complete
 **Blockers:** None
 
 ---
@@ -18,7 +18,7 @@
 | UC-002-03-01: Display Edit Form | ✅ Complete |
 | UC-002-03-02: Submit Edit Form | ✅ Complete |
 | UC-002-03-03: Cancel Edit | ✅ Complete |
-| UC-002-04-01: Delete Gender | 🔲 Not Started |
+| UC-002-04-01: Delete Gender | ✅ Complete |
 
 ---
 
@@ -211,28 +211,34 @@ None required - handled client-side via UIkit modal close.
 
 ## UC-002-04-01: Delete Gender
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-04 - Delete Gender
 
-**Description:** Delete gender record with confirmation.
+**Description:** Delete gender record with confirmation modal.
 
 **Implementation Tasks:**
-- [ ] Implement `DELETE /genders/{id}` endpoint
-- [ ] Check if gender is in use by Person records
-- [ ] If in use, return error message in `gender_row_edit.html`
-- [ ] If not in use, delete record and return empty response
-- [ ] HTMX `hx-confirm` handles browser confirmation
-- [ ] HTMX `hx-swap="delete"` removes row from DOM
+- [x] Implement `GET /genders/{id}/delete` endpoint (confirmation modal)
+- [x] Implement `DELETE /genders/{id}` endpoint
+- [x] Add `modal_delete` fragment for confirmation dialog
+- [x] Add `modal_delete_success` fragment for OOB row removal (uses `<template>` wrapper for proper OOB swap)
+- [x] Add `Templates.gender$modal_delete()` and `Templates.gender$modal_delete_success()` methods
+- [ ] Check if gender is in use by Person records (deferred - Person entity not yet implemented)
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| DELETE | `/genders/{id}` | Delete gender |
+| GET | `/genders/{id}/delete` | Display delete confirmation modal |
+| DELETE | `/genders/{id}` | Execute deletion |
 
 **Test Results:**
-- Test ID: TC-002-04-001, TC-002-04-002, TC-002-04-003
-- Status: 🔲 Not Tested
-- Notes:
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-04-001 | ✅ | Modal displays with title "Delete Gender", warning message with code/description, Delete and Cancel buttons |
+| TC-002-04-002 | ✅ | Delete removes row via OOB swap (required `<template>` wrapper for `<tr>` elements) |
+| TC-002-04-003 | ✅ | Cancel closes modal, record preserved in table |
+
+**Run Date:** 2025-12-30
+**Summary:** 3/3 tests passed
 
 ---
 
@@ -255,8 +261,8 @@ None required - handled client-side via UIkit modal close.
 | TC-002-03-001 | Gender Edit Form Display | UC-002-03-01 | ✅ |
 | TC-002-03-002 | Gender Edit Success | UC-002-03-02 | ✅ |
 | TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | ✅ |
-| TC-002-04-001 | Gender Delete Confirmation | UC-002-04-01 | 🔲 |
-| TC-002-04-002 | Gender Delete Success | UC-002-04-01 | 🔲 |
-| TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | 🔲 |
+| TC-002-04-001 | Gender Delete Confirmation | UC-002-04-01 | ✅ |
+| TC-002-04-002 | Gender Delete Success | UC-002-04-01 | ✅ |
+| TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | ✅ |
 
 ---

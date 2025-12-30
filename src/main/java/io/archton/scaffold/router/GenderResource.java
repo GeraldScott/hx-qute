@@ -7,6 +7,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
@@ -46,6 +47,10 @@ public class GenderResource {
         // Success response fragments (close modal + OOB updates)
         public static native TemplateInstance gender$modal_success(String message, List<Gender> genders);
         public static native TemplateInstance gender$modal_success_row(String message, Gender gender);
+
+        // Delete modal fragments
+        public static native TemplateInstance gender$modal_delete(Gender gender, String error);
+        public static native TemplateInstance gender$modal_delete_success(Long deletedId);
     }
 
     @GET
@@ -197,5 +202,44 @@ public class GenderResource {
 
         // Return success with OOB single row update
         return Templates.gender$modal_success_row("Gender updated successfully.", gender);
+    }
+
+    @GET
+    @Path("/{id}/delete")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance deleteConfirm(@PathParam("id") Long id) {
+        Gender gender = Gender.findById(id);
+        if (gender == null) {
+            Gender emptyGender = new Gender();
+            emptyGender.id = id;
+            return Templates.gender$modal_delete(emptyGender, "Gender not found.");
+        }
+        return Templates.gender$modal_delete(gender, null);
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @Transactional
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance delete(@PathParam("id") Long id) {
+        Gender gender = Gender.findById(id);
+        if (gender == null) {
+            Gender emptyGender = new Gender();
+            emptyGender.id = id;
+            return Templates.gender$modal_delete(emptyGender, "Gender not found.");
+        }
+
+        // TODO: Check if gender is in use by Person records
+        // For now, just delete - Person entity doesn't exist yet
+        // Long personCount = Person.count("gender", gender);
+        // if (personCount > 0) {
+        //     return Templates.gender$modal_delete(gender,
+        //         "Cannot delete: Gender is in use by " + personCount + " person(s).");
+        // }
+
+        gender.delete();
+
+        // Return success with OOB row removal
+        return Templates.gender$modal_delete_success(id);
     }
 }
