@@ -1,940 +1,458 @@
-# HX Qute - Architecture
+# HX Qute Architecture Guide
 
-This document describes the system architecture for HX Qute, a reference application built with Quarkus, HTMX, and Qute templates. It serves as a blueprint for developers building similar applications or extending this one.
+A comprehensive technical reference for developing features in this Quarkus + HTMX + Qute application.
 
 ---
 
-## 1. Technology Stack
+## Table of Contents
 
-### Core Framework
+1. [Overview](#1-overview)
+2. [Technology Stack](#2-technology-stack)
+3. [Project Structure](#3-project-structure)
+4. [Database Layer](#4-database-layer)
+5. [Entity Layer](#5-entity-layer)
+6. [Resource Layer](#6-resource-layer)
+7. [Template System](#7-template-system)
+8. [HTMX Integration](#8-htmx-integration)
+9. [Security Architecture](#9-security-architecture)
+10. [Configuration Reference](#10-configuration-reference)
+11. [Testing Patterns](#11-testing-patterns)
+12. [Development Workflow](#12-development-workflow)
+
+---
+
+## 1. Overview
+
+HX Qute is a reference implementation demonstrating modern server-side web development using the hypermedia-driven application (HDA) pattern. It combines Quarkus's reactive capabilities with HTMX's HTML-over-the-wire approach, eliminating the need for complex JavaScript frameworks while delivering responsive, interactive user experiences.
+
+### Design Principles
+
+| Principle | Implementation |
+|-----------|----------------|
+| Server-Side Rendering | All HTML generated on the server via Qute templates |
+| Hypermedia-Driven | HTMX handles partial page updates without full reloads |
+| Type Safety | `@CheckedTemplate` ensures compile-time template validation |
+| Fragment-Based UI | Qute fragments enable reusable, modal-based CRUD patterns |
+| Security by Default | Form authentication with BCrypt password hashing |
+
+---
+
+## 2. Technology Stack
+
+### 2.1 Core Framework
+
 | Component | Technology | Version |
 |-----------|------------|---------|
 | Framework | Quarkus | 3.30.3 |
 | Language | Java | 21 |
 | Build Tool | Maven | 3.x |
 
-### Backend Dependencies
-| Purpose | Dependency | Notes |
-|---------|------------|-------|
-| REST API | `quarkus-rest` | RESTEasy Reactive |
-| Templating | `quarkus-rest-qute` | Type-safe templates |
-| ORM | `quarkus-hibernate-orm-panache` | Active Record pattern |
-| Database | `quarkus-jdbc-postgresql` | PostgreSQL driver |
-| Migrations | `quarkus-flyway` | Schema versioning |
+### 2.2 Backend Dependencies
+
+| Purpose | Extension | Description |
+|---------|-----------|-------------|
+| REST API | `quarkus-rest` | RESTEasy Reactive endpoints |
+| Templating | `quarkus-rest-qute` | Type-safe Qute template integration |
+| ORM | `quarkus-hibernate-orm-panache` | Active Record pattern for entities |
+| Database | `quarkus-jdbc-postgresql` | PostgreSQL JDBC driver |
+| Migrations | `quarkus-flyway` | Versioned schema migrations |
 | Security | `quarkus-security-jpa` | JPA-based identity provider with BCrypt |
-| Validation | `quarkus-hibernate-validator` | Bean validation |
+| Validation | `quarkus-hibernate-validator` | Bean validation (JSR-380) |
 | CDI | `quarkus-arc` | Dependency injection |
 | Testing | `quarkus-junit5` | JUnit 5 integration |
 
-### Frontend Stack (CDN-based)
-| Purpose | Technology | CDN Source |
-|---------|------------|------------|
-| Dynamic UI | HTMX 2.0.8 | jsdelivr.net |
-| CSS Framework | UIkit 3.25 | jsdelivr.net |
-| Custom Styles | Custom CSS | Local `/style.css` |
+### 2.3 Frontend Stack (CDN-Based)
+
+| Purpose | Technology | Version | CDN |
+|---------|------------|---------|-----|
+| Dynamic UI | HTMX | 2.0.8 | jsdelivr.net |
+| CSS Framework | UIkit | 3.25.4 | jsdelivr.net |
+| Custom Styles | CSS | - | Local `/style.css` |
+
+### 2.4 Database
+
+| Component | Technology |
+|-----------|------------|
+| RDBMS | PostgreSQL 17 |
+| Migrations | Flyway |
+| ORM | Hibernate with Panache |
 
 ---
 
-## 2. Project Structure
+## 3. Project Structure
 
 ```
-src/main/java/io/archton/scaffold/
-├── entity/              # JPA entities (Panache public field style)
-│   ├── Gender.java
-│   ├── Person.java
-│   └── UserLogin.java   # @UserDefinition for quarkus-security-jpa
-├── repository/          # PanacheRepository implementations
-│   └── GenderRepository.java
-├── router/              # REST resources with @CheckedTemplate
-│   ├── IndexResource.java
-│   ├── GenderResource.java
-│   ├── PersonResource.java
-│   └── AuthResource.java
-├── service/             # Business logic services
-│   └── PasswordValidator.java
-└── error/               # Exception handling
-    └── GlobalExceptionMapper.java
-
-src/main/resources/
-├── db/migration/        # Flyway migrations
-│   ├── V1.0.0__Create_gender_table.sql
-│   ├── V1.0.1__Insert_gender_data.sql
-│   ├── V1.1.0__Create_person_table.sql
-│   └── V1.2.0__Create_user_login_table.sql
-├── templates/
-│   ├── base.html                    # Base layout
-│   ├── error.html                   # Error page
-│   ├── IndexResource/
-│   │   └── index.html               # Home page
-│   ├── GenderResource/
-│   │   ├── gender.html              # Gender list
-│   │   └── genderForm.html          # Gender create/edit form
-│   ├── PersonResource/
-│   │   ├── persons.html             # Persons list
-│   │   └── personForm.html          # Person create/edit form
-│   └── AuthResource/
-│       ├── login.html               # Login page
-│       ├── signup.html              # Signup page
-│       └── logout.html              # Logout confirmation
-├── META-INF/resources/
-│   ├── style.css                    # Custom styles
-│   ├── favicon.ico
-│   └── img/                         # Images
-└── application.properties
+src/main/
+├── java/io/archton/scaffold/
+│   ├── entity/              # JPA entities with Panache
+│   │   ├── Gender.java
+│   │   └── UserLogin.java
+│   ├── error/               # Exception handling
+│   │   └── GlobalExceptionMapper.java
+│   ├── router/              # REST resource classes
+│   │   ├── AuthResource.java
+│   │   ├── GenderResource.java
+│   │   └── IndexResource.java
+│   └── service/             # Business logic services
+│       └── PasswordValidator.java
+├── resources/
+│   ├── application.properties
+│   ├── db/migration/        # Flyway SQL migrations
+│   │   ├── V1.0.0__Create_gender_table.sql
+│   │   ├── V1.0.1__Insert_gender_data.sql
+│   │   ├── V1.2.0__Create_user_login_table.sql
+│   │   └── V1.2.1__Insert_admin_user.sql
+│   ├── templates/
+│   │   ├── base.html        # Master layout template
+│   │   ├── error.html       # Error page template
+│   │   ├── AuthResource/    # Auth page templates
+│   │   ├── GenderResource/  # Gender page templates
+│   │   └── IndexResource/   # Index page templates
+│   └── META-INF/resources/  # Static assets
+│       ├── style.css
+│       └── img/
+└── test/
+    └── java/io/archton/scaffold/
+        └── router/          # REST endpoint tests
 ```
 
 ---
 
-## 3. Entity Layer
+## 4. Database Layer
 
-### 3.1 Base Pattern: Panache Active Record
+### 4.1 Flyway Migrations
 
-All entities extend `PanacheEntity`, which provides:
-- Auto-managed `id` field (Long)
-- Built-in CRUD methods (`persist()`, `delete()`, `findById()`, etc.)
-- Static finder methods via Active Record pattern
+Flyway manages all schema changes through versioned SQL scripts.
+
+**Location**: `src/main/resources/db/migration/`
+
+**Naming Convention**: `V{major}.{minor}.{patch}__{Description}.sql`
+
+| Convention | Example |
+|------------|---------|
+| Initial schema | `V1.0.0__Create_gender_table.sql` |
+| New feature | `V1.1.0__Create_person_table.sql` |
+| Data seed | `V1.2.1__Insert_admin_user.sql` |
+| Bug fix | `V1.2.2__Fix_constraint_name.sql` |
+
+**Configuration**:
+
+```properties
+quarkus.flyway.migrate-at-start=true
+quarkus.hibernate-orm.schema-management.strategy=none
+```
+
+### 4.2 Migration Best Practices
+
+1. **One change per migration**: Each script should represent a single, atomic schema change
+2. **Never modify applied migrations**: Create new migrations for changes
+3. **Use descriptive names**: Names should clearly indicate the change
+4. **Include rollback comments**: Document how to reverse the change
+5. **Test migrations**: Verify against a clean database before committing
+
+### 4.3 PostgreSQL-Specific Patterns
+
+**Identity Columns** (use BIGSERIAL for auto-increment):
+
+```sql
+CREATE TABLE entity_name (
+    id BIGSERIAL PRIMARY KEY,
+    -- columns...
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
+);
+```
+
+**Important**: Use `BIGSERIAL` with `GenerationType.IDENTITY` in JPA. Do NOT use sequences with Panache entities.
+
+---
+
+## 5. Entity Layer
+
+### 5.1 PanacheEntityBase Pattern
+
+All entities extend `PanacheEntityBase` (not `PanacheEntity`) to use `BIGSERIAL` primary keys:
 
 ```java
 @Entity
-@Table(name = "table_name")
-public class MyEntity extends PanacheEntity {
+@Table(name = "entity_name")
+public class EntityName extends PanacheEntityBase {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    
+    // Public fields (Panache convention)
+    @Column(nullable = false, length = 100)
+    public String name;
 
-    // Public fields (no getters/setters needed)
-    @Column(nullable = false)
-    public String fieldName;
+    // Audit fields (use Instant for UTC timestamps)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    public Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    public Instant updatedAt;
+
+    @Column(name = "created_by")
+    public String createdBy;
+
+    @Column(name = "updated_by")
+    public String updatedBy;
 
     // Static finder methods
-    public static MyEntity findByFieldName(String value) {
-        return find("fieldName", value).firstResult();
+    public static EntityName findByName(String name) {
+        return find("name", name).firstResult();
     }
 
-    public static List<MyEntity> findByStatus(String status) {
-        return list("status", status);
+    public static List<EntityName> listAllOrdered() {
+        return list("ORDER BY name");
+    }
+
+    // Lifecycle callbacks
+    @PrePersist
+    void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
 }
+```
+
+### 5.2 UserLogin Entity (Security)
+
+The authentication entity uses Quarkus Security JPA annotations:
+
+```java
+@Entity
+@Table(name = "user_login")
+@UserDefinition
+public class UserLogin extends PanacheEntityBase {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    
+    @Username
+    @Column(nullable = false, unique = true)
+    public String email;
+    
+    @Password(value = PasswordType.MCF)
+    @Column(nullable = false)
+    public String password;
+    
+    @Roles
+    @Column(nullable = false)
+    public String role;
+    
+    // Factory method with BCrypt hashing
+    public static UserLogin create(String email, String password, String role) {
+        UserLogin user = new UserLogin();
+        user.email = email.toLowerCase().trim();
+        user.password = BcryptUtil.bcryptHash(password, 12);
+        user.role = role;
+        return user;
+    }
+    
+    public static UserLogin findByEmail(String email) {
+        return find("LOWER(email)", email.toLowerCase().trim()).firstResult();
+    }
+    
+    public static boolean emailExists(String email) {
+        return count("LOWER(email)", email.toLowerCase().trim()) > 0;
+    }
+}
+```
+
+### 5.3 Entity Relationships
+
+```java
+// Many-to-One relationship
+@ManyToOne
+@JoinColumn(name = "gender_id")
+public Gender gender;
+
+// One-to-Many relationship (if needed)
+@OneToMany(mappedBy = "gender")
+public List<Person> persons;
+```
 
 ---
 
-## 4. Resource Layer (Controllers)
+## 6. Resource Layer
 
-### 4.1 Base Resource Pattern
+### 6.1 Resource Pattern
 
-Resources follow this structure:
-1. Class-level `@Path` annotation
-2. Optional `@RolesAllowed` for security
-3. Injected dependencies (`SecurityIdentity`, repositories)
-4. Nested `@CheckedTemplate` class for type-safe templates
-5. Handler methods returning `TemplateInstance`
+Resources serve as controllers, handling HTTP requests and returning templates. This application uses **Qute fragments** (preferred pattern) rather than separate partial template files:
 
 ```java
-@Path("/resource-path")
-@RolesAllowed({"user", "admin"})  // Optional: protect entire resource
-public class MyResource {
+@Path("/entities")
+@RolesAllowed({"user", "admin"})
+public class EntityResource {
 
     @Inject
     SecurityIdentity securityIdentity;
 
-    @Inject
-    MyRepository repository;
-
-    // Templates located at templates/MyResource/*.html
+    // Type-safe templates including fragments (uses $ separator)
     @CheckedTemplate
     public static class Templates {
-        public static native TemplateInstance list(
+        // Full page template
+        public static native TemplateInstance entity(
             String title,
             String currentPage,
             String userName,
-            List<Entity> items
+            List<Entity> entities
         );
 
-        public static native TemplateInstance form(
-            String title,
-            String currentPage,
-            String userName,
-            Entity item,
-            String error
-        );
+        // Fragment methods (note $ separator matching fragment id)
+        public static native TemplateInstance entity$table(List<Entity> entities);
+        public static native TemplateInstance entity$modal_create(Entity entity, String error);
+        public static native TemplateInstance entity$modal_edit(Entity entity, String error);
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list() {
-        String username = securityIdentity.isAnonymous()
+    public TemplateInstance list(@HeaderParam("HX-Request") String hxRequest) {
+        List<Entity> entities = Entity.listAllOrdered();
+
+        // HTMX request: return only the table fragment
+        if ("true".equals(hxRequest)) {
+            return Templates.entity$table(entities);
+        }
+
+        // Full page request
+        String userName = getCurrentUsername();
+        return Templates.entity("Entities", "entity", userName, entities);
+    }
+
+    private String getCurrentUsername() {
+        return securityIdentity.isAnonymous()
             ? null
             : securityIdentity.getPrincipal().getName();
-
-        List<Entity> items = repository.listAll();
-
-        return Templates.list("Entities", "entity", username, items);
     }
 }
 ```
 
-### 4.2 GenderResource (Complete CRUD Example - Admin)
+**Key Points:**
+- Single `@CheckedTemplate` class contains both full page and fragment methods
+- Fragment methods use `$` separator: `entity$table` accesses `{#fragment id=table}` in `entity.html`
+- Use `@HeaderParam("HX-Request")` for cleaner HTMX detection (alternative to `@Context HttpHeaders`)
 
-**File**: `router/GenderResource.java`
+### 6.2 Standard CRUD Endpoints
 
-This resource demonstrates the full CRUD pattern with HTMX integration for admin-only master data.
+| Method | Path | Handler | Description |
+|--------|------|---------|-------------|
+| GET | `/entities` | `list()` | List with optional filter |
+| GET | `/entities/create` | `createForm()` | Show create form |
+| POST | `/entities/create` | `create()` | Submit create form |
+| GET | `/entities/create/cancel` | `createCancel()` | Cancel create, show button |
+| GET | `/entities/{id}` | `getRow()` | Get single row partial |
+| GET | `/entities/{id}/edit` | `editForm()` | Get row in edit mode |
+| POST | `/entities/{id}/update` | `update()` | Submit edit form |
+| DELETE | `/entities/{id}` | `delete()` | Delete entity |
+
+### 6.3 Template Parameter Conventions
+
+All templates receive these standard parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `title` | String | Page title for `<title>` tag |
+| `currentPage` | String | Identifier for active navigation |
+| `userName` | String | Current user's email (null if anonymous) |
+
+### 6.4 Global Exception Handling
+
+The `GlobalExceptionMapper` provides consistent error handling for all requests:
 
 ```java
-@Path("/genders")
-@RolesAllowed("admin")  // Admin only access
-public class GenderResource {
+@Provider
+public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Inject
-    GenderRepository genderRepository;
+    @Location("error.html")
+    Template errorTemplate;
 
-    @Inject
-    SecurityIdentity securityIdentity;
+    @ConfigProperty(name = "quarkus.profile")
+    String profile;
 
-    // Full page templates (located at templates/GenderResource/*.html)
-    @CheckedTemplate
-    public static class Templates {
-        public static native TemplateInstance gender(
-            String title,
-            String currentPage,
-            String userName,
-            List<Gender> genders,
-            String filterText
-        );
-    }
+    @Context
+    UriInfo uriInfo;
 
-    // Partial templates for HTMX updates (located at templates/partials/*.html)
-    @CheckedTemplate(basePath = "partials")
-    public static class Partials {
-        public static native TemplateInstance gender_table(
-            List<Gender> genders,
-            String filterText
-        );
+    @Context
+    HttpHeaders headers;
 
-        public static native TemplateInstance gender_row(
-            Gender gender
-        );
+    @Override
+    public Response toResponse(Throwable exception) {
+        // Determine status code from exception type
+        int status;
+        String message;
 
-        public static native TemplateInstance gender_row_edit(
-            Gender gender,
-            String error
-        );
-
-        public static native TemplateInstance gender_create_form(
-            String error
-        );
-
-        public static native TemplateInstance gender_create_button();
-
-        public static native TemplateInstance gender_success(
-            String message,
-            List<Gender> genders
-        );
-
-        public static native TemplateInstance gender_error(String message);
-    }
-
-    // LIST with optional filtering
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list(
-            @Context HttpHeaders headers,
-            @QueryParam("filter") String filterText) {
-
-        String username = securityIdentity.getPrincipal().getName();
-
-        List<Gender> genders;
-        if (filterText != null && !filterText.trim().isEmpty()) {
-            genders = Gender.findByCodeOrDescriptionContaining(filterText.trim());
+        if (exception instanceof WebApplicationException wae) {
+            status = wae.getResponse().getStatus();
+            message = wae.getMessage();
         } else {
-            genders = Gender.listAllOrdered();
+            status = 500;
+            message = "An unexpected error occurred.";
         }
 
-        // Return partial for HTMX requests, full page otherwise
-        if (isHtmxRequest(headers)) {
-            return Partials.gender_table(genders, filterText);
-        }
-        return Templates.gender("Gender Management", "gender", username, genders, filterText);
-    }
+        // Generate unique reference ID for troubleshooting
+        String referenceId = UUID.randomUUID().toString();
 
-    // CREATE form (GET) - returns inline form partial
-    @GET
-    @Path("/create")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createForm() {
-        return Partials.gender_create_form(null);
-    }
+        // Log with reference ID
+        LOG.errorf(exception, "Error %d [%s]: %s", status, referenceId, exception.getMessage());
 
-    // CREATE cancel (GET) - returns the Add button
-    @GET
-    @Path("/create/cancel")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createFormCancel() {
-        return Partials.gender_create_button();
-    }
-
-    // CREATE submit (POST)
-    @POST
-    @Path("/create")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public TemplateInstance create(
-            @FormParam("code") String code,
-            @FormParam("description") String description) {
-
-        String username = securityIdentity.getPrincipal().getName();
-
-        // Validation: code required
-        if (code == null || code.trim().isEmpty()) {
-            return Partials.gender_create_form("Code is required.");
+        // Return HTML for browser, JSON for API
+        if (acceptsHtml(headers)) {
+            boolean devMode = "dev".equals(profile);
+            String html = errorTemplate
+                .data("status", status)
+                .data("message", message)
+                .data("referenceId", referenceId)
+                .data("devMode", devMode)
+                .data("stackTrace", devMode ? getStackTrace(exception) : null)
+                .render();
+            return Response.status(status).entity(html).type(MediaType.TEXT_HTML).build();
         }
 
-        // Validation: description required
-        if (description == null || description.trim().isEmpty()) {
-            return Partials.gender_create_form("Description is required.");
-        }
-
-        // Validation: code max length
-        if (code.trim().length() > 7) {
-            return Partials.gender_create_form("Code must be 7 characters or less.");
-        }
-
-        // Check for duplicate code
-        if (Gender.findByCode(code.trim()) != null) {
-            return Partials.gender_create_form("Code already exists.");
-        }
-
-        // Check for duplicate description
-        if (Gender.findByDescription(description.trim()) != null) {
-            return Partials.gender_create_form("Description already exists.");
-        }
-
-        // Create entity
-        Gender gender = new Gender();
-        gender.code = code.trim().toUpperCase();
-        gender.description = description.trim();
-        gender.createdBy = username;
-        gender.updatedBy = username;
-        gender.persist();
-
-        // Return success with OOB table refresh
-        List<Gender> genders = Gender.listAllOrdered();
-        return Partials.gender_success("Gender '" + gender.code + "' was created successfully!", genders);
-    }
-
-    // ROW display (GET) - returns single row partial (for cancel)
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance getRow(@PathParam("id") Long id) {
-        Gender gender = Gender.findById(id);
-
-        if (gender == null) {
-            throw new NotFoundException("Gender not found");
-        }
-
-        return Partials.gender_row(gender);
-    }
-
-    // EDIT form (GET) - returns inline row edit partial
-    @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance editForm(@PathParam("id") Long id) {
-        Gender gender = Gender.findById(id);
-
-        if (gender == null) {
-            throw new NotFoundException("Gender not found");
-        }
-
-        return Partials.gender_row_edit(gender, null);
-    }
-
-    // UPDATE submit (POST)
-    @POST
-    @Path("/{id}/update")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public TemplateInstance update(
-            @PathParam("id") Long id,
-            @FormParam("code") String code,
-            @FormParam("description") String description) {
-
-        String username = securityIdentity.getPrincipal().getName();
-        Gender gender = Gender.findById(id);
-
-        if (gender == null) {
-            throw new NotFoundException("Gender not found");
-        }
-
-        // Validation: code required
-        if (code == null || code.trim().isEmpty()) {
-            return Partials.gender_row_edit(gender, "Code is required.");
-        }
-
-        // Validation: description required
-        if (description == null || description.trim().isEmpty()) {
-            return Partials.gender_row_edit(gender, "Description is required.");
-        }
-
-        // Check for duplicate code (excluding current record)
-        Gender existingCode = Gender.findByCode(code.trim());
-        if (existingCode != null && !existingCode.id.equals(id)) {
-            return Partials.gender_row_edit(gender, "Code already exists.");
-        }
-
-        // Check for duplicate description (excluding current record)
-        Gender existingDesc = Gender.findByDescription(description.trim());
-        if (existingDesc != null && !existingDesc.id.equals(id)) {
-            return Partials.gender_row_edit(gender, "Description already exists.");
-        }
-
-        // Update entity
-        gender.code = code.trim().toUpperCase();
-        gender.description = description.trim();
-        gender.updatedBy = username;
-        // Managed entity - no explicit persist needed
-
-        // Return updated row partial
-        return Partials.gender_row(gender);
-    }
-
-    // DELETE
-    @DELETE
-    @Path("/{id}")
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public Response delete(@PathParam("id") Long id) {
-        Gender gender = Gender.findById(id);
-
-        if (gender == null) {
-            throw new NotFoundException("Gender not found");
-        }
-
-        // Check if gender is in use by Person records
-        long personCount = Person.count("gender.id", id);
-        if (personCount > 0) {
-            return Response.ok(Partials.gender_row_edit(gender,
-                "Cannot delete: Gender is in use by " + personCount + " person(s)."))
-                .build();
-        }
-
-        gender.delete();
-
-        // Return empty response - row removed via hx-swap="delete"
-        return Response.ok().build();
-    }
-
-    // Helper: detect HTMX requests
-    private boolean isHtmxRequest(HttpHeaders headers) {
-        return headers.getHeaderString("HX-Request") != null;
+        return Response.status(status)
+            .entity(String.format("{\"error\":\"%s\",\"referenceId\":\"%s\"}", message, referenceId))
+            .type(MediaType.APPLICATION_JSON)
+            .build();
     }
 }
 ```
 
-**Key Patterns**:
-- `Templates` class for full page renders (direct navigation)
-- `Partials` class with `basePath = "partials"` for HTMX fragment updates
-- `isHtmxRequest()` helper checks for `HX-Request` header
-- **Inline row editing**: Edit form replaces table row, not modal
-- **Inline create form**: Form appears above table, not in modal
-- Delete returns empty response with `hx-swap="delete"` on client
+**Key Features:**
+- **Content negotiation**: Returns HTML for browsers, JSON for API clients
+- **Reference IDs**: Each error gets a UUID for log correlation
+- **Dev mode stack traces**: Full traces shown only in development
+- **Consistent logging**: All errors logged with path and reference ID
 
 ---
 
-### 4.3 PersonResource (Complete CRUD Example)
+## 7. Template System
 
-**File**: `router/PersonResource.java`
+### 7.1 Template Locations
 
-This resource demonstrates the full CRUD pattern with filtering and HTMX integration.
+Templates follow a convention based on the resource class name:
 
-```java
-@Path("/persons")
-@RolesAllowed({"user", "admin"})
-public class PersonResource {
-
-    @Inject
-    SecurityIdentity securityIdentity;
-
-    // Full page templates (located at templates/PersonResource/*.html)
-    @CheckedTemplate
-    public static class Templates {
-        public static native TemplateInstance persons(
-            String title,
-            String currentPage,
-            String userName,
-            List<Person> persons,
-            String filterText,
-            List<Gender> genderChoices
-        );
-    }
-
-    // Partial templates for HTMX updates (located at templates/partials/*.html)
-    @CheckedTemplate(basePath = "partials")
-    public static class Partials {
-        public static native TemplateInstance persons_table(
-            List<Person> persons,
-            String filterText
-        );
-
-        public static native TemplateInstance person_row(
-            Person person
-        );
-
-        public static native TemplateInstance person_row_edit(
-            Person person,
-            List<Gender> genderChoices,
-            String error
-        );
-
-        public static native TemplateInstance person_create_form(
-            List<Gender> genderChoices,
-            String error
-        );
-
-        public static native TemplateInstance person_create_button();
-
-        public static native TemplateInstance person_success(
-            String message,
-            List<Person> persons
-        );
-
-        public static native TemplateInstance person_error(String message);
-    }
-
-    // LIST with filtering
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list(
-            @Context HttpHeaders headers,
-            @QueryParam("filter") String filterText) {
-
-        String username = securityIdentity.getPrincipal().getName();
-
-        List<Person> persons;
-        if (filterText != null && !filterText.trim().isEmpty()) {
-            persons = Person.findByNameContaining(filterText.trim());
-        } else {
-            persons = Person.listAllOrdered();
-        }
-
-        List<Gender> genderChoices = Gender.listAllOrdered();
-
-        // Return partial for HTMX requests, full page otherwise
-        if (isHtmxRequest(headers)) {
-            return Partials.persons_table(persons, filterText);
-        }
-        return Templates.persons(
-            "Persons", "persons", username,
-            persons, filterText, genderChoices
-        );
-    }
-
-    // CREATE form (GET) - returns inline form partial
-    @GET
-    @Path("/create")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createForm() {
-        List<Gender> genderChoices = Gender.listAllOrdered();
-        return Partials.person_create_form(genderChoices, null);
-    }
-
-    // CREATE cancel (GET) - returns the Add button
-    @GET
-    @Path("/create/cancel")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance createFormCancel() {
-        return Partials.person_create_button();
-    }
-
-    // CREATE submit (POST)
-    @POST
-    @Path("/create")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public TemplateInstance create(
-            @FormParam("firstName") String firstName,
-            @FormParam("lastName") String lastName,
-            @FormParam("email") String email,
-            @FormParam("phone") String phone,
-            @FormParam("dateOfBirth") LocalDate dateOfBirth,
-            @FormParam("genderId") Long genderId) {
-
-        String username = securityIdentity.getPrincipal().getName();
-        List<Gender> genderChoices = Gender.listAllOrdered();
-
-        // Validation: email required
-        if (email == null || email.trim().isEmpty()) {
-            return Partials.person_create_form(genderChoices, "Email is required.");
-        }
-
-        // Validation: email format
-        if (!isValidEmail(email)) {
-            return Partials.person_create_form(genderChoices, "Invalid email format.");
-        }
-
-        // Check for duplicate email
-        if (Person.findByEmail(email.trim()) != null) {
-            return Partials.person_create_form(genderChoices, "Email already registered.");
-        }
-
-        // Create entity
-        Person person = new Person();
-        person.firstName = firstName != null ? firstName.trim() : null;
-        person.lastName = lastName != null ? lastName.trim() : null;
-        person.email = email.trim().toLowerCase();
-        person.phone = phone != null ? phone.trim() : null;
-        person.dateOfBirth = dateOfBirth;
-        person.createdBy = username;
-        person.updatedBy = username;
-
-        if (genderId != null) {
-            person.gender = Gender.findById(genderId);
-        }
-
-        person.persist();
-
-        // Return success with OOB table refresh
-        List<Person> persons = Person.listAllOrdered();
-        String displayName = person.getDisplayName();
-        return Partials.person_success("Person '" + displayName + "' was created successfully!", persons);
-    }
-
-    // ROW display (GET) - returns single row partial (for cancel)
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance getRow(@PathParam("id") Long id) {
-        Person person = Person.findById(id);
-
-        if (person == null) {
-            throw new NotFoundException("Person not found");
-        }
-
-        return Partials.person_row(person);
-    }
-
-    // EDIT form (GET) - returns inline row edit partial
-    @GET
-    @Path("/{id}/edit")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance editForm(@PathParam("id") Long id) {
-        Person person = Person.findById(id);
-
-        if (person == null) {
-            throw new NotFoundException("Person not found");
-        }
-
-        List<Gender> genderChoices = Gender.listAllOrdered();
-        return Partials.person_row_edit(person, genderChoices, null);
-    }
-
-    // UPDATE submit (POST)
-    @POST
-    @Path("/{id}/update")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public TemplateInstance update(
-            @PathParam("id") Long id,
-            @FormParam("firstName") String firstName,
-            @FormParam("lastName") String lastName,
-            @FormParam("email") String email,
-            @FormParam("phone") String phone,
-            @FormParam("dateOfBirth") LocalDate dateOfBirth,
-            @FormParam("genderId") Long genderId) {
-
-        String username = securityIdentity.getPrincipal().getName();
-        Person person = Person.findById(id);
-        List<Gender> genderChoices = Gender.listAllOrdered();
-
-        if (person == null) {
-            throw new NotFoundException("Person not found");
-        }
-
-        // Validation: email required
-        if (email == null || email.trim().isEmpty()) {
-            return Partials.person_row_edit(person, genderChoices, "Email is required.");
-        }
-
-        // Validation: email format
-        if (!isValidEmail(email)) {
-            return Partials.person_row_edit(person, genderChoices, "Invalid email format.");
-        }
-
-        // Check for duplicate email (excluding current record)
-        Person existingEmail = Person.findByEmail(email.trim());
-        if (existingEmail != null && !existingEmail.id.equals(id)) {
-            return Partials.person_row_edit(person, genderChoices, "Email already registered.");
-        }
-
-        // Update entity
-        person.firstName = firstName != null ? firstName.trim() : null;
-        person.lastName = lastName != null ? lastName.trim() : null;
-        person.email = email.trim().toLowerCase();
-        person.phone = phone != null ? phone.trim() : null;
-        person.dateOfBirth = dateOfBirth;
-        person.updatedBy = username;
-
-        if (genderId != null) {
-            person.gender = Gender.findById(genderId);
-        } else {
-            person.gender = null;
-        }
-        // Managed entity - no explicit persist needed
-
-        // Return updated row partial
-        return Partials.person_row(person);
-    }
-
-    // DELETE
-    @DELETE
-    @Path("/{id}")
-    @Produces(MediaType.TEXT_HTML)
-    @Transactional
-    public Response delete(@PathParam("id") Long id) {
-        Person person = Person.findById(id);
-
-        if (person == null) {
-            throw new NotFoundException("Person not found");
-        }
-
-        person.delete();
-
-        // Return empty response - row removed via hx-swap="delete"
-        return Response.ok().build();
-    }
-
-    // Helper: detect HTMX requests
-    private boolean isHtmxRequest(HttpHeaders headers) {
-        return headers.getHeaderString("HX-Request") != null;
-    }
-
-    // Helper: validate email format
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-    }
-}
-```
-
-**Key Patterns**:
-- `Templates` class for full page renders (direct navigation)
-- `Partials` class with `basePath = "partials"` for HTMX fragment updates
-- `isHtmxRequest()` helper checks for `HX-Request` header
-- LIST returns table partial for filter updates, full page for direct access
-- **Inline row editing**: Edit form replaces table row, not modal
-- **Inline create form**: Form appears above table, not in modal
-- Delete returns empty response with `hx-swap="delete"` on client
-
----
-
-### 4.4 AuthResource (Authentication)
-
-**File**: `router/AuthResource.java`
-
-This resource handles user registration and authentication pages. Note that login submission is handled by Quarkus form authentication (`/j_security_check`), not by this resource.
-
-```java
-@Path("/")
-public class AuthResource {
-
-    @Inject
-    PasswordValidator passwordValidator;
-
-    @Inject
-    io.vertx.ext.web.RoutingContext routingContext;
-
-    @CheckedTemplate
-    public static class Templates {
-        public static native TemplateInstance login(
-            String title,
-            String currentPage,
-            String userName,
-            String error
-        );
-
-        public static native TemplateInstance signup(
-            String title,
-            String currentPage,
-            String userName,
-            String error
-        );
-
-        public static native TemplateInstance logout(
-            String title,
-            String currentPage,
-            String userName
-        );
-    }
-
-    // LOGIN PAGE
-    @GET
-    @Path("/login")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance loginPage(@QueryParam("error") String error) {
-        String errorMessage = null;
-        if ("true".equals(error)) {
-            errorMessage = "Invalid email or password.";
-        }
-        return Templates.login("Login", "login", null, errorMessage);
-    }
-
-    // SIGNUP PAGE
-    @GET
-    @Path("/signup")
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance signupPage(@QueryParam("error") String error) {
-        String errorMessage = mapSignupError(error);
-        return Templates.signup("Sign Up", "signup", null, errorMessage);
-    }
-
-    // SIGNUP SUBMIT (Email-based - no username field)
-    @POST
-    @Path("/signup")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
-    public Response signup(
-            @FormParam("email") String email,
-            @FormParam("password") String password) {
-
-        // Validation: email required
-        if (email == null || email.trim().isEmpty()) {
-            return Response.seeOther(URI.create("/signup?error=email_required")).build();
-        }
-
-        // Validation: email format
-        if (!isValidEmail(email)) {
-            return Response.seeOther(URI.create("/signup?error=email_invalid")).build();
-        }
-
-        // Validation: password required
-        if (password == null || password.isEmpty()) {
-            return Response.seeOther(URI.create("/signup?error=password_required")).build();
-        }
-
-        // Validation: password policy (NIST SP 800-63B-4)
-        List<String> passwordErrors = passwordValidator.validate(password);
-        if (!passwordErrors.isEmpty()) {
-            // Map to appropriate error code
-            if (password.length() < 15) {
-                return Response.seeOther(URI.create("/signup?error=password_short")).build();
-            }
-            if (password.length() > 128) {
-                return Response.seeOther(URI.create("/signup?error=password_long")).build();
-            }
-        }
-
-        // Check for duplicate email (case-insensitive)
-        if (UserLogin.emailExists(email.trim())) {
-            return Response.seeOther(URI.create("/signup?error=email_exists")).build();
-        }
-
-        // Create UserLogin with hashed password
-        UserLogin user = UserLogin.create(email.trim(), password, "user");
-        user.persist();
-
-        return Response.seeOther(URI.create("/login")).build();
-    }
-
-    // LOGOUT PAGE
-    @GET
-    @Path("/logout")
-    @Produces(MediaType.TEXT_HTML)
-    public Response logoutPage() {
-        // Destroy session
-        if (routingContext.session() != null) {
-            routingContext.session().destroy();
-        }
-
-        // Clear authentication cookie
-        NewCookie clearCookie = new NewCookie.Builder("quarkus-credential")
-                .value("")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        return Response.ok(Templates.logout("Logged Out", "logout", null))
-                .cookie(clearCookie)
-                .build();
-    }
-
-    private String mapSignupError(String error) {
-        if (error == null) return null;
-        return switch (error) {
-            case "email_required" -> "Email is required.";
-            case "email_invalid" -> "Invalid email format.";
-            case "password_required" -> "Password is required.";
-            case "password_short" -> "Password must be at least 15 characters.";
-            case "password_long" -> "Password must be 128 characters or less.";
-            case "email_exists" -> "Email already registered.";
-            default -> "An error occurred. Please try again.";
-        };
-    }
-
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-    }
-}
-```
-
-**Key Points**:
-- Login form posts to `/j_security_check` (handled by Quarkus form auth)
-- Form field names must be `j_username` and `j_password` for Quarkus form auth
-- The `j_username` field contains the email address
-- Signup creates `UserLogin` directly (no separate Person entity for auth)
-- Password hashing via `UserLogin.create()` factory method
-
----
-
-## 5. Template System
-
-### 5.1 Template Location Convention
-
-Templates are located based on resource class name:
-
-| Resource Class | Template Location |
+| Resource Class | Template Directory |
 |----------------|-------------------|
 | `IndexResource` | `templates/IndexResource/` |
 | `GenderResource` | `templates/GenderResource/` |
 | `PersonResource` | `templates/PersonResource/` |
 | `AuthResource` | `templates/AuthResource/` |
-| **Partials** | `templates/partials/` |
+| Partials (shared) | `templates/partials/` |
 
-**Partials Directory**: Templates in `templates/partials/` are used for HTMX inline updates. They are referenced using `@CheckedTemplate(basePath = "partials")` in resource classes. The inline editing pattern replaces table rows directly without modals.
+### 7.2 Base Template (Layout)
 
-```
-src/main/resources/templates/
-├── base.html                          # Base layout
-├── error.html                         # Error page
-├── IndexResource/
-│   └── index.html                     # Home page (full page)
-├── GenderResource/
-│   └── gender.html                    # Gender list (full page)
-├── PersonResource/
-│   └── persons.html                   # Persons list (full page)
-├── AuthResource/
-│   ├── login.html                     # Login page
-│   ├── signup.html                    # Signup page
-│   └── logout.html                    # Logout confirmation
-└── partials/                          # HTMX inline fragment templates
-    ├── gender_table.html              # Gender table partial
-    ├── gender_row.html                # Single gender row (display mode)
-    ├── gender_row_edit.html           # Single gender row (edit mode)
-    ├── gender_create_form.html        # Inline create form
-    ├── gender_create_button.html      # Add button partial
-    ├── gender_success.html            # Success message with OOB table refresh
-    ├── gender_error.html              # Error message partial
-    ├── persons_table.html             # Persons table partial
-    ├── person_row.html                # Single person row (display mode)
-    ├── person_row_edit.html           # Single person row (edit mode)
-    ├── person_create_form.html        # Inline create form
-    ├── person_create_button.html      # Add button partial
-    ├── person_success.html            # Success message with OOB table refresh
-    └── person_error.html              # Error message partial
-```
-
-### 5.2 Base Template (Layout)
-
-**File**: `templates/base.html`
+The base template (`templates/base.html`) provides the master layout with a responsive sidebar navigation:
 
 ```html
 {@String title}
@@ -946,21 +464,16 @@ src/main/resources/templates/
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{title??}</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
 
-    <!-- UIkit CSS (CDN) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.25/dist/css/uikit.min.css"/>
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/css/uikit.min.css"/>
 
-    <!-- UIkit JS (CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25/dist/js/uikit.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25/dist/js/uikit-icons.min.js"></script>
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit-icons.min.js"></script>
 
-    <!-- HTMX 2.0.8 (CDN with SRI) -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
-        integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
-        crossorigin="anonymous"
-    ></script>
+    <!-- HTMX -->
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
 
     <link rel="stylesheet" href="/style.css"/>
 </head>
@@ -982,52 +495,45 @@ src/main/resources/templates/
                 <!-- Logo -->
                 <div class="uk-padding-small">
                     <a href="/" class="uk-flex uk-flex-middle logo-link">
-                        <img src="/img/logo-scaffold.png" width="40" height="40" alt="HX-Qute Logo"/>
+                        <img src="/img/logo-scaffold.png" width="40" height="40" alt="Logo"/>
                         <span class="uk-margin-small-left uk-text-bold uk-text-large">HX-Qute</span>
                     </a>
                 </div>
 
                 <!-- Navigation -->
                 <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
-                    <li class="{#if currentPage == 'home'}uk-active{/if}">
+                    <li class="{#if currentPage?? == 'home'}uk-active{/if}">
                         <a href="/">
-                            <span uk-icon="icon: home; ratio: 1.2"></span>
+                            <span uk-icon="icon: home"></span>
                             <span class="uk-margin-small-left">Home</span>
                         </a>
                     </li>
-                    <li class="{#if currentPage == 'persons'}uk-active{/if}">
-                        <a href="/persons">
-                            <span uk-icon="icon: users; ratio: 1.2"></span>
-                            <span class="uk-margin-small-left">Persons</span>
-                        </a>
-                    </li>
-                    <li class="uk-parent {#if currentPage == 'gender'}uk-open{/if}">
+                    <li class="uk-parent {#if currentPage?? == 'gender'}uk-open{/if}">
                         <a href="#">
-                            <span uk-icon="icon: settings; ratio: 1.2"></span>
+                            <span uk-icon="icon: settings"></span>
                             <span class="uk-margin-small-left">Maintenance</span>
                         </a>
                         <ul class="uk-nav-sub">
-                            <li class="{#if currentPage == 'gender'}uk-active{/if}">
-                                <a href="/genders">
-                                    <span uk-icon="icon: users; ratio: 1"></span>
-                                    <span class="uk-margin-small-left">Gender</span>
-                                </a>
+                            <li class="{#if currentPage?? == 'gender'}uk-active{/if}">
+                                <a href="/genders">Gender</a>
                             </li>
                         </ul>
                     </li>
+                    {#if userName}
                     <li>
-                        {#if userName}
                         <a href="/logout">
-                            <span uk-icon="icon: sign-out; ratio: 1.2"></span>
+                            <span uk-icon="icon: sign-out"></span>
                             <span class="uk-margin-small-left">Logout ({userName})</span>
                         </a>
-                        {#else}
+                    </li>
+                    {#else}
+                    <li>
                         <a href="/login">
-                            <span uk-icon="icon: sign-in; ratio: 1.2"></span>
+                            <span uk-icon="icon: sign-in"></span>
                             <span class="uk-margin-small-left">Login</span>
                         </a>
-                        {/if}
                     </li>
+                    {/if}
                 </ul>
             </aside>
         </div>
@@ -1041,1386 +547,722 @@ src/main/resources/templates/
             </div>
         </div>
     </div>
+
+    <!-- Mobile Sidebar (Offcanvas) -->
+    <div id="mobile-sidebar" uk-offcanvas="overlay: true">
+        <div class="uk-offcanvas-bar sidebar">
+            <button class="uk-offcanvas-close" type="button" uk-close></button>
+            <!-- Same navigation as desktop sidebar -->
+        </div>
+    </div>
 </div>
 </body>
 </html>
 ```
 
-**Key Patterns**:
-- `{@String variableName}` - Type declarations for template parameters
-- `{#insert}default{/}` - Content insertion point
-- `{#if currentPage == 'xyz'}uk-active{/if}` - Active page highlighting
-- `{userName??}` - Null-safe access
+**Key Features:**
+- **Responsive sidebar**: Desktop shows fixed sidebar, mobile uses offcanvas menu
+- **Parameter declarations**: `{@String title}` etc. at the top for type safety
+- **Null-safe navigation**: Uses `{#if currentPage?? == 'home'}` for safe comparison
+- **Content slot**: `{#insert}` receives content from child templates
 
-### 5.3 Page Template (Full Page with Partial Include)
+### 7.3 Qute Syntax Reference
 
-**File**: `templates/PersonResource/persons.html`
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| `{expression}` | Output value | `{entity.name}` |
+| `{#if}{/if}` | Conditional | `{#if userName != null}...{/if}` |
+| `{#for}{/for}` | Iteration | `{#for item in items}...{/for}` |
+| `{#include}{/include}` | Include template | `{#include base}...{/include}` |
+| `{#insert /}` | Content slot | Used in base template |
+| `{@Type name}` | Parameter declaration | `{@String title}` |
+| `{item ?: 'default'}` | Elvis operator | `{name ?: 'Unknown'}` |
+| `{item.raw}` | Unescaped output | `{htmlContent.raw}` |
+| `{#fragment id=name}` | Named fragment | `{#fragment id=table}...{/fragment}` |
+| `{#include $fragment}` | Include fragment | `{#include $table /}` |
 
-Full page templates include the base layout and embed a partial for the dynamic content area. This allows the same table content to be rendered as a full page (direct navigation) or as a partial (HTMX update). The inline form pattern places the create form above the table instead of in a modal.
+### 7.4 Qute Fragments
 
+Qute fragments allow defining reusable template sections within a single file. This is the preferred pattern for modal-based CRUD.
+
+**Defining fragments:**
 ```html
-{@String title}
-{@String currentPage}
-{@String userName}
-{@java.util.List<io.archton.scaffold.entity.Person> persons}
-{@String filterText}
-{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
-
-{#include base}
-
-<h1 class="uk-heading-small">Persons</h1>
-
-<!-- Filter Form - targets the table container for partial updates -->
-<div class="uk-margin">
-    <form class="uk-grid-small" uk-grid
-          hx-get="/persons"
-          hx-target="#persons-table-container"
-          hx-push-url="true">
-        <div class="uk-width-1-2@s">
-            <input class="uk-input" type="text" name="filter"
-                   placeholder="Search by name..." value="{filterText ?: ''}"/>
-        </div>
-        <div class="uk-width-auto@s">
-            <button type="submit" class="uk-button uk-button-primary">Filter</button>
-            <a href="/persons" class="uk-button uk-button-default"
-               hx-get="/persons" hx-target="#persons-table-container">Clear</a>
-        </div>
-    </form>
-</div>
-
-<!-- Create Form Container - inline form appears here -->
-<div id="person-create-container">
-    {#include partials/person_create_button /}
-</div>
-
-<!-- Table Container - swapped by HTMX on filter/CRUD operations -->
-<div id="persons-table-container">
-    {#include partials/persons_table persons=persons filterText=filterText /}
-</div>
-
-{/include}
-```
-
-**Key Patterns**:
-- `hx-target="#persons-table-container"` targets the table for partial updates
-- `{#include partials/persons_table ... /}` embeds the partial in full page render
-- `#person-create-container` receives inline create form (no modal)
-- Table rows swap in place for inline edit (via `hx-target="closest tr"`)
-
----
-
-### 5.4 Partial Templates
-
-Partial templates are HTML fragments without the base layout. They are returned for HTMX requests to update specific page sections.
-
-#### 5.4.1 Table Partial
-
-**File**: `templates/partials/persons_table.html`
-
-The table partial includes individual rows via the `person_row` partial. Edit/Delete buttons target `closest tr` for inline row replacement.
-
-```html
-{@java.util.List<io.archton.scaffold.entity.Person> persons}
-{@String filterText}
-
-{#if persons.isEmpty}
-<p class="uk-text-muted">No persons found.</p>
-{#else}
-<table class="uk-table uk-table-striped uk-table-hover">
-    <thead>
-        <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Date of Birth</th>
-            <th>Gender</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="persons-table-body">
-        {#for person in persons}
-        {#include partials/person_row person=person /}
-        {/for}
-    </tbody>
-</table>
-{/if}
-```
-
-#### 5.4.2 Row Partial (Display Mode)
-
-**File**: `templates/partials/person_row.html`
-
-Single row in display mode. Edit button swaps this row with the edit form row.
-
-```html
-{@io.archton.scaffold.entity.Person person}
-
-<tr>
-    <td>{person.firstName ?: ''}</td>
-    <td>{person.lastName ?: ''}</td>
-    <td>{person.email}</td>
-    <td>{person.phone ?: ''}</td>
-    <td>{person.dateOfBirth}</td>
-    <td>{person.gender.description ?: ''}</td>
-    <td>
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/persons/{person.id}/edit"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Edit
-        </button>
-        <button class="uk-button uk-button-small uk-button-danger"
-                hx-delete="/persons/{person.id}"
-                hx-confirm="Are you sure you want to delete this person?"
-                hx-target="closest tr"
-                hx-swap="delete swap:300ms">
-            Delete
-        </button>
-    </td>
-</tr>
-```
-
-#### 5.4.3 Row Edit Partial (Inline Edit Mode)
-
-**File**: `templates/partials/person_row_edit.html`
-
-Single row in edit mode. Form inputs replace display cells. Cancel returns to display mode, Save updates and returns display row.
-
-```html
-{@io.archton.scaffold.entity.Person person}
-{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
-{@String error}
-
-<tr class="editing">
-    <td><input class="uk-input uk-form-small" type="text" name="firstName"
-               value="{person.firstName ?: ''}" placeholder="First Name"/></td>
-    <td><input class="uk-input uk-form-small" type="text" name="lastName"
-               value="{person.lastName ?: ''}" placeholder="Last Name"/></td>
-    <td><input class="uk-input uk-form-small" type="email" name="email" required
-               value="{person.email ?: ''}" placeholder="Email *"/></td>
-    <td><input class="uk-input uk-form-small" type="tel" name="phone"
-               value="{person.phone ?: ''}" placeholder="Phone"/></td>
-    <td><input class="uk-input uk-form-small" type="date" name="dateOfBirth"
-               value="{person.dateOfBirth}"/></td>
-    <td>
-        <select class="uk-select uk-form-small" name="genderId">
-            <option value="">-- Select --</option>
-            {#for gender in genderChoices}
-            <option value="{gender.id}" {#if person.gender?? && person.gender.id == gender.id}selected{/if}>
-                {gender.description}
-            </option>
-            {/for}
-        </select>
-    </td>
-    <td>
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/persons/{person.id}"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Cancel
-        </button>
-        <button class="uk-button uk-button-small uk-button-primary"
-                hx-post="/persons/{person.id}/update"
-                hx-include="closest tr"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Save
-        </button>
-    </td>
-</tr>
-{#if error}
-<tr class="uk-alert uk-alert-danger">
-    <td colspan="7">{error}</td>
-</tr>
-{/if}
-```
-
-#### 5.4.4 Create Form Partial (Inline)
-
-**File**: `templates/partials/person_create_form.html`
-
-Inline create form that appears above the table. Replaces the Add button when shown.
-
-```html
-{@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
-{@String error}
-
-<div class="uk-card uk-card-default uk-card-body uk-margin">
-    <h3 class="uk-card-title">Add Person</h3>
-
-    {#if error}
-    <div class="uk-alert uk-alert-danger" uk-alert>
-        <a class="uk-alert-close" uk-close></a>
-        <p>{error}</p>
-    </div>
-    {/if}
-
-    <form hx-post="/persons/create"
-          hx-target="#person-create-container"
-          hx-swap="innerHTML"
-          class="uk-grid-small" uk-grid>
-        <div class="uk-width-1-6@m">
-            <input class="uk-input" type="text" name="firstName" placeholder="First Name"/>
-        </div>
-        <div class="uk-width-1-6@m">
-            <input class="uk-input" type="text" name="lastName" placeholder="Last Name"/>
-        </div>
-        <div class="uk-width-1-4@m">
-            <input class="uk-input" type="email" name="email" placeholder="Email *" required/>
-        </div>
-        <div class="uk-width-1-6@m">
-            <input class="uk-input" type="tel" name="phone" placeholder="Phone"/>
-        </div>
-        <div class="uk-width-1-6@m">
-            <input class="uk-input" type="date" name="dateOfBirth"/>
-        </div>
-        <div class="uk-width-1-6@m">
-            <select class="uk-select" name="genderId">
-                <option value="">Gender</option>
-                {#for gender in genderChoices}
-                <option value="{gender.id}">{gender.description}</option>
-                {/for}
-            </select>
-        </div>
-        <div class="uk-width-auto@m">
-            <button type="submit" class="uk-button uk-button-primary">Save</button>
-            <button type="button" class="uk-button uk-button-default"
-                    hx-get="/persons/create/cancel"
-                    hx-target="#person-create-container"
-                    hx-swap="innerHTML">Cancel</button>
-        </div>
-    </form>
-</div>
-```
-
-#### 5.4.5 Create Button Partial
-
-**File**: `templates/partials/person_create_button.html`
-
-The Add button that loads the create form when clicked.
-
-```html
-<button class="uk-button uk-button-primary"
-        hx-get="/persons/create"
-        hx-target="#person-create-container"
-        hx-swap="innerHTML">
-    Add Person
-</button>
-```
-
-#### 5.4.6 Success Partial (with OOB Table Refresh)
-
-**File**: `templates/partials/person_success.html`
-
-Success partial returns the Add button (replacing the form) and uses Out-of-Band (OOB) swap to refresh the table body.
-
-```html
-{@String message}
-{@java.util.List<io.archton.scaffold.entity.Person> persons}
-
-<!-- Replace create form container with Add button -->
-<button class="uk-button uk-button-primary"
-        hx-get="/persons/create"
-        hx-target="#person-create-container"
-        hx-swap="innerHTML">
-    Add Person
-</button>
-
-<!-- Success notification -->
-<div class="uk-alert uk-alert-success uk-margin-small-top" uk-alert>
-    <a class="uk-alert-close" uk-close></a>
-    <p>{message}</p>
-</div>
-
-<!-- OOB swap to refresh table body -->
-<tbody id="persons-table-body" hx-swap-oob="true">
-    {#for person in persons}
-    {#include partials/person_row person=person /}
-    {/for}
-</tbody>
-```
-
-**Key Pattern**: The `hx-swap-oob="true"` attribute causes HTMX to find the element with matching `id` in the current page and replace it with this content, regardless of the main swap target.
-
-#### 5.4.7 Error Partial
-
-**File**: `templates/partials/person_error.html`
-
-```html
-{@String message}
-
-<div class="uk-alert uk-alert-danger" uk-alert>
-    <a class="uk-alert-close" uk-close></a>
-    <p>{message}</p>
-</div>
-```
-
----
-
-### 5.5 Gender Partial Templates
-
-#### 5.5.1 Gender Table Partial
-
-**File**: `templates/partials/gender_table.html`
-
-The table partial includes individual rows via the `gender_row` partial. Edit/Delete buttons target `closest tr` for inline row replacement.
-
-```html
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
-{@String filterText}
-
-{#if genders.isEmpty}
-<p class="uk-text-muted">No genders found.</p>
-{#else}
-<table class="uk-table uk-table-striped uk-table-hover">
-    <thead>
-        <tr>
-            <th>Code</th>
-            <th>Description</th>
-            <th>Created</th>
-            <th>Updated</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="gender-table-body">
-        {#for gender in genders}
-        {#include partials/gender_row gender=gender /}
-        {/for}
-    </tbody>
-</table>
-{/if}
-```
-
-#### 5.5.2 Gender Row Partial (Display Mode)
-
-**File**: `templates/partials/gender_row.html`
-
-Single row in display mode. Edit button swaps this row with the edit form row.
-
-```html
-{@io.archton.scaffold.entity.Gender gender}
-
-<tr>
-    <td>{gender.code}</td>
-    <td>{gender.description}</td>
-    <td>{gender.createdAt}</td>
-    <td>{gender.updatedAt}</td>
-    <td>
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/genders/{gender.id}/edit"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Edit
-        </button>
-        <button class="uk-button uk-button-small uk-button-danger"
-                hx-delete="/genders/{gender.id}"
-                hx-confirm="Are you sure you want to delete this gender?"
-                hx-target="closest tr"
-                hx-swap="delete swap:300ms">
-            Delete
-        </button>
-    </td>
-</tr>
-```
-
-#### 5.5.3 Gender Row Edit Partial (Inline Edit Mode)
-
-**File**: `templates/partials/gender_row_edit.html`
-
-Single row in edit mode. Form inputs replace display cells. Cancel returns to display mode, Save updates and returns display row.
-
-```html
-{@io.archton.scaffold.entity.Gender gender}
-{@String error}
-
-<tr class="editing">
-    <td>
-        <input class="uk-input uk-form-small" type="text" name="code" required
-               maxlength="7" style="text-transform: uppercase;"
-               value="{gender.code ?: ''}" placeholder="Code *"/>
-    </td>
-    <td>
-        <input class="uk-input uk-form-small" type="text" name="description" required
-               value="{gender.description ?: ''}" placeholder="Description *"/>
-    </td>
-    <td class="uk-text-muted uk-text-small">{gender.createdAt}</td>
-    <td class="uk-text-muted uk-text-small">{gender.updatedAt}</td>
-    <td>
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/genders/{gender.id}"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Cancel
-        </button>
-        <button class="uk-button uk-button-small uk-button-primary"
-                hx-post="/genders/{gender.id}/update"
-                hx-include="closest tr"
-                hx-target="closest tr"
-                hx-swap="outerHTML">
-            Save
-        </button>
-    </td>
-</tr>
-{#if error}
-<tr class="uk-alert uk-alert-danger">
-    <td colspan="5">{error}</td>
-</tr>
-{/if}
-```
-
-#### 5.5.4 Gender Create Form Partial (Inline)
-
-**File**: `templates/partials/gender_create_form.html`
-
-Inline create form that appears above the table. Replaces the Add button when shown.
-
-```html
-{@String error}
-
-<div class="uk-card uk-card-default uk-card-body uk-margin">
-    <h3 class="uk-card-title">Add Gender</h3>
-
-    {#if error}
-    <div class="uk-alert uk-alert-danger" uk-alert>
-        <a class="uk-alert-close" uk-close></a>
-        <p>{error}</p>
-    </div>
-    {/if}
-
-    <form hx-post="/genders/create"
-          hx-target="#gender-create-container"
-          hx-swap="innerHTML"
-          class="uk-grid-small" uk-grid>
-        <div class="uk-width-1-4@m">
-            <input class="uk-input" type="text" name="code" placeholder="Code *"
-                   maxlength="7" style="text-transform: uppercase;" required/>
-            <span class="uk-text-muted uk-text-small">Max 7 chars, uppercased</span>
-        </div>
-        <div class="uk-width-1-2@m">
-            <input class="uk-input" type="text" name="description" placeholder="Description *" required/>
-        </div>
-        <div class="uk-width-auto@m">
-            <button type="submit" class="uk-button uk-button-primary">Save</button>
-            <button type="button" class="uk-button uk-button-default"
-                    hx-get="/genders/create/cancel"
-                    hx-target="#gender-create-container"
-                    hx-swap="innerHTML">Cancel</button>
-        </div>
-    </form>
-</div>
-```
-
-#### 5.5.5 Gender Create Button Partial
-
-**File**: `templates/partials/gender_create_button.html`
-
-The Add button that loads the create form when clicked.
-
-```html
-<button class="uk-button uk-button-primary"
-        hx-get="/genders/create"
-        hx-target="#gender-create-container"
-        hx-swap="innerHTML">
-    Add Gender
-</button>
-```
-
-#### 5.5.6 Gender Success Partial (with OOB Table Refresh)
-
-**File**: `templates/partials/gender_success.html`
-
-Success partial returns the Add button and uses OOB swap to refresh the table body.
-
-```html
-{@String message}
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
-
-<!-- Replace create form container with Add button -->
-<button class="uk-button uk-button-primary"
-        hx-get="/genders/create"
-        hx-target="#gender-create-container"
-        hx-swap="innerHTML">
-    Add Gender
-</button>
-
-<!-- Success notification -->
-<div class="uk-alert uk-alert-success uk-margin-small-top" uk-alert>
-    <a class="uk-alert-close" uk-close></a>
-    <p>{message}</p>
-</div>
-
-<!-- OOB swap to refresh table body -->
-<tbody id="gender-table-body" hx-swap-oob="true">
-    {#for gender in genders}
-    {#include partials/gender_row gender=gender /}
-    {/for}
-</tbody>
-```
-
-#### 5.5.7 Gender Error Partial
-
-**File**: `templates/partials/gender_error.html`
-
-```html
-{@String message}
-
-<div class="uk-alert uk-alert-danger" uk-alert>
-    <a class="uk-alert-close" uk-close></a>
-    <p>{message}</p>
-</div>
-```
-
----
-
-### 5.6 Login Template
-
-**File**: `templates/AuthResource/login.html`
-
-```html
-{@String title}
-{@String currentPage}
-{@String userName}
-{@String error}
-
-{#include base}
-
-<div class="uk-flex uk-flex-center uk-flex-middle" style="min-height: 60vh;">
-    <div class="uk-card uk-card-default uk-card-body uk-width-1-2@m">
-        <h2 class="uk-card-title">Login</h2>
-
-        {#if error}
-        <div class="uk-alert uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            <p>{error}</p>
-        </div>
-        {/if}
-
-        <form action="/j_security_check" method="POST" class="uk-form-stacked">
-            <div class="uk-margin">
-                <label class="uk-form-label" for="j_username">Email</label>
-                <input class="uk-input" type="email" id="j_username" name="j_username"
-                       placeholder="Enter email" required/>
-            </div>
-
-            <div class="uk-margin">
-                <label class="uk-form-label" for="j_password">Password</label>
-                <input class="uk-input" type="password" id="j_password" name="j_password"
-                       placeholder="Enter password" required/>
-            </div>
-
-            <div class="uk-margin">
-                <button type="submit" class="uk-button uk-button-primary">Login</button>
-            </div>
-        </form>
-
-        <p class="uk-text-small">
-            Don't have an account? <a href="/signup">Sign up</a>
-        </p>
-    </div>
-</div>
-
-{/include}
-```
-
-**Critical**: Form must POST to `/j_security_check` with fields named `j_username` and `j_password`. The `j_username` field contains the user's email address.
-
-### 5.7 Signup Template
-
-**File**: `templates/AuthResource/signup.html`
-
-```html
-{@String title}
-{@String currentPage}
-{@String userName}
-{@String error}
-
-{#include base}
-
-<div class="uk-flex uk-flex-center uk-flex-middle" style="min-height: 60vh;">
-    <div class="uk-card uk-card-default uk-card-body uk-width-1-2@m">
-        <h2 class="uk-card-title">Sign Up</h2>
-
-        {#if error}
-        <div class="uk-alert uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            <p>{error}</p>
-        </div>
-        {/if}
-
-        <form action="/signup" method="POST" class="uk-form-stacked">
-            <div class="uk-margin">
-                <label class="uk-form-label" for="email">Email</label>
-                <input class="uk-input" type="email" id="email" name="email"
-                       placeholder="Enter email" required/>
-            </div>
-
-            <div class="uk-margin">
-                <label class="uk-form-label" for="password">Password</label>
-                <input class="uk-input" type="password" id="password" name="password"
-                       placeholder="Enter password (min 15 characters)" required/>
-                <span class="uk-text-muted uk-text-small">Minimum 15 characters (NIST compliant)</span>
-            </div>
-
-            <div class="uk-margin">
-                <button type="submit" class="uk-button uk-button-primary">Sign Up</button>
-            </div>
-        </form>
-
-        <p class="uk-text-small">
-            Already have an account? <a href="/login">Login</a>
-        </p>
-    </div>
-</div>
-
-{/include}
-```
-
-**Key Elements**:
-- Input id: `email`, `password`
-- No username field - email is the login identifier
-- Button text: "Sign Up"
-- Link to login page with text "Login"
-- Password hint shows NIST-compliant 15 character minimum
-
----
-
-### 5.8 Qute Fragments with `rendered=false`
-
-When using Qute's `{#fragment}` directive to define multiple template fragments in a single file, fragments that have their own parameter declarations **must** use `rendered=false` to prevent rendering errors.
-
-#### The Problem
-
-By default, Qute evaluates **all fragments** in a template file when the parent template is rendered. If a fragment declares parameters that aren't provided to the parent template, Qute throws a rendering error.
-
-**Example Error**:
-```
-Rendering error in template [GenderResource/gender.html:189]: 
-Key "gender" not found in the template data map with keys 
-[genders, title, currentPage, userName] in expression {gender.id}
-```
-
-This occurs when:
-1. The main page is rendered with `genders` (List), `title`, `currentPage`, `userName`
-2. A fragment in the same file declares `{@io.archton.scaffold.entity.Gender gender}` (singular)
-3. Qute tries to evaluate `{gender.id}` but `gender` doesn't exist in the data map
-
-#### The Solution
-
-Add `rendered=false` to fragments that have their own parameters:
-
-```html
-{#fragment id=modal_success_row rendered=false}
-{@String message}
-{@io.archton.scaffold.entity.Gender gender}
-<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
-<tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
-    <td>{gender.code}</td>
-    <td>{gender.description}</td>
-    <!-- ... -->
-</tr>
-{/fragment}
-```
-
-The `rendered=false` attribute tells Qute: **"Don't render this fragment when the parent template is rendered. Only render it when explicitly called from Java code."**
-
-#### Fragment Rendering Rules
-
-| Fragment Type | `rendered=false` | Reason |
-|---------------|------------------|--------|
-| Uses parent template data only | No | Fragment uses same data as parent (e.g., `genders` list) |
-| Has own parameter declarations | **Yes** | Fragment requires data not provided to parent |
-| Called only from Java code | **Yes** | Fragment is standalone, never rendered with parent |
-
-#### Example: Single-File Template with Multiple Fragments
-
-```html
-{@String currentPage}
-{@String userName}
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
-{#include base}
-<!-- Main page content using genders, currentPage, userName -->
-{/include}
-
 {#fragment id=table}
-<!-- Uses genders from parent - NO rendered=false needed -->
-{#for g in genders}
-<tr id="gender-row-{g.id}">...</tr>
-{/for}
+<!-- Table content -->
 {/fragment}
 
 {#fragment id=modal_create rendered=false}
+{@Entity entity}
 {@String error}
-<!-- Has own parameter - rendered=false REQUIRED -->
-{/fragment}
-
-{#fragment id=modal_edit rendered=false}
-{@io.archton.scaffold.entity.Gender gender}
-{@String error}
-<!-- Has own parameters - rendered=false REQUIRED -->
-{/fragment}
-
-{#fragment id=modal_success_row rendered=false}
-{@String message}
-{@io.archton.scaffold.entity.Gender gender}
-<!-- Has own parameters - rendered=false REQUIRED -->
+<!-- Modal content for create form -->
 {/fragment}
 ```
 
-#### Java Code Calling Fragments
+**Key attributes:**
+- `id=name` — Fragment identifier, accessed as `$name` or via `Templates.entity$name()`
+- `rendered=false` — Fragment is not rendered in main output; only accessible programmatically
 
-Fragments are called using the `$` syntax in `@CheckedTemplate`:
-
+**Accessing fragments from Java:**
 ```java
-@CheckedTemplate
-public static class Templates {
-    // Main page template
-    public static native TemplateInstance gender(
-        String title, String currentPage, String userName,
-        List<Gender> genders
-    );
-    
-    // Fragment templates (note the $ syntax: templateName$fragmentId)
-    public static native TemplateInstance gender$modal_edit(
-        Gender gender, String error
-    );
-    
-    public static native TemplateInstance gender$modal_success_row(
-        String message, Gender gender
-    );
-}
-
-// Usage
-return Templates.gender$modal_success_row("Gender updated.", gender);
+// Fragment methods use $ separator
+public static native TemplateInstance entity$table(List<Entity> entities);
+public static native TemplateInstance entity$modal_create(Entity entity, String error);
 ```
 
 ---
 
-## 6. HTMX Integration Patterns
+## 7.5 Modal-Based CRUD Pattern
 
-### 6.1 Core HTMX Attributes
+This application uses UIkit modals with HTMX for Create, Edit, and Delete operations. The pattern provides a clean user experience without page reloads.
+
+### 7.5.1 Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Main Page                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Add Button                                               │   │
+│  │  hx-get="/entities/create"                               │   │
+│  │  hx-target="#entity-modal-body"                          │   │
+│  │  hx-on::after-request="UIkit.modal(...).show()"          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Table Container (#entity-table-container)               │   │
+│  │  ┌─────────────────────────────────────────────────────┐ │   │
+│  │  │ Row 1: [Data] [Edit] [Delete]                       │ │   │
+│  │  │ Row 2: [Data] [Edit] [Delete]                       │ │   │
+│  │  └─────────────────────────────────────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Static Modal Shell (#entity-modal)                      │   │
+│  │  ┌─────────────────────────────────────────────────────┐ │   │
+│  │  │ Modal Body (#entity-modal-body)                     │ │   │
+│  │  │ ← Content loaded dynamically via HTMX               │ │   │
+│  │  └─────────────────────────────────────────────────────┘ │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Principles:**
+1. **Single static modal shell** — Always present in DOM, content loaded dynamically
+2. **HTMX loads modal content** — Button clicks fetch form HTML into modal body
+3. **UIkit shows/hides modal** — Via `hx-on::after-request` inline handlers
+4. **OOB swaps update table** — Success responses update table without closing modal first
+5. **No `<script>` tags** — All JavaScript is inline via HTMX event handlers
+
+**HTMX Event Handler Syntax:**
+The `hx-on::` syntax is a shorthand for `hx-on:htmx:`. Both forms are valid:
+- `hx-on::after-request` → shorthand (used in this project)
+- `hx-on:htmx:after-request` → explicit form
+
+Common HTMX events: `after-request`, `before-request`, `load`, `after-swap`
+
+### 7.5.2 Page Template Structure
+
+```html
+{@String title}
+{@String currentPage}
+{@String userName}
+{@java.util.List<io.archton.scaffold.entity.Entity> entities}
+
+{#include base}
+{#title}{title}{/title}
+
+<h2 class="uk-heading-small">Entity Management</h2>
+
+<!-- Add Button: loads create form into modal, then shows modal -->
+<button class="uk-button uk-button-primary uk-margin-bottom"
+        hx-get="/entities/create"
+        hx-target="#entity-modal-body"
+        hx-on::after-request="UIkit.modal('#entity-modal').show()">
+    <span uk-icon="plus"></span> Add
+</button>
+
+<!-- Table Container: target for OOB updates -->
+<div id="entity-table-container">
+    {#include $table /}
+</div>
+
+<!-- Static Modal Shell: always present, content loaded dynamically -->
+<div id="entity-modal" uk-modal="bg-close: false">
+    <div class="uk-modal-dialog">
+        <div id="entity-modal-body" class="uk-modal-body">
+            <!-- Content loaded via HTMX -->
+        </div>
+    </div>
+</div>
+
+{/include}
+
+{!-- Table Fragment --}
+{#fragment id=table}
+<table class="uk-table uk-table-hover uk-table-divider">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th class="uk-width-small">Actions</th>
+        </tr>
+    </thead>
+    <tbody id="entity-table-body">
+        {#for e in entities}
+        <tr id="entity-row-{e.id}">
+            <td>{e.name}</td>
+            <td>{e.description}</td>
+            <td>
+                <div class="uk-button-group">
+                    <button class="uk-button uk-button-small uk-button-primary"
+                            hx-get="/entities/{e.id}/edit"
+                            hx-target="#entity-modal-body"
+                            hx-on::after-request="UIkit.modal('#entity-modal').show()">
+                        Edit
+                    </button>
+                    <button class="uk-button uk-button-small uk-button-danger"
+                            hx-get="/entities/{e.id}/delete"
+                            hx-target="#entity-modal-body"
+                            hx-on::after-request="UIkit.modal('#entity-modal').show()">
+                        Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+        {/for}
+    </tbody>
+</table>
+{/fragment}
+```
+
+### 7.5.3 Modal Content Fragments
+
+**Create Form Fragment:**
+```html
+{#fragment id=modal_create rendered=false}
+{@io.archton.scaffold.entity.Entity entity}
+{@String error}
+
+<h2 class="uk-modal-title">Add Entity</h2>
+
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+
+<form hx-post="/entities" hx-target="#entity-modal-body">
+    <div class="uk-margin">
+        <label class="uk-form-label">Name *</label>
+        <input class="uk-input" type="text" name="name" 
+               value="{entity.name ?: ''}" required />
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Description</label>
+        <input class="uk-input" type="text" name="description" 
+               value="{entity.description ?: ''}" />
+    </div>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">
+            Cancel
+        </button>
+        <button class="uk-button uk-button-primary" type="submit">
+            Save
+        </button>
+    </div>
+</form>
+{/fragment}
+```
+
+**Edit Form Fragment:**
+```html
+{#fragment id=modal_edit rendered=false}
+{@io.archton.scaffold.entity.Entity entity}
+{@String error}
+
+<h2 class="uk-modal-title">Edit Entity</h2>
+
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+
+<form hx-put="/entities/{entity.id}" hx-target="#entity-modal-body">
+    <div class="uk-margin">
+        <label class="uk-form-label">Name *</label>
+        <input class="uk-input" type="text" name="name" 
+               value="{entity.name}" required />
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Description</label>
+        <input class="uk-input" type="text" name="description" 
+               value="{entity.description ?: ''}" />
+    </div>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">
+            Cancel
+        </button>
+        <button class="uk-button uk-button-primary" type="submit">
+            Save
+        </button>
+    </div>
+</form>
+{/fragment}
+```
+
+**Delete Confirmation Fragment:**
+```html
+{#fragment id=modal_delete rendered=false}
+{@io.archton.scaffold.entity.Entity entity}
+{@String error}
+
+<h2 class="uk-modal-title">Delete Entity</h2>
+
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{#else}
+<div class="uk-alert uk-alert-warning">
+    Are you sure you want to delete <strong>{entity.name}</strong>?
+</div>
+<p class="uk-text-muted">This action cannot be undone.</p>
+{/if}
+
+<div class="uk-margin uk-text-right">
+    <button class="uk-button uk-button-default uk-modal-close" type="button">
+        Cancel
+    </button>
+    {#if !error??}
+    <button class="uk-button uk-button-danger"
+            hx-delete="/entities/{entity.id}"
+            hx-target="#entity-modal-body">
+        Delete
+    </button>
+    {/if}
+</div>
+{/fragment}
+```
+
+### 7.5.4 Success Response Fragments
+
+Success responses close the modal and update the table using Out-of-Band (OOB) swaps.
+
+**Create Success (refresh entire table):**
+```html
+{#fragment id=modal_success rendered=false}
+{@String message}
+{@java.util.List<io.archton.scaffold.entity.Entity> entities}
+
+<!-- This div closes the modal when loaded -->
+<div hx-on::load="UIkit.modal('#entity-modal').hide()"></div>
+
+<!-- OOB swap: Replace table container content -->
+<div id="entity-table-container" hx-swap-oob="innerHTML">
+    {#include $table entities=entities /}
+</div>
+{/fragment}
+```
+
+**Edit Success (update single row):**
+```html
+{#fragment id=modal_success_row rendered=false}
+{@String message}
+{@io.archton.scaffold.entity.Entity entity}
+
+<!-- Close modal -->
+<div hx-on::load="UIkit.modal('#entity-modal').hide()"></div>
+
+<!-- OOB swap: Update specific row -->
+<template>
+<tr id="entity-row-{entity.id}" hx-swap-oob="outerHTML">
+    <td>{entity.name}</td>
+    <td>{entity.description}</td>
+    <td>
+        <div class="uk-button-group">
+            <button class="uk-button uk-button-small uk-button-primary"
+                    hx-get="/entities/{entity.id}/edit"
+                    hx-target="#entity-modal-body"
+                    hx-on::after-request="UIkit.modal('#entity-modal').show()">
+                Edit
+            </button>
+            <button class="uk-button uk-button-small uk-button-danger"
+                    hx-get="/entities/{entity.id}/delete"
+                    hx-target="#entity-modal-body"
+                    hx-on::after-request="UIkit.modal('#entity-modal').show()">
+                Delete
+            </button>
+        </div>
+    </td>
+</tr>
+</template>
+{/fragment}
+```
+
+**Delete Success (remove row):**
+```html
+{#fragment id=modal_delete_success rendered=false}
+{@Long deletedId}
+
+<!-- Close modal -->
+<div hx-on::load="UIkit.modal('#entity-modal').hide()"></div>
+
+<!-- OOB swap: Remove row (requires <template> wrapper for <tr>) -->
+<template>
+<tr id="entity-row-{deletedId}" hx-swap-oob="delete"></tr>
+</template>
+{/fragment}
+```
+
+**Important:** When using OOB swaps with `<tr>` elements, wrap them in `<template>` tags to prevent browser parsing issues.
+
+### 7.5.5 Resource Class Pattern
+
+```java
+@Path("/entities")
+@RolesAllowed({"user", "admin"})
+public class EntityResource {
+
+    @Inject
+    SecurityIdentity securityIdentity;
+
+    // Type-safe template methods including fragments
+    @CheckedTemplate
+    public static class Templates {
+        // Full page
+        public static native TemplateInstance entity(
+            String title, String currentPage, String userName,
+            List<Entity> entities);
+        
+        // Fragments (note $ separator)
+        public static native TemplateInstance entity$table(List<Entity> entities);
+        public static native TemplateInstance entity$modal_create(Entity entity, String error);
+        public static native TemplateInstance entity$modal_edit(Entity entity, String error);
+        public static native TemplateInstance entity$modal_delete(Entity entity, String error);
+        public static native TemplateInstance entity$modal_success(String message, List<Entity> entities);
+        public static native TemplateInstance entity$modal_success_row(String message, Entity entity);
+        public static native TemplateInstance entity$modal_delete_success(Long deletedId);
+    }
+
+    // LIST - Full page or table fragment
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance list(@Context HttpHeaders headers) {
+        List<Entity> entities = Entity.listAllOrdered();
+        
+        if (isHtmxRequest(headers)) {
+            return Templates.entity$table(entities);
+        }
+        return Templates.entity("Entities", "entities", getCurrentUsername(), entities);
+    }
+
+    // CREATE FORM - Return modal content
+    @GET
+    @Path("/create")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance createForm() {
+        return Templates.entity$modal_create(new Entity(), null);
+    }
+
+    // CREATE SUBMIT - Validate and save
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    @Transactional
+    public TemplateInstance create(
+            @FormParam("name") String name,
+            @FormParam("description") String description) {
+        
+        Entity entity = new Entity();
+        entity.name = name;
+        entity.description = description;
+        
+        // Validation
+        if (name == null || name.trim().isEmpty()) {
+            return Templates.entity$modal_create(entity, "Name is required.");
+        }
+        
+        // Check uniqueness
+        if (Entity.findByName(name.trim()) != null) {
+            return Templates.entity$modal_create(entity, "Name already exists.");
+        }
+        
+        // Save
+        entity.name = name.trim();
+        entity.createdBy = getCurrentUsername();
+        entity.persist();
+        
+        // Return success with OOB table refresh
+        return Templates.entity$modal_success("Entity created.", Entity.listAllOrdered());
+    }
+
+    // EDIT FORM - Return modal with pre-populated data
+    @GET
+    @Path("/{id}/edit")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance editForm(@PathParam("id") Long id) {
+        Entity entity = Entity.findById(id);
+        if (entity == null) {
+            throw new NotFoundException("Entity not found");
+        }
+        return Templates.entity$modal_edit(entity, null);
+    }
+
+    // EDIT SUBMIT - Validate and update
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    @Transactional
+    public TemplateInstance update(
+            @PathParam("id") Long id,
+            @FormParam("name") String name,
+            @FormParam("description") String description) {
+        
+        Entity entity = Entity.findById(id);
+        if (entity == null) {
+            throw new NotFoundException("Entity not found");
+        }
+        
+        // Validation
+        if (name == null || name.trim().isEmpty()) {
+            return Templates.entity$modal_edit(entity, "Name is required.");
+        }
+        
+        // Check uniqueness (exclude current record)
+        Entity existing = Entity.findByName(name.trim());
+        if (existing != null && !existing.id.equals(id)) {
+            return Templates.entity$modal_edit(entity, "Name already exists.");
+        }
+        
+        // Update
+        entity.name = name.trim();
+        entity.description = description;
+        entity.updatedBy = getCurrentUsername();
+        
+        // Return success with OOB row update
+        return Templates.entity$modal_success_row("Entity updated.", entity);
+    }
+
+    // DELETE CONFIRM - Return confirmation modal
+    @GET
+    @Path("/{id}/delete")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance deleteConfirm(@PathParam("id") Long id) {
+        Entity entity = Entity.findById(id);
+        if (entity == null) {
+            throw new NotFoundException("Entity not found");
+        }
+        return Templates.entity$modal_delete(entity, null);
+    }
+
+    // DELETE EXECUTE - Validate and remove
+    @DELETE
+    @Path("/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    @Transactional
+    public TemplateInstance delete(@PathParam("id") Long id) {
+        Entity entity = Entity.findById(id);
+        if (entity == null) {
+            throw new NotFoundException("Entity not found");
+        }
+        
+        // Check if in use (example: foreign key constraint)
+        if (Entity.isInUse(id)) {
+            return Templates.entity$modal_delete(entity, 
+                "Cannot delete: Entity is in use.");
+        }
+        
+        entity.delete();
+        return Templates.entity$modal_delete_success(id);
+    }
+
+    private String getCurrentUsername() {
+        return securityIdentity.isAnonymous() 
+            ? null 
+            : securityIdentity.getPrincipal().getName();
+    }
+
+    private boolean isHtmxRequest(HttpHeaders headers) {
+        return headers.getHeaderString("HX-Request") != null;
+    }
+}
+```
+
+### 7.5.6 CRUD Endpoints Summary
+
+| Method | Path | Handler | Returns | Description |
+|--------|------|---------|---------|-------------|
+| GET | `/entities` | `list()` | Full page or `$table` | List all entities |
+| GET | `/entities/create` | `createForm()` | `$modal_create` | Create form in modal |
+| POST | `/entities` | `create()` | `$modal_create` or `$modal_success` | Submit create |
+| GET | `/entities/{id}/edit` | `editForm()` | `$modal_edit` | Edit form in modal |
+| PUT | `/entities/{id}` | `update()` | `$modal_edit` or `$modal_success_row` | Submit edit |
+| GET | `/entities/{id}/delete` | `deleteConfirm()` | `$modal_delete` | Confirm delete in modal |
+| DELETE | `/entities/{id}` | `delete()` | `$modal_delete` or `$modal_delete_success` | Execute delete |
+
+### 7.5.7 Key Implementation Notes
+
+**Modal Shell Configuration:**
+```html
+<div id="entity-modal" uk-modal="bg-close: false">
+```
+- `bg-close: false` prevents accidental closure when clicking backdrop
+- Users must explicitly click Cancel or press Escape
+
+**Cancel Button (No Server Request):**
+```html
+<button class="uk-button uk-button-default uk-modal-close" type="button">
+    Cancel
+</button>
+```
+- Uses UIkit's `uk-modal-close` class
+- Closes modal client-side without any HTMX request
+- Original data preserved (no modifications until Save)
+
+**Error Handling in Modal:**
+- Validation errors re-render the form with error message
+- Modal stays open; user can correct and resubmit
+- Use `{#if error??}` for null-safe error display
+
+**Button Styling:**
+- Group Edit/Delete with `uk-button-group` for visual cohesion
+- Edit uses `uk-button-primary` (blue)
+- Delete uses `uk-button-danger` (red)
+- Save uses `uk-button-primary` (blue)
+- Cancel uses `uk-button-default` (gray)
+
+---
+
+## 8. HTMX Integration
+
+### 8.1 Core HTMX Attributes
 
 | Attribute | Purpose | Example |
 |-----------|---------|---------|
-| `hx-get` | GET request | `hx-get="/persons"` |
-| `hx-post` | POST request | `hx-post="/persons/create"` |
-| `hx-delete` | DELETE request | `hx-delete="/persons/{id}"` |
-| `hx-target` | Element to update | `hx-target="#persons-table-container"` |
-| `hx-swap` | How to swap content | `hx-swap="outerHTML"`, `hx-swap="innerHTML"` |
+| `hx-get` | GET request | `hx-get="/entities"` |
+| `hx-post` | POST request | `hx-post="/entities/create"` |
+| `hx-put` | PUT request | `hx-put="/entities/1"` |
+| `hx-delete` | DELETE request | `hx-delete="/entities/1"` |
+| `hx-target` | Response destination | `hx-target="#table-body"` |
+| `hx-swap` | Swap strategy | `hx-swap="outerHTML"` |
+| `hx-swap-oob` | Out-of-band swap | `hx-swap-oob="innerHTML"` |
+| `hx-trigger` | Event trigger | `hx-trigger="keyup changed delay:500ms"` |
+| `hx-on::event` | Inline event handler | `hx-on::after-request="doSomething()"` |
 | `hx-push-url` | Update browser URL | `hx-push-url="true"` |
-| `hx-confirm` | Confirmation dialog | `hx-confirm="Are you sure?"` |
-| `hx-trigger` | When to trigger request | `hx-trigger="load"`, `hx-trigger="click"` |
 | `hx-indicator` | Loading indicator | `hx-indicator="#spinner"` |
-| `hx-include` | Include form values | `hx-include="#filterform"` |
 
-### 6.2 Full Page vs Partial Response Pattern
+### 8.2 HTMX Patterns
 
-The server detects HTMX requests via the `HX-Request` header and returns appropriate content:
-
-```java
-// In resource class
-private boolean isHtmxRequest(HttpHeaders headers) {
-    return headers.getHeaderString("HX-Request") != null;
-}
-
-@GET
-@Produces(MediaType.TEXT_HTML)
-public TemplateInstance list(@Context HttpHeaders headers) {
-    List<Person> persons = Person.listAllOrdered();
-
-    // Return partial for HTMX requests, full page otherwise
-    if (isHtmxRequest(headers)) {
-        return Partials.persons_table(persons, filterText);
-    }
-    return Templates.persons("Persons", "persons", username, persons, filterText, genderChoices);
-}
-```
-
-### 6.3 Filter Form with Partial Updates
+#### Inline Row Editing
 
 ```html
-<!-- Filter targets just the table container, not the whole page -->
-<form hx-get="/persons"
-      hx-target="#persons-table-container"
-      hx-push-url="true"
-      class="uk-grid-small" uk-grid>
-    <div class="uk-width-1-2@s">
-        <input class="uk-input" type="text" name="filter"
-               placeholder="Search by name..." value="{filterText ?: ''}"/>
-    </div>
-    <div class="uk-width-auto@s">
-        <button type="submit" class="uk-button uk-button-primary">Filter</button>
-        <a class="uk-button uk-button-default"
-           hx-get="/persons"
-           hx-target="#persons-table-container">Clear</a>
-    </div>
-</form>
-
-<!-- Table container - only this element is swapped on filter -->
-<div id="persons-table-container">
-    {#include partials/persons_table ... /}
-</div>
-```
-
-### 6.4 Inline Row Editing Pattern
-
-The click-to-edit pattern replaces table rows inline without modals:
-
-```html
-<!-- Display Row -->
-<tr>
-    <td>{person.firstName}</td>
-    <td>{person.email}</td>
+<!-- Display mode -->
+<tr id="entity-row-{id}">
+    <td>{name}</td>
     <td>
-        <button hx-get="/persons/{person.id}/edit"
+        <button hx-get="/entities/{id}/edit"
                 hx-target="closest tr"
                 hx-swap="outerHTML">Edit</button>
     </td>
 </tr>
 
-<!-- Edit Row (returned by server) -->
-<tr class="editing">
-    <td><input name="firstName" value="{person.firstName}"/></td>
-    <td><input name="email" value="{person.email}"/></td>
+<!-- Edit mode (returned from /entities/{id}/edit) -->
+<tr id="entity-row-{id}">
     <td>
-        <button hx-get="/persons/{person.id}"
+        <input name="name" value="{name}" />
+    </td>
+    <td>
+        <button hx-post="/entities/{id}/update"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                hx-include="closest tr">Save</button>
+        <button hx-get="/entities/{id}"
                 hx-target="closest tr"
                 hx-swap="outerHTML">Cancel</button>
-        <button hx-post="/persons/{person.id}/update"
-                hx-include="closest tr"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Save</button>
     </td>
 </tr>
 ```
 
-**Key Attributes**:
-- `hx-target="closest tr"` - Targets the parent row
-- `hx-swap="outerHTML"` - Replaces the entire row
-- `hx-include="closest tr"` - Includes all inputs from the row
+#### Out-of-Band Updates
 
-### 6.5 Inline Create Form Pattern
-
-The create form appears above the table instead of in a modal:
+When creating an entity, update both the form area and the table:
 
 ```html
-<!-- Create Form Container -->
+<!-- person_success.html -->
 <div id="person-create-container">
-    <button hx-get="/persons/create"
-            hx-target="#person-create-container"
-            hx-swap="innerHTML">Add Person</button>
+    <div class="uk-alert uk-alert-success">{message}</div>
+    <button hx-get="/persons/create" 
+            hx-target="#person-create-container">
+        Add Another
+    </button>
 </div>
 
-<!-- Create Form (returned by server) -->
-<div class="uk-card uk-card-body">
-    <form hx-post="/persons/create"
-          hx-target="#person-create-container"
-          hx-swap="innerHTML">
-        <input name="firstName" placeholder="First Name"/>
-        <input name="email" placeholder="Email" required/>
-        <button type="submit">Save</button>
-        <button type="button"
-                hx-get="/persons/create/cancel"
-                hx-target="#person-create-container">Cancel</button>
-    </form>
-</div>
-```
-
-### 6.6 Delete with Row Removal
-
-Delete button removes the row directly using `hx-swap="delete"`:
-
-```html
-<button class="uk-button uk-button-small uk-button-danger"
-        hx-delete="/persons/{person.id}"
-        hx-confirm="Are you sure you want to delete this person?"
-        hx-target="closest tr"
-        hx-swap="delete swap:300ms">
-    Delete
-</button>
-```
-
-**Server returns empty response** - the row fades out and is removed.
-
-### 6.7 Loading Indicator
-
-```html
-<form hx-post="/persons/create"
-      hx-target="#person-create-container"
-      hx-indicator="#spinner">
-    <!-- form fields -->
-</form>
-
-<div id="spinner" class="htmx-indicator">
-    <div uk-spinner></div>
-</div>
-```
-
-### 6.8 Out-of-Band (OOB) Swaps
-
-For updating multiple page elements in a single response. Used after create to refresh the table while replacing the form:
-
-```html
-{@String message}
-{@java.util.List<io.archton.scaffold.entity.Person> persons}
-
-<!-- Main response: replaces the create form container -->
-<button hx-get="/persons/create"
-        hx-target="#person-create-container"
-        hx-swap="innerHTML">Add Person</button>
-
-<!-- Success notification -->
-<div class="uk-alert uk-alert-success uk-margin-small-top" uk-alert>
-    <p>{message}</p>
-</div>
-
-<!-- OOB swap: refreshes the table body independently -->
+<!-- OOB table refresh -->
 <tbody id="persons-table-body" hx-swap-oob="true">
     {#for person in persons}
-    {#include partials/person_row person=person /}
+        {#include partials/person_row person=person /}
     {/for}
 </tbody>
 ```
 
-**Key Pattern**: The `hx-swap-oob="true"` attribute causes HTMX to find the element with matching `id` and replace it, regardless of the main swap target.
+#### Active Search with Debounce
 
-### 6.9 HX-Trigger Header for Events
+```html
+<input type="search" 
+       name="filter"
+       hx-get="/entities"
+       hx-target="#entity-table-container"
+       hx-trigger="keyup changed delay:300ms, search"
+       hx-push-url="true"
+       placeholder="Search..." />
+```
 
-Server can trigger client-side events via response header:
+### 8.3 Response Headers
+
+| Header | Purpose | Example |
+|--------|---------|---------|
+| `HX-Redirect` | Full page redirect | `HX-Redirect: /login` |
+| `HX-Trigger` | Trigger client event | `HX-Trigger: entityCreated` |
+| `HX-Retarget` | Override target | `HX-Retarget: #error-area` |
+| `HX-Reswap` | Override swap method | `HX-Reswap: innerHTML` |
+
+### 8.4 Content Negotiation
+
+Resources check for HTMX requests to return partials vs full pages:
 
 ```java
-return Response.ok(templateInstance)
-    .header("HX-Trigger", "personCreated")
-    .build();
-```
-
-Client listens for the event:
-```html
-<div hx-get="/persons"
-     hx-target="#persons-table-container"
-     hx-trigger="personCreated from:body">
-</div>
-```
-
-### 6.10 Progressive Enhancement with hx-boost
-
-Enable `hx-boost="true"` on the body element to automatically convert standard navigation to HTMX requests. This provides faster navigation without full page reloads while maintaining graceful degradation when JavaScript is disabled.
-
-**Base template** (`templates/base.html`):
-
-```html
-<body hx-boost="true">
-    <div class="uk-offcanvas-content">
-        ...
-    </div>
-</body>
-```
-
-**Benefits**:
-
-| Benefit | Description |
-|---------|-------------|
-| Faster navigation | No full page reload for internal links |
-| Automatic URL updates | Browser history works correctly via `hx-push-url` |
-| Graceful degradation | Works without JavaScript enabled |
-| Less boilerplate | No need to add `hx-get` to every link |
-
-**Opt-out for specific elements**:
-
-```html
-<!-- External links -->
-<a href="https://external-site.com" hx-boost="false">External Link</a>
-
-<!-- File downloads -->
-<a href="/download/report.pdf" hx-boost="false">Download PDF</a>
-
-<!-- Entire sections -->
-<nav hx-boost="false">
-    <!-- External links here -->
-</nav>
-```
-
-**Important**: Forms using `hx-boost` will automatically submit via AJAX. For the login form which posts to `/j_security_check`, this works correctly as the server redirects via `HX-Redirect` header after successful authentication.
-
-### 6.11 Request Synchronization with hx-sync
-
-Use `hx-sync` to manage concurrent requests and prevent race conditions, particularly critical for filter/search operations.
-
-**Problem Scenario** (without sync):
-
-1. User types "Jo" → Request 1 sent
-2. User types "John" → Request 2 sent
-3. Request 2 returns first (faster query)
-4. Request 1 returns last → **Overwrites correct results!**
-
-**Solution - Filter Form with Sync**:
-
-```html
-<form hx-get="/persons"
-      hx-target="#persons-table-container"
-      hx-sync="this:replace"
-      hx-push-url="true"
-      class="uk-grid-small" uk-grid>
-    <div class="uk-width-1-2@s">
-        <input class="uk-input"
-               type="search"
-               name="filter"
-               placeholder="Search by name..."
-               value="{filterText ?: ''}"
-               hx-get="/persons"
-               hx-trigger="input changed delay:300ms, search"
-               hx-target="#persons-table-container"
-               hx-sync="closest form:abort"/>
-    </div>
-    <div class="uk-width-auto@s">
-        <button type="submit" class="uk-button uk-button-primary">Filter</button>
-        <a class="uk-button uk-button-default"
-           hx-get="/persons"
-           hx-target="#persons-table-container"
-           hx-push-url="/persons">Clear</a>
-    </div>
-</form>
-```
-
-**Sync Strategies**:
-
-| Strategy | Behavior | Use Case |
-|----------|----------|----------|
-| `drop` | Drop new request if one in flight | Prevent duplicate form submissions |
-| `abort` | Abort current, start new | Search/filter (latest wins) |
-| `replace` | Abort current, replace with new | Default for forms |
-| `queue` | Queue requests, execute in order | Sequential operations |
-| `queue last` | Queue, keep only last | Latest state wins |
-
-**Trigger Modifiers** for active search:
-
-| Modifier | Purpose |
-|----------|---------|
-| `input` | Fires on every keystroke |
-| `changed` | Only if value actually changed |
-| `delay:300ms` | Wait 300ms after last keystroke (debounce) |
-| `search` | Also fires on search input clear (×) button |
-
-**Submit Button** (prevent double-click):
-
-```html
-<button hx-post="/persons/create"
-        hx-sync="this:drop">
-    Save
-</button>
-```
-
-### 6.12 Attribute Inheritance Best Practices
-
-HTMX supports attribute inheritance from parent elements, reducing repetition in templates. Child elements inherit attributes from their ancestors unless explicitly overridden.
-
-**Inheritable Attributes**:
-
-| Attribute | Inherits | Notes |
-|-----------|----------|-------|
-| `hx-target` | Yes | Child elements use parent's target |
-| `hx-swap` | Yes | Can be overridden per-element |
-| `hx-boost` | Yes | Applies to all descendant links/forms |
-| `hx-confirm` | No | Must be specified per-element |
-| `hx-indicator` | Yes | Useful for section-wide spinners |
-| `hx-headers` | Yes | Merged with child headers |
-| `hx-sync` | Yes | Useful for form-wide sync strategy |
-
-**Before (Repetitive)**:
-
-```html
-<tbody>
-    <tr>
-        <td>...</td>
-        <td>
-            <button hx-get="/persons/{id}/edit"
-                    hx-target="closest tr"
-                    hx-swap="outerHTML">Edit</button>
-            <button hx-delete="/persons/{id}"
-                    hx-target="closest tr"
-                    hx-swap="delete swap:300ms"
-                    hx-confirm="Are you sure?">Delete</button>
-        </td>
-    </tr>
-</tbody>
-```
-
-**After (With Inheritance)**:
-
-```html
-<tbody hx-target="closest tr" hx-swap="outerHTML">
-    <tr>
-        <td>...</td>
-        <td>
-            <button hx-get="/persons/{id}/edit">Edit</button>
-            <button hx-delete="/persons/{id}"
-                    hx-swap="delete swap:300ms"
-                    hx-confirm="Are you sure?">Delete</button>
-        </td>
-    </tr>
-</tbody>
-```
-
-**Key Patterns**:
-
-- Place common `hx-target` on `<tbody>` for table row operations
-- Override `hx-swap` only where needed (e.g., delete uses `delete` instead of `outerHTML`)
-- `hx-confirm` cannot be inherited - always specify on individual delete buttons
-- `hx-boost="true"` on `<body>` applies to all navigation links
-
-**Template Application**:
-
-Update `templates/partials/persons_table.html`:
-
-```html
-<tbody id="persons-table-body" hx-target="closest tr" hx-swap="outerHTML">
-    {#for person in persons}
-    {#include partials/person_row person=person /}
-    {/for}
-</tbody>
-```
-
-Update `templates/partials/person_row.html`:
-
-```html
-<tr>
-    <td>{person.firstName ?: ''}</td>
-    <td>{person.lastName ?: ''}</td>
-    <td>{person.email}</td>
-    <td>{person.phone ?: ''}</td>
-    <td>{person.dateOfBirth}</td>
-    <td>{person.gender.description ?: ''}</td>
-    <td>
-        <!-- Inherits hx-target and hx-swap from tbody -->
-        <button class="uk-button uk-button-small uk-button-default"
-                hx-get="/persons/{person.id}/edit">
-            Edit
-        </button>
-        <!-- Override hx-swap for delete behavior -->
-        <button class="uk-button uk-button-small uk-button-danger"
-                hx-delete="/persons/{person.id}"
-                hx-confirm="Are you sure you want to delete this person?"
-                hx-swap="delete swap:300ms">
-            Delete
-        </button>
-    </td>
-</tr>
-```
-
-### 6.13 Loading Indicators
-
-Use `hx-indicator` to provide visual feedback during HTMX requests. This improves user experience by showing that an action is in progress.
-
-**Global Loading Indicator**
-
-Add to `templates/base.html`:
-
-```html
-<body hx-boost="true">
-    <!-- Global loading indicator -->
-    <div id="global-spinner" class="htmx-indicator">
-        <div uk-spinner></div>
-        <span class="uk-margin-small-left">Loading...</span>
-    </div>
-
-    <div class="uk-offcanvas-content">
-        ...
-    </div>
-</body>
-```
-
-**CSS for Loading States** (`style.css`):
-
-```css
-/* HTMX Loading Indicators */
-.htmx-indicator {
-    display: none;
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1000;
-    background: var(--sidebar-bg, #f8f9fa);
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+private boolean isHtmxRequest(HttpHeaders headers) {
+    return headers.getHeaderString("HX-Request") != null;
 }
 
-/* Show indicator when HTMX request is in flight */
-.htmx-request .htmx-indicator,
-.htmx-request.htmx-indicator {
-    display: flex;
-    align-items: center;
-}
-
-/* Disable interactive elements during request */
-.htmx-request button[hx-get],
-.htmx-request button[hx-post],
-.htmx-request button[hx-put],
-.htmx-request button[hx-delete],
-.htmx-request a[hx-get] {
-    opacity: 0.6;
-    pointer-events: none;
-    cursor: wait;
-}
-
-/* Table row loading state */
-tr.htmx-request {
-    opacity: 0.6;
-    background: #f5f5f5;
-}
-
-/* Inline button spinner */
-.btn-spinner {
-    display: none;
-}
-
-.htmx-request .btn-spinner {
-    display: inline-block;
-}
-
-.htmx-request .btn-text {
-    display: none;
-}
-```
-
-**Per-Element Indicator**:
-
-```html
-<button hx-post="/persons/create"
-        hx-target="#person-create-container"
-        hx-indicator="#create-spinner"
-        class="uk-button uk-button-primary">
-    <span id="create-spinner" class="htmx-indicator btn-spinner" uk-spinner="ratio: 0.5"></span>
-    <span class="btn-text">Save</span>
-</button>
-```
-
-**Table Row Loading State**:
-
-```html
-<tr hx-indicator="this">
-    <td>
-        <button hx-get="/persons/{id}/edit">Edit</button>
-    </td>
-</tr>
-```
-
-When the Edit button is clicked, the entire row dims to indicate loading.
-
-### 6.14 Response Status Code Standards
-
-HTMX handles HTTP status codes differently than traditional AJAX. Understanding these behaviors is critical for proper error handling.
-
-**HTMX Response Code Behavior**:
-
-| Status | HTMX Behavior |
-|--------|---------------|
-| 2xx | Normal swap |
-| 204 No Content | No swap, good for deletes |
-| 3xx | **Not followed by default!** Use HX-Redirect header instead |
-| 4xx | Error event triggered, no swap by default |
-| 5xx | Error event triggered, no swap by default |
-
-**Recommended Status Codes**:
-
-| Scenario | Status | Response Body | Headers |
-|----------|--------|---------------|---------|
-| Success with content | 200 | HTML partial | - |
-| Success, no content (delete) | 200 or 204 | Empty | - |
-| Validation error | 200 | Form with error message | - |
-| Not found | 404 | Error partial | `HX-Retarget: #error-container` |
-| Redirect needed | 200 | Empty | `HX-Redirect: /path` |
-| Server error | 500 | Error partial | `HX-Retarget: #error-container` |
-
-**Important: Redirects**
-
-HTMX does **not** follow HTTP 3xx redirects by default. Use response headers instead:
-
-```java
-// DON'T DO THIS - Won't work as expected with HTMX
-return Response.seeOther(URI.create("/persons")).build();
-
-// DO THIS INSTEAD - Full page redirect
-return Response.ok()
-    .header("HX-Redirect", "/persons")
-    .build();
-
-// Or for in-page navigation (AJAX-style)
-return Response.ok()
-    .header("HX-Location", "/persons")
-    .build();
-```
-
-**Dynamic Error Targeting with HX-Retarget**:
-
-When errors need different placement than the original target:
-
-```java
-@POST
-@Path("/create")
-public Response create(...) {
-    try {
-        // ... validation and creation ...
-        return Response.ok(Partials.person_success(...))
-            .header("HX-Trigger", "personCreated")
-            .build();
-
-    } catch (ValidationException e) {
-        // Return error to a different location
-        return Response.ok(Partials.error_message(e.getMessage()))
-            .header("HX-Retarget", "#notification-area")
-            .header("HX-Reswap", "beforeend")
-            .build();
+@GET
+public TemplateInstance list(@Context HttpHeaders headers) {
+    if (isHtmxRequest(headers)) {
+        return Partials.entity_table(entities);
     }
-}
-```
-
-**Client-Side Error Handling**:
-
-Add global error handling in `base.html`:
-
-```html
-<body hx-boost="true"
-      hx-on::response-error="handleHtmxError(event)">
-```
-
-```javascript
-function handleHtmxError(event) {
-    const xhr = event.detail.xhr;
-    if (xhr.status >= 500) {
-        UIkit.notification({
-            message: 'Server error. Please try again.',
-            status: 'danger',
-            pos: 'top-right'
-        });
-    }
+    return Templates.entities(title, currentPage, userName, entities);
 }
 ```
 
 ---
 
-## 7. Security Architecture
+## 9. Security Architecture
 
-### 7.1 Quarkus Security JPA (Built-in Authentication)
+### 9.1 Authentication Flow
 
-This application uses **`quarkus-security-jpa`** for form-based authentication. This is the simplest and most maintainable approach, leveraging Quarkus's built-in JPA identity provider rather than custom identity providers.
+The application uses Quarkus form-based authentication with JPA identity provider:
 
-**Dependencies** (`pom.xml`):
-```xml
-<!-- JPA-based security with built-in BCrypt support -->
-<dependency>
-    <groupId>io.quarkus</groupId>
-    <artifactId>quarkus-security-jpa</artifactId>
-</dependency>
+```
+┌─────────────┐     POST /j_security_check     ┌─────────────────┐
+│   Browser   │ ─────────────────────────────> │ Quarkus Security│
+│  (Login     │     j_username, j_password     │                 │
+│   Form)     │                                │ ┌─────────────┐ │
+└─────────────┘                                │ │ UserLogin   │ │
+       ▲                                       │ │ Entity      │ │
+       │        Set-Cookie: quarkus-credential │ │ @UserDefn   │ │
+       └─────────────────────────────────────  │ └─────────────┘ │
+                                               └─────────────────┘
 ```
 
-**Configuration** (`application.properties`):
-```properties
-# =============================================================================
-# Form-Based Authentication Configuration
-# =============================================================================
+### 9.2 Security Configuration
 
-# --- Form Authentication ---
+```properties
+# Form Authentication
 quarkus.http.auth.form.enabled=true
 quarkus.http.auth.form.login-page=/login
 quarkus.http.auth.form.landing-page=/
@@ -2429,335 +1271,101 @@ quarkus.http.auth.form.timeout=PT30M
 quarkus.http.auth.form.cookie-name=quarkus-credential
 quarkus.http.auth.form.http-only-cookie=true
 
-# --- Route Protection ---
-quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/profile/*
+# Session Security
+quarkus.http.auth.form.new-cookie-interval=PT1M
+quarkus.http.same-site-cookie.quarkus-credential.value=strict
+
+# Route Protection
+quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
 
-quarkus.http.auth.permission.admin.paths=/genders,/genders/*,/admin/*
+quarkus.http.auth.permission.admin.paths=/genders,/genders/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 
-quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/img/*,/style.css,/webjars/*,/j_security_check
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/style.css
 quarkus.http.auth.permission.public.policy=permit
-
-# --- Password Policy (NIST SP 800-63B-4) ---
-app.security.password.min-length=15
-app.security.password.max-length=128
-
-# --- Session Security ---
-quarkus.http.auth.form.new-cookie-interval=PT1M
-quarkus.http.same-site-cookie.quarkus-credential=strict
 ```
 
-### 7.2 How quarkus-security-jpa Works
-
-The `quarkus-security-jpa` extension automatically provides an identity provider when it detects a `@UserDefinition` annotated entity:
-
-1. **Login form** posts to `/j_security_check` with `j_username` and `j_password`
-2. **Quarkus** intercepts the request and uses the JPA identity provider
-3. **Identity provider** queries `UserLogin` entity by the `@Username` field (email)
-4. **Password verification** uses BCrypt to compare `j_password` against `@Password` field
-5. **Roles** are loaded from the `@Roles` field
-6. **Session cookie** is created on successful authentication
-
-**No custom identity provider code is needed!**
-
-### 7.3 Password Validation Service
-
-NIST SP 800-63B-4 compliant password validation:
-
-**File**: `service/PasswordValidator.java`
+### 9.3 Role-Based Access Control
 
 ```java
-package io.archton.htmx.service;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import java.util.ArrayList;
-import java.util.List;
-
-@ApplicationScoped
-public class PasswordValidator {
-
-    @ConfigProperty(name = "app.security.password.min-length", defaultValue = "15")
-    int minLength;
-
-    @ConfigProperty(name = "app.security.password.max-length", defaultValue = "128")
-    int maxLength;
-
-    /**
-     * Validate password against NIST SP 800-63B-4 requirements.
-     *
-     * @param password the plain text password to validate
-     * @return list of validation errors (empty if valid)
-     */
-    public List<String> validate(String password) {
-        List<String> errors = new ArrayList<>();
-
-        if (password == null || password.isEmpty()) {
-            errors.add("Password is required");
-            return errors;
-        }
-
-        // NIST 800-63B-4: Minimum 15 characters when password-only auth
-        if (password.length() < minLength) {
-            errors.add("Password must be at least " + minLength + " characters");
-        }
-
-        // NIST 800-63B-4: Accept at least 64 characters (we allow 128)
-        if (password.length() > maxLength) {
-            errors.add("Password must be " + maxLength + " characters or less");
-        }
-
-        // NIST 800-63B-4: No truncation - ensure full password is used
-        // (This is enforced by not truncating in storage)
-
-        // NIST 800-63B-4: No composition rules required
-        // (Intentionally NOT checking for special chars, uppercase, etc.)
-
-        return errors;
-    }
-
-    /**
-     * Check if password is valid.
-     */
-    public boolean isValid(String password) {
-        return validate(password).isEmpty();
-    }
-}
-```
-
-### 7.4 Security Requirements Summary (NIST SP 800-63B-4)
-
-| Requirement | NIST 800-63B-4 | Implementation |
-|-------------|----------------|----------------|
-| Minimum password length | 15 chars (password-only) | Configurable, default 15 |
-| Maximum password length | Accept 64+ chars | 128 chars |
-| Password truncation | Prohibited | Full password stored |
-| Composition rules | Not required | None enforced |
-| Password hashing | Approved algorithm | BCrypt, cost 12 |
-| Session timeout | Risk-based | 30 min idle |
-| Secure cookies | HttpOnly, SameSite | Configured |
-
-### 7.5 Resource-Level Security
-
-```java
+// Admin-only resource
 @Path("/genders")
-@RolesAllowed("admin")  // Admin only
+@RolesAllowed("admin")
 public class GenderResource { }
 
-@Path("/persons")
-@RolesAllowed({"user", "admin"})  // All authenticated users
-public class PersonResource { }
-```
-
-### 7.6 What Phase 1 Does NOT Include
-
-| Feature | Reason | Future Phase |
-|---------|--------|--------------|
-| Account lockout | Defer to Phase 2/3 | 2 |
-| MFA/2FA | Defer to Phase 2 (WebAuthn) | 2 |
-| Password breach checking (HIBP) | Enhancement, not MVP | 2 |
-| Audit logging | Enhancement | 2 |
-| Password reset | Enhancement | 2 |
-| Email verification | Enhancement | 2 |
-
-See [LOGIN-PHASED.md](LOGIN-PHASED.md) for details on Phase 2 (WebAuthn) and Phase 3 (OIDC) implementations.
-
----
-
-## 8. Query Filtering Pattern
-
-### 8.1 Simple Filter in Resource
-
-```java
-@GET
-@Produces(MediaType.TEXT_HTML)
-public TemplateInstance list(@QueryParam("filter") String filterText) {
-    List<Person> persons;
-    if (filterText != null && !filterText.trim().isEmpty()) {
-        persons = Person.findByNameContaining(filterText.trim());
-    } else {
-        persons = Person.listAllOrdered();
-    }
-    return Templates.persons(..., persons, filterText, ...);
-}
-```
-
-### 8.2 Entity Finder Method
-
-```java
-public static List<Person> findByNameContaining(String searchText) {
-    String pattern = "%" + searchText.toLowerCase() + "%";
-    return list("LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?1", pattern);
-}
-```
-
-### 8.3 Session-Based Filter Persistence
-
-To persist filter criteria during the user's session, use Vert.x session storage:
-
-```java
+// Authenticated users
 @Path("/persons")
 @RolesAllowed({"user", "admin"})
-public class PersonResource {
+public class PersonResource { }
 
-    @Inject
-    io.vertx.ext.web.RoutingContext routingContext;
+// Method-level security
+@GET
+@RolesAllowed("admin")
+public TemplateInstance adminOnly() { }
+```
 
-    private static final String FILTER_SESSION_KEY = "persons.filter";
+### 9.4 Password Policy (NIST SP 800-63B-4)
 
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    public TemplateInstance list(@QueryParam("filter") String filterText,
-                                  @QueryParam("clear") String clear) {
-        String username = securityIdentity.getPrincipal().getName();
+| Requirement | Value |
+|-------------|-------|
+| Minimum length | 15 characters |
+| Maximum length | 128 characters |
+| Hashing | BCrypt, cost factor 12 |
+| Composition rules | None (per NIST) |
+| Storage format | Modular Crypt Format (MCF) |
 
-        // Handle clear action
-        if ("true".equals(clear)) {
-            routingContext.session().remove(FILTER_SESSION_KEY);
-            filterText = null;
+```java
+@ApplicationScoped
+public class PasswordValidator {
+    
+    @ConfigProperty(name = "app.security.password.min-length", defaultValue = "15")
+    int minLength;
+    
+    @ConfigProperty(name = "app.security.password.max-length", defaultValue = "128")
+    int maxLength;
+    
+    public List<String> validate(String password) {
+        List<String> errors = new ArrayList<>();
+        if (password == null || password.length() < minLength) {
+            errors.add("Password must be at least " + minLength + " characters.");
         }
-
-        // If no filter provided, check session for persisted filter
-        if (filterText == null) {
-            filterText = routingContext.session().get(FILTER_SESSION_KEY);
-        } else {
-            // Persist new filter to session
-            routingContext.session().put(FILTER_SESSION_KEY, filterText.trim());
+        if (password != null && password.length() > maxLength) {
+            errors.add("Password must be " + maxLength + " characters or less.");
         }
-
-        List<Person> persons;
-        if (filterText != null && !filterText.trim().isEmpty()) {
-            persons = Person.findByNameContaining(filterText.trim());
-        } else {
-            persons = Person.listAllOrdered();
-        }
-
-        List<Gender> genderChoices = Gender.listAllOrdered();
-
-        return Templates.persons(
-            "Persons", "persons", username,
-            persons, filterText, genderChoices
-        );
+        return errors;
     }
 }
 ```
 
-**Template Update** (Clear button with session clear):
-```html
-<form hx-get="/persons" hx-target="#main-content" hx-push-url="true">
-    <input type="text" name="filter" value="{filterText ?: ''}"/>
-    <button type="submit">Filter</button>
-    <a href="/persons?clear=true" class="uk-button uk-button-default"
-       hx-get="/persons?clear=true" hx-target="#main-content">Clear</a>
-</form>
-```
-
-**Key Points**:
-- Filter persists across page navigations within the session
-- `?clear=true` parameter removes the session filter
-- Session storage is tied to the user's authenticated session
-- Filter is URL-shareable when passed as query parameter
-
 ---
 
-## 9. Startup and Data Initialization
-
-### 9.1 Flyway Migrations
-
-Database schema is managed via Flyway migrations in `src/main/resources/db/migration/`.
-
-**Naming Convention**: `V{major}.{minor}.{patch}__{Description}.sql`
-
-**Example**: `V1.0.0__Create_gender_table.sql`
-
-```sql
-CREATE TABLE gender (
-    id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(7) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    CONSTRAINT uq_gender_code UNIQUE (code),
-    CONSTRAINT uq_gender_description UNIQUE (description)
-);
-
-CREATE INDEX idx_gender_code ON gender(code);
-```
-
-### 9.2 UserLogin Table Migration
-
-**Example**: `V1.2.0__Create_user_login_table.sql`
-
-```sql
-CREATE TABLE user_login (
-    id BIGSERIAL PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    active BOOLEAN DEFAULT TRUE,
-
-    CONSTRAINT uq_user_login_email UNIQUE (email)
-);
-
-CREATE INDEX idx_user_login_email ON user_login(email);
-```
-
-**Notes:**
-- Single table design - profile fields included directly
-- `email` is the login identifier (no separate username)
-- `password` stored as BCrypt hash in MCF format
-- No MFA fields - deferred to Phase 2
-
-### 9.3 Default Admin User
-
-Create via migration `V1.2.1__Insert_admin_user.sql`:
-
-```sql
--- Insert admin UserLogin (password: use a secure password, BCrypt hash with cost 12)
--- Generate hash with: BcryptUtil.bcryptHash("YourSecurePassword", 12)
-INSERT INTO user_login (email, password, role, first_name, last_name, created_at, updated_at, active)
-VALUES (
-    'admin@example.com',
-    '$2a$12$[generated-bcrypt-hash]',
-    'admin',
-    'Admin',
-    'User',
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP,
-    true
-);
-```
-
----
-
-## 10. Configuration
+## 10. Configuration Reference
 
 ### 10.1 application.properties
 
 ```properties
-# Application
+# =============================================================================
+# Server Configuration
+# =============================================================================
 quarkus.http.port=9080
 
-# PostgreSQL
+# =============================================================================
+# Database Configuration
+# =============================================================================
 quarkus.datasource.db-kind=postgresql
+# Connection details from environment or dev services
 
-# Flyway Migrations
+# =============================================================================
+# Flyway Configuration
+# =============================================================================
 quarkus.flyway.migrate-at-start=true
 quarkus.hibernate-orm.schema-management.strategy=none
 
 # =============================================================================
-# Form-Based Authentication Configuration
+# Form Authentication
 # =============================================================================
-
-# --- Form Authentication ---
 quarkus.http.auth.form.enabled=true
 quarkus.http.auth.form.login-page=/login
 quarkus.http.auth.form.landing-page=/
@@ -2765,8 +1373,12 @@ quarkus.http.auth.form.error-page=/login?error=true
 quarkus.http.auth.form.timeout=PT30M
 quarkus.http.auth.form.cookie-name=quarkus-credential
 quarkus.http.auth.form.http-only-cookie=true
+quarkus.http.auth.form.new-cookie-interval=PT1M
+quarkus.http.same-site-cookie.quarkus-credential.value=strict
 
-# --- Route Protection ---
+# =============================================================================
+# Route Protection
+# =============================================================================
 quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*,/profile/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
 
@@ -2774,245 +1386,198 @@ quarkus.http.auth.permission.admin.paths=/genders,/genders/*,/admin/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 
-quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/img/*,/style.css,/webjars/*,/j_security_check
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/img/*,/style.css,/webjars/*
 quarkus.http.auth.permission.public.policy=permit
 
-# --- Password Policy (NIST SP 800-63B-4) ---
+# =============================================================================
+# Password Policy (NIST SP 800-63B-4)
+# =============================================================================
 app.security.password.min-length=15
 app.security.password.max-length=128
 
-# --- Session Security ---
-quarkus.http.auth.form.new-cookie-interval=PT1M
-quarkus.http.same-site-cookie.quarkus-credential=strict
-
-# Console styling
+# =============================================================================
+# Development Settings
+# =============================================================================
 quarkus.log.console.darken=1
-
-# Custom banner
 quarkus.banner.enabled=true
 quarkus.banner.path=banner.txt
 ```
 
----
+### 10.2 Static Resources
 
-## 11. Static Resources
-
-### 11.1 Location
-
-Static files go in `src/main/resources/META-INF/resources/` and are served at the root path.
+Static files are served from `src/main/resources/META-INF/resources/`:
 
 | File Path | URL |
 |-----------|-----|
 | `META-INF/resources/style.css` | `/style.css` |
-| `META-INF/resources/favicon.ico` | `/favicon.ico` |
 | `META-INF/resources/img/logo.png` | `/img/logo.png` |
 
-### 11.2 CDN vs Local
-
-| Resource | Approach | Reason |
-|----------|----------|--------|
-| HTMX | CDN (SRI) | Subresource Integrity provides security |
-| UIkit CSS/JS | CDN | Common library, caching benefits |
-| Custom CSS | Local | Project-specific styles |
-
 ---
 
-## 12. Common Patterns Reference
+## 11. Testing Patterns
 
-### 12.1 Getting Current User
-
-```java
-@Inject
-SecurityIdentity securityIdentity;
-
-private String getCurrentEmail() {
-    return securityIdentity.isAnonymous()
-        ? null
-        : securityIdentity.getPrincipal().getName();  // Principal is email
-}
-
-private UserLogin getCurrentUser() {
-    String email = getCurrentEmail();
-    if (email == null) return null;
-    return UserLogin.findByEmail(email);
-}
-```
-
-### 12.2 Validation Error Handling
+### 11.1 Base Test Class
 
 ```java
-@POST
-@Path("/create")
-@Transactional
-public Response create(@FormParam("email") String email) {
-    if (email == null || email.trim().isEmpty()) {
-        return Response.ok(Templates.form(..., "Email is required.")).build();
+@QuarkusTest
+public abstract class BaseHtmxTest {
+
+    protected String loginAndGetCookie(String username, String password) {
+        return given()
+            .formParam("j_username", username)
+            .formParam("j_password", password)
+            .when()
+            .post("/j_security_check")
+            .then()
+            .extract()
+            .cookie("quarkus-credential");
     }
-    // ... create entity
-    return Response.seeOther(URI.create("/persons")).build();
+
+    protected Response get(String path) {
+        return given().when().get(path);
+    }
+
+    protected Response htmxGet(String path) {
+        return given()
+            .header("HX-Request", "true")
+            .when().get(path);
+    }
+
+    protected Response authenticatedGet(String path, String cookie) {
+        return given()
+            .cookie("quarkus-credential", cookie)
+            .when().get(path);
+    }
+
+    protected Response authenticatedHtmxPost(String path, String cookie, Map<String, String> formParams) {
+        var request = given()
+            .cookie("quarkus-credential", cookie)
+            .header("HX-Request", "true")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED);
+        
+        formParams.forEach(request::formParam);
+        return request.when().post(path);
+    }
+
+    protected Document parseHtml(String html) {
+        return Jsoup.parse(html);
+    }
 }
 ```
 
-### 12.3 Naming Conventions
+### 11.2 Test Example
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Entity class | PascalCase singular | `Person` |
-| Table name | snake_case | `person` |
-| Entity field | camelCase | `firstName` |
-| Column name | snake_case | `first_name` |
-| Resource class | PascalCase + Resource | `PersonResource` |
-| URL path | lowercase plural | `/persons` |
-| Template file | camelCase.html | `personForm.html` |
+```java
+@QuarkusTest
+public class PersonResourceTest extends BaseHtmxTest {
+
+    @Test
+    public void testPersonListRequiresAuth() {
+        get("/persons")
+            .then()
+            .statusCode(302)
+            .header("Location", containsString("/login"));
+    }
+
+    @Test
+    public void testPersonListAuthenticated() {
+        String cookie = loginAndGetCookie("admin@example.com", "AdminPassword123");
+        
+        authenticatedGet("/persons", cookie)
+            .then()
+            .statusCode(200)
+            .body(containsString("Persons"));
+    }
+
+    @Test
+    public void testPersonCreateHtmx() {
+        String cookie = loginAndGetCookie("admin@example.com", "AdminPassword123");
+        
+        authenticatedHtmxPost("/persons/create", cookie, Map.of(
+            "firstName", "John",
+            "lastName", "Doe",
+            "email", "john@example.com"
+        ))
+            .then()
+            .statusCode(200)
+            .body(containsString("john@example.com"));
+    }
+}
+```
+
+### 11.3 Test Credentials
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@example.com | AdminPassword123 | admin |
 
 ---
 
-## 13. Use Case Traceability Matrix
+## 12. Development Workflow
 
-This section maps each use case from [USE-CASES.md](USE-CASES.md) to the technical components that implement it.
+### 12.1 Starting Development
 
-### 13.1 Authentication Use Cases (UC-1.x)
+```bash
+# Start Quarkus in dev mode
+./mvnw quarkus:dev
 
-| Use Case | Components | Templates | Routes |
-|----------|------------|-----------|--------|
-| **UC-1.1: Display Signup Page** | `AuthResource.signupPage()` | `AuthResource/signup.html` | GET `/signup` |
-| **UC-1.2: Register New User** | `AuthResource.signup()`, `UserLogin.create()`, `PasswordValidator` | `AuthResource/signup.html` | POST `/signup` |
-| **UC-1.3: Display Login Page** | `AuthResource.loginPage()` | `AuthResource/login.html` | GET `/login` |
-| **UC-1.4: Authenticate User** | `quarkus-security-jpa` (built-in), `@UserDefinition` entity | `AuthResource/login.html` | POST `/j_security_check` |
-| **UC-1.5: Logout User** | `AuthResource.logoutPage()`, session destruction | `AuthResource/logout.html` | GET `/logout` |
-| **UC-1.6: Access Protected Route** | `quarkus.http.auth.permission.*` configuration | N/A | N/A |
+# Application runs at http://localhost:9080
+# Dev UI at http://localhost:9080/q/dev/
+```
 
-### 13.2 Gender Management Use Cases (UC-2.x)
+### 12.2 Creating a New Feature
 
-| Use Case | Components | Templates | Routes |
-|----------|------------|-----------|--------|
-| **UC-2.1: View Gender List** | `GenderResource.list()`, `Gender.listAllOrdered()` | `GenderResource/gender.html`, `partials/gender_table.html`, `partials/gender_row.html` | GET `/genders` |
-| **UC-2.2: Create Gender** | `GenderResource.createForm()`, `GenderResource.create()` | `partials/gender_create_form.html`, `partials/gender_create_button.html`, `partials/gender_success.html` | GET/POST `/genders/create`, GET `/genders/create/cancel` |
-| **UC-2.3: Edit Gender** | `GenderResource.getRow()`, `GenderResource.editForm()`, `GenderResource.update()` | `partials/gender_row.html`, `partials/gender_row_edit.html` | GET `/genders/{id}`, GET `/genders/{id}/edit`, POST `/genders/{id}/update` |
-| **UC-2.4: Delete Gender** | `GenderResource.delete()`, HTMX `hx-confirm`, `hx-swap="delete"` | N/A | DELETE `/genders/{id}` |
+1. **Create migration**: Add `V{version}__Description.sql` in `db/migration/`
+2. **Create entity**: Add entity class extending `PanacheEntityBase`
+3. **Create resource**: Add resource class with `@CheckedTemplate` classes
+4. **Create templates**: Add page and partial templates
+5. **Add tests**: Create test class extending `BaseHtmxTest`
+6. **Update navigation**: Add link in `base.html` if needed
 
-### 13.3 Persons Management Use Cases (UC-3.x)
+### 12.3 Adding Navigation Items
 
-| Use Case | Components | Templates | Routes |
-|----------|------------|-----------|--------|
-| **UC-3.1: View Persons List** | `PersonResource.list()`, `Person.listAllOrdered()` | `PersonResource/persons.html`, `partials/persons_table.html`, `partials/person_row.html` | GET `/persons` |
-| **UC-3.2: Create Person** | `PersonResource.createForm()`, `PersonResource.create()` | `partials/person_create_form.html`, `partials/person_create_button.html`, `partials/person_success.html` | GET/POST `/persons/create`, GET `/persons/create/cancel` |
-| **UC-3.3: Edit Person** | `PersonResource.getRow()`, `PersonResource.editForm()`, `PersonResource.update()` | `partials/person_row.html`, `partials/person_row_edit.html` | GET `/persons/{id}`, GET `/persons/{id}/edit`, POST `/persons/{id}/update` |
-| **UC-3.4: Delete Person** | `PersonResource.delete()`, `hx-swap="delete"` | N/A | DELETE `/persons/{id}` |
-| **UC-3.5: Filter Persons** | `PersonResource.list()` with `@QueryParam`, `Person.findByNameContaining()` | `PersonResource/persons.html`, `partials/persons_table.html` | GET `/persons?filter=text` |
+Edit the sidebar in `templates/base.html`:
 
-### 13.4 Cross-Cutting Concerns
+```html
+<li class="{#if currentPage == 'mypage'}uk-active{/if}">
+    <a href="/mypage">My Page</a>
+</li>
+```
 
-| Concern | Implementation | Use Cases Affected |
-|---------|----------------|-------------------|
-| **Authentication** | `@RolesAllowed`, `quarkus.http.auth.permission.*` | UC-2.x, UC-3.x |
-| **Authorization** | `@RolesAllowed("admin")` for Gender | UC-2.x |
-| **Validation** | Server-side checks, HTML `required` | UC-1.2, UC-2.2, UC-2.3, UC-3.2, UC-3.3 |
-| **Audit Fields** | `createdAt`, `updatedAt` | All entities |
-| **Password Security** | `PasswordValidator`, BCrypt cost 12 | UC-1.2, UC-1.4 |
+### 12.4 Template Development Tips
+
+1. Check for `HX-Request` header to return partials vs full pages
+2. Use `@CheckedTemplate` for compile-time validation
+3. Keep partials focused on single components
+4. Use OOB swaps for updating multiple page areas
+5. Test with both direct navigation and HTMX requests
 
 ---
 
-## Appendix A: URL Routes Summary
+## Quick Reference
 
-| URL | Method | Handler | Auth Required | Role |
-|-----|--------|---------|---------------|------|
-| `/` | GET | IndexResource.index() | No | - |
-| `/login` | GET | AuthResource.loginPage() | No | - |
-| `/j_security_check` | POST | Quarkus form auth | No | - |
-| `/signup` | GET | AuthResource.signupPage() | No | - |
-| `/signup` | POST | AuthResource.signup() | No | - |
-| `/logout` | GET | AuthResource.logoutPage() | No | - |
-| `/persons` | GET | PersonResource.list() | Yes | user, admin |
-| `/persons/create` | GET | PersonResource.createForm() | Yes | user, admin |
-| `/persons/create` | POST | PersonResource.create() | Yes | user, admin |
-| `/persons/create/cancel` | GET | PersonResource.createFormCancel() | Yes | user, admin |
-| `/persons/{id}` | GET | PersonResource.getRow() | Yes | user, admin |
-| `/persons/{id}/edit` | GET | PersonResource.editForm() | Yes | user, admin |
-| `/persons/{id}/update` | POST | PersonResource.update() | Yes | user, admin |
-| `/persons/{id}` | DELETE | PersonResource.delete() | Yes | user, admin |
-| `/genders` | GET | GenderResource.list() | Yes | admin |
-| `/genders/create` | GET | GenderResource.createForm() | Yes | admin |
-| `/genders/create` | POST | GenderResource.create() | Yes | admin |
-| `/genders/create/cancel` | GET | GenderResource.createFormCancel() | Yes | admin |
-| `/genders/{id}` | GET | GenderResource.getRow() | Yes | admin |
-| `/genders/{id}/edit` | GET | GenderResource.editForm() | Yes | admin |
-| `/genders/{id}/update` | POST | GenderResource.update() | Yes | admin |
-| `/genders/{id}` | DELETE | GenderResource.delete() | Yes | admin |
+### Common Patterns
 
+| Task | Pattern |
+|------|---------|
+| Get current user | `securityIdentity.getPrincipal().getName()` |
+| Check if authenticated | `!securityIdentity.isAnonymous()` |
+| Find entity | `Entity.findById(id)` |
+| List all | `Entity.listAll()` |
+| Find by field | `Entity.find("field", value).firstResult()` |
+| Persist entity | `entity.persist()` |
+| Delete entity | `entity.delete()` |
+| HTMX check | `headers.getHeaderString("HX-Request") != null` |
 
-## Key Conventions
+### Development URLs
 
-### Entities
-- Extend `PanacheEntity` (Active Record pattern)
-- Use public fields (Panache convention)
-- Add static finder methods: `findByX(...)`, `findByXAndY(...)`
-- Use `@EntityListeners(AuditListener.class)` for audit fields
+| URL | Description |
+|-----|-------------|
+| `http://localhost:9080` | Application |
+| `http://localhost:9080/q/dev/` | Dev UI |
+| `http://localhost:9080/q/health` | Health check |
 
-```java
-@Entity
-public class MyEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-    public String field;  // Public fields, no getters/setters
-}
-```
+---
 
-### Template Conventions
-
-**Base template** (`templates/base.html`) requires three parameters:
-- `title` - Page title
-- `currentPage` - Navigation highlight key (`"home"`, `"gender"`, etc.)
-- `userName` - Display name or null
-
-**Resource templates** 
-- Use `@CheckedTemplate` for type-safe templates with native methods:
-```java
-@CheckedTemplate
-public static class Templates {
-    public static native TemplateInstance gender(
-        String title, String currentPage, String userName, List<Gender> genders);
-}
-```
-- Separate `Templates` (full pages) and `Partials` classes
-- Check `HX-Request` header for HTMX vs full-page requests
-- Return `TemplateInstance` for HTML, `Response` for redirects
-- Follow `templates/{ResourceClass}/{methodName}.html` pattern:
-```html
-{@Type paramName}
-{#include base}
-    <!-- Content injected into {#insert}{/} slot -->
-{/include}
-```
-
-### Security
-- Use `@RolesAllowed({"user", "admin"})` for authorization
-- Get current user via `SecurityIdentity.getPrincipal().getName()`
-- Always filter data by current user's Person entity
-- Verify ownership on update/delete operations
-
-### Testing
-- Extend `BaseHtmxTest` for endpoint tests
-- Use `loginAndGetCookie(username, password)` for authentication
-- Key methods: `get()`, `htmxGet()`, `post()`, `htmxPost()`, `htmxDelete()`
-- Authenticated variants: `authenticatedGet()`, `authenticatedHtmxPost()`, etc.
-- Parse HTML responses with `parseHtml()` for Jsoup Document
-
-### Database Migrations
-- Location: `src/main/resources/db/migration/`
-- Naming: `V{major}.{minor}.{patch}__{Description}.sql`
-- Auto-run at startup (`quarkus.flyway.migrate-at-start=true`)
-- Hibernate schema management disabled
-
-### Adding Navigation Items
-Edit sidebar in `templates/base.html` - add `uk-active` class conditionally using `currentPage` variable:
-```html
-<li class="{#if currentPage?? == 'mypage'}uk-active{/if}">
-```
-
-## Configuration
-- `src/main/resources/application.properties` - Main config
-- Dev UI: http://localhost:9080/q/dev/
-- Dev Mode Credentials
-  - Username: `admin`
-  - Password: `Adminpassword@01`
+*Document Version: 2.1*
+*Last Updated: December 2025*
