@@ -77,7 +77,12 @@ For the development and implementation of new features, do the following:
 
 ## Implement new features
 
+Before starting implementation, confirm that the custom command `validate-feature` has been executed.
+
 Use the custom command `/implement-feature`
+
+
+Before starting implementation, confirm that the custom command `validate-feature` has been executed.
 
 ---
 
@@ -116,10 +121,6 @@ Feature folder: specs/002-master-data-management
 Use case: UC-002-03-02
 Application URL: http://localhost:9080
 ```
-
-### Pre-Implementation Checklist
-
-Before starting implementation, confirm that the custom command `validate-feature` has been executed.
 
 ---
 
