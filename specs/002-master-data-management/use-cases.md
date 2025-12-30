@@ -47,11 +47,12 @@ This feature provides CRUD operations for master data entities used throughout t
 | Trigger | User clicks Add button |
 
 **Main Flow:**
-1. System displays inline create form above table
-2. Form includes fields: code (max 1 char), description
-3. Form includes Save and Cancel buttons
+1. System opens modal dialog titled "Add Gender"
+2. Modal includes fields: code (max 1 char), description
+3. Modal includes Save and Cancel buttons in footer
+4. Modal backdrop prevents interaction with underlying page
 
-**Postcondition:** Create form is displayed
+**Postcondition:** Create form modal is displayed
 
 ---
 
@@ -60,7 +61,7 @@ This feature provides CRUD operations for master data entities used throughout t
 | Attribute | Value |
 |-----------|-------|
 | Actor | Administrator |
-| Precondition | User has filled create form |
+| Precondition | User has filled create form in modal |
 | Trigger | User clicks Save button |
 
 **Main Flow:**
@@ -72,20 +73,21 @@ This feature provides CRUD operations for master data entities used throughout t
 6. System validates uniqueness of description
 7. System sets audit fields (createdBy, createdAt, updatedBy, updatedAt)
 8. System persists new Gender record
-9. System displays success message
-10. System refreshes Gender list
+9. System closes modal
+10. System displays success notification
+11. System refreshes Gender list (OOB swap)
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 2a | Code empty | Display "Code is required." error |
-| 3a | Description empty | Display "Description is required." error |
-| 4a | Code > 1 character | Display "Code must be 1 character." error |
-| 5a | Code already exists | Display "Code already exists." error |
-| 6a | Description already exists | Display "Description already exists." error |
+| 2a | Code empty | Display "Code is required." error in modal |
+| 3a | Description empty | Display "Description is required." error in modal |
+| 4a | Code > 1 character | Display "Code must be 1 character." error in modal |
+| 5a | Code already exists | Display "Code already exists." error in modal |
+| 6a | Description already exists | Display "Description already exists." error in modal |
 
-**Postcondition:** New Gender record created; list updated
+**Postcondition:** New Gender record created; modal closed; list updated
 
 ---
 
@@ -101,18 +103,19 @@ This feature provides CRUD operations for master data entities used throughout t
 
 **Main Flow:**
 1. System retrieves Gender record by ID
-2. System replaces table row with inline edit form
-3. Form pre-populates code and description fields
-4. Form displays audit fields (read-only)
-5. Form includes Save and Cancel buttons
+2. System opens modal dialog titled "Edit Gender"
+3. Modal pre-populates code and description fields
+4. Modal displays audit fields (read-only) in details section
+5. Modal includes Save and Cancel buttons in footer
+6. Modal backdrop prevents interaction with underlying page
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 1a | Gender not found | Display error; refresh list |
+| 1a | Gender not found | Display error notification; do not open modal |
 
-**Postcondition:** Edit form displayed in place of row
+**Postcondition:** Edit form modal displayed with current values
 
 ---
 
@@ -121,7 +124,7 @@ This feature provides CRUD operations for master data entities used throughout t
 | Attribute | Value |
 |-----------|-------|
 | Actor | Administrator |
-| Precondition | User has modified edit form |
+| Precondition | User has modified edit form in modal |
 | Trigger | User clicks Save button |
 
 **Main Flow:**
@@ -132,18 +135,20 @@ This feature provides CRUD operations for master data entities used throughout t
 5. System validates uniqueness of description (excluding current record)
 6. System updates audit fields (updatedBy, updatedAt)
 7. System persists updated Gender record
-8. System replaces edit form with updated display row
+8. System closes modal
+9. System displays success notification
+10. System updates the affected row via OOB swap
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 2a | Code empty | Display "Code is required." error |
-| 3a | Description empty | Display "Description is required." error |
-| 4a | Code conflicts with another record | Display "Code already exists." error |
-| 5a | Description conflicts with another record | Display "Description already exists." error |
+| 2a | Code empty | Display "Code is required." error in modal |
+| 3a | Description empty | Display "Description is required." error in modal |
+| 4a | Code conflicts with another record | Display "Code already exists." error in modal |
+| 5a | Description conflicts with another record | Display "Description already exists." error in modal |
 
-**Postcondition:** Gender record updated; row reflects changes
+**Postcondition:** Gender record updated; modal closed; row reflects changes
 
 ---
 
@@ -152,14 +157,15 @@ This feature provides CRUD operations for master data entities used throughout t
 | Attribute | Value |
 |-----------|-------|
 | Actor | Administrator |
-| Precondition | User is in edit mode for a Gender entry |
-| Trigger | User clicks Cancel button |
+| Precondition | User has edit modal open for a Gender entry |
+| Trigger | User clicks Cancel button or modal backdrop or presses Escape |
 
 **Main Flow:**
-1. System discards any changes
-2. System replaces edit form with original display row
+1. System discards any unsaved changes
+2. System closes modal
+3. Table row remains unchanged
 
-**Postcondition:** Original values preserved; edit mode exited
+**Postcondition:** Original values preserved; modal closed
 
 ---
 
@@ -174,20 +180,23 @@ This feature provides CRUD operations for master data entities used throughout t
 | Trigger | User clicks Delete button for a Gender entry |
 
 **Main Flow:**
-1. System displays browser confirmation dialog
-2. User confirms deletion
-3. System checks if Gender is in use by Person records
-4. System deletes Gender record
-5. System removes row from list with animation
+1. System opens confirmation modal dialog
+2. Modal displays warning: "Are you sure you want to delete [code] - [description]?"
+3. Modal includes Delete (danger) and Cancel buttons
+4. User clicks Delete button to confirm
+5. System checks if Gender is in use by Person records
+6. System deletes Gender record
+7. System closes modal
+8. System removes row from list with animation (OOB swap)
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 2a | User cancels | Close dialog; no action taken |
-| 3a | Gender in use by Person records | Display "Cannot delete: Gender is in use by X person(s)." error |
+| 4a | User clicks Cancel or presses Escape | Close modal; no action taken |
+| 5a | Gender in use by Person records | Display "Cannot delete: Gender is in use by X person(s)." error in modal |
 
-**Postcondition:** Gender record deleted; list updated
+**Postcondition:** Gender record deleted; modal closed; list updated
 
 ---
 

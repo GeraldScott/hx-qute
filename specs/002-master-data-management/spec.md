@@ -124,40 +124,54 @@ public class Gender extends PanacheEntityBase {
 **Pattern**: Follows ARCHITECTURE.md Section 4.2 with:
 - Single `Templates` class with type-safe fragment methods (`gender$row`, `gender$table`, etc.)
 - Qute `{#fragment}` sections for HTMX partial responses (compile-time validated)
-- Inline editing (no modals)
-- OOB swaps for table refresh after create
+- **Modal-based CRUD** using UIkit modals for Create, Edit, and Delete operations
+- OOB swaps for table/row updates after modal form submission
 
 ### 3.2 Endpoints
 
 | Method | Path | Handler | Description |
 |--------|------|---------|-------------|
 | GET | `/genders` | `list()` | List all genders (full page or table fragment) |
-| GET | `/genders/create` | `createForm()` | Display inline create form |
-| GET | `/genders/create/cancel` | `createFormCancel()` | Return Add button (cancel create) |
-| POST | `/genders` | `create()` | Submit create form |
-| GET | `/genders/{id}` | `getRow()` | Get single row fragment (for cancel edit) |
-| GET | `/genders/{id}/edit` | `editForm()` | Display inline edit form in row |
-| PUT | `/genders/{id}` | `update()` | Submit edit form |
-| DELETE | `/genders/{id}` | `delete()` | Delete gender |
+| GET | `/genders/create` | `createForm()` | Return create form modal content |
+| POST | `/genders` | `create()` | Submit create form from modal |
+| GET | `/genders/{id}/edit` | `editForm()` | Return edit form modal content with entity data |
+| PUT | `/genders/{id}` | `update()` | Submit edit form from modal |
+| GET | `/genders/{id}/delete` | `deleteConfirm()` | Return delete confirmation modal content |
+| DELETE | `/genders/{id}` | `delete()` | Execute deletion after modal confirmation |
 
 ### 3.3 Request/Response Patterns
 
 **List (GET /genders)**:
-- Full page: Returns `Templates.gender(...)`
+- Full page: Returns `Templates.gender(...)` (includes static modal shell)
 - HTMX request: Returns `Templates.gender$table(...)` fragment
 - Detection: Check `HX-Request` header
 
+**Create Form (GET /genders/create)**:
+- Returns `Templates.gender$modal_create()` - modal body content for create form
+- Modal is shown via UIkit after HTMX swap
+
 **Create Submit (POST /genders)**:
-- Success: Returns `Templates.gender$success(message, genders)` with OOB table refresh
-- Validation error: Returns `Templates.gender$create_form(error)`
+- Success: Returns `Templates.gender$modal_success(message, genders)` with:
+  - Script to close modal
+  - OOB table refresh
+- Validation error: Returns `Templates.gender$modal_create(gender, error)` - re-renders form with error
+
+**Edit Form (GET /genders/{id}/edit)**:
+- Returns `Templates.gender$modal_edit(gender)` - modal body content with pre-populated form
+- Modal is shown via UIkit after HTMX swap
 
 **Edit Submit (PUT /genders/{id})**:
-- Success: Returns `Templates.gender$row(gender)`
-- Validation error: Returns `Templates.gender$row_edit(gender, error)`
+- Success: Returns `Templates.gender$modal_success_row(message, gender)` with:
+  - Script to close modal
+  - OOB row update for the edited gender
+- Validation error: Returns `Templates.gender$modal_edit(gender, error)` - re-renders form with error
 
-**Delete (DELETE /genders/{id})**:
-- Success: Returns empty response (row removed via `hx-swap="delete"`)
-- In-use error: Returns `Templates.gender$row_edit(gender, error)`
+**Delete Confirm (GET /genders/{id}/delete)**:
+- Returns `Templates.gender$modal_delete(gender)` - confirmation modal content
+
+**Delete Execute (DELETE /genders/{id})**:
+- Success: Returns empty body with `HX-Trigger: closeModal` header + OOB row removal
+- In-use error: Returns `Templates.gender$modal_delete(gender, error)` - shows error in modal
 
 ---
 
@@ -176,73 +190,256 @@ With `@CheckedTemplate`, Qute validates ALL expressions at compile time against 
 - **Solution**: Inline row content directly in the for loop within `$table` fragment
 - Standalone fragments (like `$row` for edit/cancel) must declare their own parameters with `{@...}` syntax
 
+### 4.2 Main Page Structure
+
 ```html
 {@java.util.List<io.archton.scaffold.entity.Gender> genders}
 {#include base}
 {#title}Gender Management{/title}
 
-<div id="gender-create-container">
-    {#include $create_button /}
-</div>
+<h2 class="uk-heading-small">Gender Code Maintenance</h2>
+
+<!-- Add Button - triggers modal AND loads content -->
+<button class="uk-button uk-button-primary uk-margin-bottom"
+        type="button"
+        hx-get="/genders/create"
+        hx-target="#gender-modal-body"
+        hx-on::after-request="UIkit.modal('#gender-modal').show()">
+    <span uk-icon="plus"></span> Add Gender
+</button>
 
 <div id="gender-table-container">
     {#include $table /}
 </div>
 
-{/include}
+<!-- Static Modal Shell (always present in DOM) -->
+<div id="gender-modal" uk-modal="bg-close: false">
+    <div class="uk-modal-dialog">
+        <div id="gender-modal-body" class="uk-modal-body">
+            <!-- Content loaded dynamically via HTMX -->
+        </div>
+    </div>
+</div>
 
+{/include}
+```
+
+### 4.3 Fragment Definitions
+
+```html
 {!-- Table fragment: rows are INLINED, not included from $row --}
 {#fragment id=table}
 {#if genders.isEmpty()}
 <p class="uk-text-muted">No genders found.</p>
 {#else}
-<table class="uk-table">
-    <thead>...</thead>
-    <tbody id="gender-table-body">
-        {#for g in genders}
-        <tr id="gender-row-{g.id}">
-            <td>{g.code}</td>
-            <td>{g.description}</td>
-        </tr>
-        {/for}
-    </tbody>
-</table>
+<div class="uk-overflow-auto">
+    <table class="uk-table uk-table-hover uk-table-divider">
+        <thead>
+            <tr>
+                <th class="uk-table-shrink">Code</th>
+                <th class="uk-table-expand">Description</th>
+                <th class="uk-width-small">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="gender-table-body">
+            {#for g in genders}
+            <tr id="gender-row-{g.id}">
+                <td>{g.code}</td>
+                <td>{g.description}</td>
+                <td>
+                    <button class="uk-button uk-button-small uk-button-default"
+                            hx-get="/genders/{g.id}/edit"
+                            hx-target="#gender-modal-body"
+                            hx-on::after-request="UIkit.modal('#gender-modal').show()">
+                        Edit
+                    </button>
+                    <button class="uk-button uk-button-small uk-button-danger"
+                            hx-get="/genders/{g.id}/delete"
+                            hx-target="#gender-modal-body"
+                            hx-on::after-request="UIkit.modal('#gender-modal').show()">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            {/for}
+        </tbody>
+    </table>
+</div>
 {/if}
 {/fragment}
 
-{!-- Standalone row fragment for direct calls (edit/cancel operations) --}
-{!-- Must declare parameter explicitly for type-safe validation --}
+{!-- Standalone row fragment for OOB updates after edit --}
 {#fragment id=row}
 {@io.archton.scaffold.entity.Gender gender}
 <tr id="gender-row-{gender.id}">
     <td>{gender.code}</td>
     <td>{gender.description}</td>
+    <td>
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/genders/{gender.id}/edit"
+                hx-target="#gender-modal-body"
+                hx-on::after-request="UIkit.modal('#gender-modal').show()">
+            Edit
+        </button>
+        <button class="uk-button uk-button-small uk-button-danger"
+                hx-get="/genders/{gender.id}/delete"
+                hx-target="#gender-modal-body"
+                hx-on::after-request="UIkit.modal('#gender-modal').show()">
+            Delete
+        </button>
+    </td>
 </tr>
 {/fragment}
 
-{#fragment id=row_edit}
+{!-- Create Form Modal Content --}
+{#fragment id=modal_create}
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
-<tr class="editing">...</tr>
+<h2 class="uk-modal-title">Add Gender</h2>
+{#if error}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-post="/genders" hx-target="#gender-modal-body">
+    <div class="uk-margin">
+        <label class="uk-form-label">Code *</label>
+        <input class="uk-input" type="text" name="code" maxlength="1"
+               value="{gender.code ?: ''}" required />
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Description *</label>
+        <input class="uk-input" type="text" name="description"
+               value="{gender.description ?: ''}" required />
+    </div>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
 {/fragment}
 
-{#fragment id=create_form}
+{!-- Edit Form Modal Content --}
+{#fragment id=modal_edit}
+{@io.archton.scaffold.entity.Gender gender}
 {@String error}
-<div class="uk-card uk-card-body">...</div>
+<h2 class="uk-modal-title">Edit Gender</h2>
+{#if error}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-put="/genders/{gender.id}" hx-target="#gender-modal-body">
+    <div class="uk-margin">
+        <label class="uk-form-label">Code *</label>
+        <input class="uk-input" type="text" name="code" maxlength="1"
+               value="{gender.code}" required />
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label">Description *</label>
+        <input class="uk-input" type="text" name="description"
+               value="{gender.description}" required />
+    </div>
+    <details class="uk-margin">
+        <summary class="uk-text-muted">Audit Information</summary>
+        <div class="uk-text-small uk-text-muted uk-margin-small-top">
+            <div>Created: {gender.createdAt} by {gender.createdBy}</div>
+            <div>Updated: {gender.updatedAt} by {gender.updatedBy}</div>
+        </div>
+    </details>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
 {/fragment}
 
-{#fragment id=create_button}
-<button hx-get="/genders/create">Add Gender</button>
+{!-- Delete Confirmation Modal Content --}
+{#fragment id=modal_delete}
+{@io.archton.scaffold.entity.Gender gender}
+{@String error}
+<h2 class="uk-modal-title">Delete Gender</h2>
+{#if error}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<p>Are you sure you want to delete <strong>{gender.code} - {gender.description}</strong>?</p>
+<p class="uk-text-muted">This action cannot be undone.</p>
+<div class="uk-margin uk-text-right">
+    <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+    <button class="uk-button uk-button-danger"
+            hx-delete="/genders/{gender.id}"
+            hx-target="#gender-modal-body">Delete</button>
+</div>
 {/fragment}
 
-{#fragment id=success}
+{!-- Success Response (closes modal + OOB table refresh) --}
+{#fragment id=modal_success}
 {@String message}
 {@java.util.List<io.archton.scaffold.entity.Gender> genders}
-<!-- Primary swap content + OOB table refresh -->
+<!-- Empty modal body (will be hidden) -->
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+
+<!-- OOB: Refresh entire table body -->
+<tbody id="gender-table-body" hx-swap-oob="innerHTML">
+    {#for g in genders}
+    <tr id="gender-row-{g.id}">
+        <td>{g.code}</td>
+        <td>{g.description}</td>
+        <td>
+            <button class="uk-button uk-button-small uk-button-default"
+                    hx-get="/genders/{g.id}/edit"
+                    hx-target="#gender-modal-body"
+                    hx-on::after-request="UIkit.modal('#gender-modal').show()">
+                Edit
+            </button>
+            <button class="uk-button uk-button-small uk-button-danger"
+                    hx-get="/genders/{g.id}/delete"
+                    hx-target="#gender-modal-body"
+                    hx-on::after-request="UIkit.modal('#gender-modal').show()">
+                Delete
+            </button>
+        </td>
+    </tr>
+    {/for}
+</tbody>
+{/fragment}
+
+{!-- Success Response for Edit (closes modal + OOB single row update) --}
+{#fragment id=modal_success_row}
+{@String message}
+{@io.archton.scaffold.entity.Gender gender}
+<!-- Empty modal body (will be hidden) -->
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+
+<!-- OOB: Update single row -->
+<tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
+    <td>{gender.code}</td>
+    <td>{gender.description}</td>
+    <td>
+        <button class="uk-button uk-button-small uk-button-default"
+                hx-get="/genders/{gender.id}/edit"
+                hx-target="#gender-modal-body"
+                hx-on::after-request="UIkit.modal('#gender-modal').show()">
+            Edit
+        </button>
+        <button class="uk-button uk-button-small uk-button-danger"
+                hx-get="/genders/{gender.id}/delete"
+                hx-target="#gender-modal-body"
+                hx-on::after-request="UIkit.modal('#gender-modal').show()">
+            Delete
+        </button>
+    </td>
+</tr>
+{/fragment}
+
+{!-- Delete Success Response (closes modal + OOB row removal) --}
+{#fragment id=modal_delete_success}
+{@Long deletedId}
+<!-- Empty modal body (will be hidden) -->
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+
+<!-- OOB: Remove the deleted row -->
+<tr id="gender-row-{deletedId}" hx-swap-oob="delete"></tr>
 {/fragment}
 ```
 
-### 4.2 Type-Safe Fragment Methods
+### 4.4 Type-Safe Fragment Methods
 
 ```java
 @CheckedTemplate
@@ -250,116 +447,178 @@ public static class Templates {
     // Full page
     public static native TemplateInstance gender(List<Gender> genders);
 
-    // Fragments (type-safe, compile-time validated)
+    // Table fragments
     public static native TemplateInstance gender$table(List<Gender> genders);
     public static native TemplateInstance gender$row(Gender gender);
-    public static native TemplateInstance gender$row_edit(Gender gender, String error);
-    public static native TemplateInstance gender$create_form(String error);
-    public static native TemplateInstance gender$create_button();
-    public static native TemplateInstance gender$success(String message, List<Gender> genders);
+
+    // Modal content fragments
+    public static native TemplateInstance gender$modal_create(Gender gender, String error);
+    public static native TemplateInstance gender$modal_edit(Gender gender, String error);
+    public static native TemplateInstance gender$modal_delete(Gender gender, String error);
+
+    // Success response fragments (close modal + OOB updates)
+    public static native TemplateInstance gender$modal_success(String message, List<Gender> genders);
+    public static native TemplateInstance gender$modal_success_row(String message, Gender gender);
+    public static native TemplateInstance gender$modal_delete_success(Long deletedId);
 }
 ```
 
-### 4.3 Fragment Parameters
+### 4.5 Fragment Parameters
 
 | Fragment | Parameters | Description |
 |----------|------------|-------------|
-| `gender$table` | `genders: List<Gender>` | Table with all rows |
-| `gender$row` | `gender: Gender` | Single row (display mode) |
-| `gender$row_edit` | `gender: Gender`, `error: String` | Single row (edit mode) |
-| `gender$create_form` | `error: String` | Inline create form |
-| `gender$create_button` | (none) | Add button |
-| `gender$success` | `message: String`, `genders: List<Gender>` | Success + OOB table |
+| `gender$table` | `genders: List<Gender>` | Table with all rows (inlined) |
+| `gender$row` | `gender: Gender` | Single row for OOB updates |
+| `gender$modal_create` | `gender: Gender`, `error: String` | Create form modal content |
+| `gender$modal_edit` | `gender: Gender`, `error: String` | Edit form modal content |
+| `gender$modal_delete` | `gender: Gender`, `error: String` | Delete confirmation modal content |
+| `gender$modal_success` | `message: String`, `genders: List<Gender>` | Success + close modal + OOB table refresh |
+| `gender$modal_success_row` | `message: String`, `gender: Gender` | Success + close modal + OOB single row update |
+| `gender$modal_delete_success` | `deletedId: Long` | Close modal + OOB row removal |
 
 ---
 
 ## 5. HTMX Patterns
 
-### 5.1 Inline Row Editing
+### 5.1 Modal-Based CRUD Architecture
+
+The application uses a **single static modal shell** that is always present in the DOM. Modal content is loaded dynamically via HTMX, and the modal is shown/hidden using UIkit's JavaScript API through inline event handlers.
+
+**Key Pattern:**
+1. Button triggers HTMX request to load modal content
+2. Content is swapped into the modal body (`#gender-modal-body`)
+3. After swap, inline `hx-on::after-request` handler shows the modal
+4. Form submissions target the same modal body
+5. Success responses include OOB swaps to update the table + hide the modal
+
+### 5.2 Opening Modals (Load + Show)
 
 ```html
-<!-- Display Row (row fragment) -->
-<tr>
+<!-- Add Button: Load create form, then show modal -->
+<button class="uk-button uk-button-primary"
+        hx-get="/genders/create"
+        hx-target="#gender-modal-body"
+        hx-on::after-request="UIkit.modal('#gender-modal').show()">
+    <span uk-icon="plus"></span> Add Gender
+</button>
+
+<!-- Edit Button: Load edit form with entity data, then show modal -->
+<button class="uk-button uk-button-small uk-button-default"
+        hx-get="/genders/{gender.id}/edit"
+        hx-target="#gender-modal-body"
+        hx-on::after-request="UIkit.modal('#gender-modal').show()">
+    Edit
+</button>
+
+<!-- Delete Button: Load confirmation, then show modal -->
+<button class="uk-button uk-button-small uk-button-danger"
+        hx-get="/genders/{gender.id}/delete"
+        hx-target="#gender-modal-body"
+        hx-on::after-request="UIkit.modal('#gender-modal').show()">
+    Delete
+</button>
+```
+
+**Why `hx-on::after-request`?** This inline JavaScript handler (allowed by HTMX) executes after the HTMX request completes, ensuring the modal content is loaded before showing. This avoids the need for `<script>` tags.
+
+### 5.3 Form Submissions in Modal
+
+```html
+<!-- Create form submits to modal body -->
+<form hx-post="/genders" hx-target="#gender-modal-body">
+    <input name="code" ... />
+    <input name="description" ... />
+    <button type="submit">Save</button>
+</form>
+
+<!-- Edit form submits to modal body -->
+<form hx-put="/genders/{gender.id}" hx-target="#gender-modal-body">
+    <input name="code" ... />
+    <input name="description" ... />
+    <button type="submit">Save</button>
+</form>
+
+<!-- Delete confirmation button -->
+<button hx-delete="/genders/{gender.id}" hx-target="#gender-modal-body">
+    Delete
+</button>
+```
+
+### 5.4 Closing Modal + OOB Updates (Success)
+
+On successful form submission, the server returns a response that:
+1. Closes the modal via `hx-on::load` inline handler
+2. Updates the table via OOB swap
+
+```html
+<!-- Success response fragment -->
+<!-- Empty div that closes modal when loaded -->
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+
+<!-- OOB swap: Update table body -->
+<tbody id="gender-table-body" hx-swap-oob="innerHTML">
+    {#for g in genders}
+    <tr id="gender-row-{g.id}">...</tr>
+    {/for}
+</tbody>
+```
+
+**For Edit Success (single row update):**
+```html
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
+
+<!-- OOB swap: Update single row -->
+<tr id="gender-row-{gender.id}" hx-swap-oob="outerHTML">
     <td>{gender.code}</td>
     <td>{gender.description}</td>
-    <td>
-        <button hx-get="/genders/{gender.id}/edit"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Edit</button>
-        <button hx-delete="/genders/{gender.id}"
-                hx-confirm="Are you sure?"
-                hx-target="closest tr"
-                hx-swap="delete swap:300ms">Delete</button>
-    </td>
-</tr>
-
-<!-- Edit Row (row_edit fragment) -->
-<tr class="editing">
-    <td><input name="code" value="{gender.code}"/></td>
-    <td><input name="description" value="{gender.description}"/></td>
-    <td>
-        <button hx-get="/genders/{gender.id}"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Cancel</button>
-        <button hx-put="/genders/{gender.id}"
-                hx-include="closest tr"
-                hx-target="closest tr"
-                hx-swap="outerHTML">Save</button>
-    </td>
+    <td>...</td>
 </tr>
 ```
 
-### 5.2 Inline Create Form
-
+**For Delete Success (row removal):**
 ```html
-<!-- Create Button (create_button fragment) -->
-<button hx-get="/genders/create"
-        hx-target="#gender-create-container"
-        hx-swap="innerHTML">Add Gender</button>
+<div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
 
-<!-- Create Form (create_form fragment) -->
-<div class="uk-card uk-card-body">
-    <form hx-post="/genders"
-          hx-target="#gender-create-container"
-          hx-swap="innerHTML">
-        <input name="code" placeholder="Code *" maxlength="1"/>
-        <input name="description" placeholder="Description *"/>
-        <button type="submit">Save</button>
-        <button type="button"
-                hx-get="/genders/create/cancel"
-                hx-target="#gender-create-container">Cancel</button>
-    </form>
-</div>
+<!-- OOB swap: Remove row -->
+<tr id="gender-row-{deletedId}" hx-swap-oob="delete"></tr>
 ```
 
-### 5.3 OOB Table Refresh (Success)
+### 5.5 Cancel Button (UIkit Modal Close)
+
+The Cancel button uses UIkit's `uk-modal-close` class which automatically closes the modal without any HTMX request:
 
 ```html
-<!-- success fragment -->
-<!-- Main swap: Replace form with Add button + success message -->
-<button hx-get="/genders/create"
-        hx-target="#gender-create-container">Add Gender</button>
-
-<div class="uk-alert uk-alert-success">{message}</div>
-
-<!-- OOB swap: Refresh table body independently -->
-<!-- Note: <tbody> wrapped in <template> for HTML spec compliance -->
-<!-- Note: Rows are INLINED, not included via $row fragment -->
-<template>
-    <tbody id="gender-table-body" hx-swap-oob="true">
-        {#for g in genders}
-        <tr id="gender-row-{g.id}">
-            <td>{g.code}</td>
-            <td>{g.description}</td>
-        </tr>
-        {/for}
-    </tbody>
-</template>
+<button class="uk-button uk-button-default uk-modal-close" type="button">
+    Cancel
+</button>
 ```
 
-**Why `<template>` wrapper?** Per HTMX documentation, table elements like `<tbody>`, `<tr>`, `<td>` cannot stand alone in HTML responses. Wrapping in `<template>` ensures proper parsing while HTMX still processes the OOB swap correctly.
+### 5.6 Error Handling in Modal
 
-**Why inline rows instead of `{#include $row /}`?** With `@CheckedTemplate`, loop variables cannot be passed to included fragments. The `$row` fragment is only used for standalone calls (e.g., cancel edit returning a single row).
+On validation errors, the server re-renders the form with error message. The modal stays open:
+
+```html
+{#if error}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form ...>
+    <!-- Form fields with preserved values -->
+</form>
+```
+
+### 5.7 Important Notes
+
+**No `<script>` tags needed:** All JavaScript is inline via:
+- `hx-on::after-request` - Execute JS after HTMX request completes
+- `hx-on::load` - Execute JS when element is loaded into DOM
+- `uk-modal-close` class - UIkit's declarative modal close
+
+**Modal shell configuration:**
+```html
+<div id="gender-modal" uk-modal="bg-close: false">
+```
+- `bg-close: false` prevents accidental closure when clicking backdrop
+- Users must explicitly click Cancel or press Escape to close
 
 ---
 
@@ -432,12 +691,12 @@ public class GenderResource { ... }
 | Use Case | Implementation Component |
 |----------|-------------------------|
 | UC-002-01-01: View Gender List | `GenderResource.list()`, `gender.html`, `gender$table` fragment (rows inlined) |
-| UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender$create_form` fragment |
-| UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender$success` fragment |
-| UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender$row_edit` fragment |
-| UC-002-03-02: Submit Edit Form | `GenderResource.update()`, `gender$row` fragment |
-| UC-002-03-03: Cancel Edit | `GenderResource.getRow()`, `gender$row` fragment |
-| UC-002-04-01: Delete Gender | `GenderResource.delete()` |
+| UC-002-02-01: Display Create Form | `GenderResource.createForm()`, `gender$modal_create` fragment |
+| UC-002-02-02: Submit Create Form | `GenderResource.create()`, `gender$modal_success` fragment |
+| UC-002-03-01: Display Edit Form | `GenderResource.editForm()`, `gender$modal_edit` fragment |
+| UC-002-03-02: Submit Edit Form | `GenderResource.update()`, `gender$modal_success_row` fragment |
+| UC-002-03-03: Cancel Edit | UIkit `uk-modal-close` class (no server request) |
+| UC-002-04-01: Delete Gender | `GenderResource.deleteConfirm()`, `GenderResource.delete()`, `gender$modal_delete`, `gender$modal_delete_success` fragments |
 
 ---
 
@@ -468,6 +727,6 @@ public class GenderResource { ... }
 
 ---
 
-*Document Version: 1.1*
+*Document Version: 2.0*
 *Last Updated: December 2025*
-*Changes: Added PostgreSQL BIGSERIAL/IDENTITY requirement, PanacheEntityBase usage, and type-safe template fragment limitations*
+*Changes: Redesigned from inline editing to modal-based CRUD using UIkit modals with HTMX integration. Added modal fragments, OOB swap patterns for table/row updates, and inline JavaScript via hx-on attributes.*
