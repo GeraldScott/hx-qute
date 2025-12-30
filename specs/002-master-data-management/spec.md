@@ -1,6 +1,6 @@
 # Technical Specification: Feature 002 - Master Data Management
 
-This document describes the technical implementation requirements for the Master Data Management feature, focusing on Gender entity CRUD operations.
+This document describes the technical implementation requirements for the Master Data Management feature, covering CRUD operations for master data entities: Gender and Title.
 
 ---
 
@@ -687,6 +687,317 @@ public class GenderResource { ... }
 
 ---
 
+# Title Entity Specification
+
+The Title entity follows the same patterns as Gender with the following differences:
+- Code field: max **5 characters** (vs Gender's 1 character)
+- Stores honorifics: Mr, Ms, Mrs, Dr, Prof, Rev, etc.
+
+---
+
+## T1. Database Schema
+
+### T1.1 Title Table
+
+**Key Constraints:**
+- `code`: Max 5 characters, unique, uppercase, not null
+- `description`: Max 255 characters, unique, not null
+- Audit fields track creation and modification metadata
+
+**Important - PostgreSQL ID Generation:**
+- Primary key column must use `BIGSERIAL` type (auto-increment)
+- This maps to `GenerationType.IDENTITY` in JPA
+- Do NOT use sequences - Panache's default sequence strategy conflicts with `BIGSERIAL`
+
+```sql
+CREATE TABLE title (
+    id BIGSERIAL PRIMARY KEY,  -- Must be BIGSERIAL, not BIGINT with sequence
+    code VARCHAR(5) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255) NOT NULL DEFAULT 'system',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(255)
+);
+```
+
+---
+
+## T2. Entity Design
+
+### T2.1 Title Entity
+
+**File**: `src/main/java/io/archton/scaffold/entity/Title.java`
+
+**Pattern**: Active Record using PanacheEntityBase (no separate repository class)
+
+**Important - Use PanacheEntityBase, NOT PanacheEntity:**
+- `PanacheEntity` assumes sequence-based ID generation (creates `entity_SEQ` sequence)
+- `PanacheEntityBase` allows explicit `@Id` with `GenerationType.IDENTITY`
+- When using PostgreSQL `BIGSERIAL`, you MUST use `PanacheEntityBase`
+
+```java
+package io.archton.scaffold.entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.List;
+
+@Entity
+@Table(name = "title", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "code"),
+    @UniqueConstraint(columnNames = "description")
+})
+public class Title extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
+    @Column(name = "code", nullable = false, unique = true, length = 5)
+    public String code;
+
+    @Column(name = "description", nullable = false, unique = true, length = 255)
+    public String description;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    public Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    public Instant updatedAt;
+
+    @Column(name = "created_by")
+    public String createdBy;
+
+    @Column(name = "updated_by")
+    public String updatedBy;
+
+    // Static finder methods (Active Record pattern)
+    public static Title findByCode(String code) {
+        return find("code", code).firstResult();
+    }
+
+    public static Title findByDescription(String description) {
+        return find("description", description).firstResult();
+    }
+
+    public static List<Title> listAllOrdered() {
+        return list("ORDER BY code ASC");
+    }
+
+    // Lifecycle callbacks
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
+}
+```
+
+---
+
+## T3. Resource Layer
+
+### T3.1 TitleResource
+
+**File**: `src/main/java/io/archton/scaffold/router/TitleResource.java`
+
+**Security**: `@RolesAllowed("admin")` - Admin-only access
+
+**Pattern**: Same as GenderResource with type-safe fragments and modal-based CRUD.
+
+### T3.2 Endpoints
+
+| Method | Path | Handler | Description | Status |
+|--------|------|---------|-------------|--------|
+| GET | `/titles` | `list()` | List all titles (full page or table fragment) | ⏳ TODO |
+| GET | `/titles/create` | `createForm()` | Return create form modal content | ⏳ TODO |
+| POST | `/titles` | `create()` | Submit create form from modal | ⏳ TODO |
+| GET | `/titles/{id}/edit` | `editForm()` | Return edit form modal content with entity data | ⏳ TODO |
+| PUT | `/titles/{id}` | `update()` | Submit edit form from modal | ⏳ TODO |
+| GET | `/titles/{id}/delete` | `deleteConfirm()` | Return delete confirmation modal content | ⏳ TODO |
+| DELETE | `/titles/{id}` | `delete()` | Execute deletion after modal confirmation | ⏳ TODO |
+
+### T3.3 Request/Response Patterns
+
+Same as Gender - see Section 3.3 for details. Key difference:
+- Code max length validation: 5 characters instead of 1
+
+---
+
+## T4. Template Structure
+
+### T4.1 Single File with Fragments
+
+**File**: `templates/TitleResource/title.html`
+
+Uses Qute fragments (`{#fragment}`) for HTMX partial responses. Same structure as Gender template with:
+- Main page with table and static modal shell
+- `$table` fragment for table content
+- `$modal_create` fragment for create form
+- `$modal_edit` fragment for edit form
+- `$modal_success` fragment for create success + OOB table refresh
+- `$modal_success_row` fragment for edit success + OOB row update
+- `$modal_delete` fragment for delete confirmation
+- `$modal_delete_success` fragment for delete success + OOB row removal
+
+### T4.2 Key Template Differences from Gender
+
+```html
+<!-- Code input with maxlength="5" -->
+<input class="uk-input" type="text" name="code" maxlength="5" value="{title.code ?: ''}" required />
+
+<!-- Page title -->
+<h2 class="uk-heading-small">Title Code Maintenance</h2>
+
+<!-- Modal titles -->
+<h2 class="uk-modal-title">Add Title</h2>
+<h2 class="uk-modal-title">Edit Title</h2>
+<h2 class="uk-modal-title">Delete Title</h2>
+
+<!-- Empty state message -->
+<p class="uk-text-muted">No titles found.</p>
+
+<!-- Element IDs use "title" prefix -->
+<div id="title-table-container">...</div>
+<div id="title-modal" uk-modal="bg-close: false">...</div>
+<div id="title-modal-body">...</div>
+<tr id="title-row-{t.id}">...</tr>
+```
+
+### T4.3 Type-Safe Fragment Methods
+
+```java
+@CheckedTemplate
+public static class Templates {
+    // Full page (with base template parameters)
+    public static native TemplateInstance title(
+        String title,
+        String currentPage,
+        String userName,
+        List<Title> titles
+    );
+
+    // Table fragment
+    public static native TemplateInstance title$table(List<Title> titles);
+
+    // Modal content fragments
+    public static native TemplateInstance title$modal_create(Title title, String error);
+    public static native TemplateInstance title$modal_edit(Title title, String error);
+
+    // Success response fragments (close modal + OOB updates)
+    public static native TemplateInstance title$modal_success(String message, List<Title> titles);
+    public static native TemplateInstance title$modal_success_row(String message, Title title);
+
+    // Delete fragments
+    public static native TemplateInstance title$modal_delete(Title title, String error);
+    public static native TemplateInstance title$modal_delete_success(Long deletedId);
+}
+```
+
+---
+
+## T5. Validation Rules
+
+### T5.1 Create Validation
+
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| code | Required | "Code is required." |
+| code | Max 5 chars | "Code must be at most 5 characters." |
+| code | Unique | "Code already exists." |
+| description | Required | "Description is required." |
+| description | Unique | "Description already exists." |
+
+### T5.2 Edit Validation
+
+Same as create, but uniqueness checks exclude current record.
+
+### T5.3 Delete Validation
+
+| Condition | Error Message |
+|-----------|---------------|
+| Title in use by Person | "Cannot delete: Title is in use by X person(s)." |
+
+---
+
+## T6. Security Configuration
+
+### T6.1 Route Protection
+
+**application.properties**:
+```properties
+quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*,/titles/*
+quarkus.http.auth.permission.admin.policy=admin
+quarkus.http.auth.policy.admin.roles-allowed=admin
+```
+
+### T6.2 Resource Annotation
+
+```java
+@Path("/titles")
+@RolesAllowed("admin")
+public class TitleResource { ... }
+```
+
+---
+
+## T7. Navigation
+
+### T7.1 Sidebar Menu
+
+**Location**: Under "Maintenance" parent menu item, after Gender
+
+```html
+<li class="uk-parent">
+    <a href="#">Maintenance</a>
+    <ul class="uk-nav-sub">
+        <li class="{#if currentPage == 'gender'}uk-active{/if}">
+            <a href="/genders">Gender</a>
+        </li>
+        <li class="{#if currentPage == 'title'}uk-active{/if}">
+            <a href="/titles">Title</a>
+        </li>
+    </ul>
+</li>
+```
+
+---
+
+## T8. Traceability
+
+| Use Case | Implementation Component | Status |
+|----------|-------------------------|--------|
+| UC-002-05-01: View Title List | `TitleResource.list()`, `title.html`, `title$table` fragment | ⏳ TODO |
+| UC-002-06-01: Display Create Form | `TitleResource.createForm()`, `title$modal_create` fragment | ⏳ TODO |
+| UC-002-06-02: Submit Create Form | `TitleResource.create()`, `title$modal_success` fragment | ⏳ TODO |
+| UC-002-07-01: Display Edit Form | `TitleResource.editForm()`, `title$modal_edit` fragment | ⏳ TODO |
+| UC-002-07-02: Submit Edit Form | `TitleResource.update()`, `title$modal_success_row` fragment | ⏳ TODO |
+| UC-002-07-03: Cancel Edit | UIkit `uk-modal-close` class (no server request) | ⏳ TODO |
+| UC-002-08-01: Display Delete Confirmation | `TitleResource.deleteConfirm()`, `title$modal_delete` fragment | ⏳ TODO |
+| UC-002-08-02: Execute Delete | `TitleResource.delete()`, `title$modal_delete_success` fragment | ⏳ TODO |
+
+---
+
+## T9. Sample Data
+
+| Code | Description |
+|------|-------------|
+| MR | Mister |
+| MS | Miss |
+| MRS | Missus |
+| DR | Doctor |
+| PROF | Professor |
+| REV | Reverend |
+
+---
+
 ## 10. Dependencies
 
 ### 10.1 Required Extensions
@@ -714,6 +1025,6 @@ public class GenderResource { ... }
 
 ---
 
-*Document Version: 2.2*
+*Document Version: 3.0*
 *Last Updated: December 2025*
-*Changes: Aligned with ARCHITECTURE.md patterns - changed timestamp type from OffsetDateTime to Instant, updated security paths to match implementation, updated UIkit version to 3.25.4.*
+*Changes: Added Title entity specification (US-002-05 through US-002-08). Title code max length is 5 characters.*

@@ -175,6 +175,78 @@ The user stories are grouped into domain-specific features that deliver business
 
 ---
 
+### US-002-05: View Title Master Data
+**As an** authenticated system administrator
+**I want to** view a list of all codes and descriptions that describe a person's title or honorific (Mr, Ms, Mrs, Dr, Prof, Rev)
+**So that** I can view and update the list
+
+**Acceptance Criteria:**
+- Page is accessible from the navigation bar under the heading Maintenance
+- Entries are displayed in a table format
+- Each row shows: code, description
+- Entries are sorted by code
+- Empty state message displays when no entries exist
+
+**Priority:** High
+**Story Points:** 3
+
+---
+
+### US-002-06: Create New Title
+**As an** authenticated system administrator
+**I want to** add a new entry
+**So that** I can add new entries
+
+**Acceptance Criteria:**
+- Add button is visible on the list page
+- Form includes: code and description
+- Code and description are unique
+- Maximum code length is 5 characters
+- Code is coerced to uppercase
+- Entry has audit fields to record who created the entry and when
+- Successful creation returns user to the list
+- New entry appears in the list immediately
+
+**Priority:** High
+**Story Points:** 3
+
+---
+
+### US-002-07: Edit Existing Title
+**As an** authenticated system administrator
+**I want to** modify an existing entry
+**So that** I can correct errors or update details
+
+**Acceptance Criteria:**
+- Edit button is visible for each entry in the list
+- Edit form pre-populates with existing data
+- User can modify code and description
+- Audit data fields are displayed but cannot be amended
+- Entry has audit fields to record who updated the entry and when
+- Changes are saved upon form submission
+- User is returned to the list after successful update
+- Updated entry reflects changes immediately
+
+**Priority:** High
+**Story Points:** 2
+
+---
+
+### US-002-08: Delete Title
+**As an** authenticated system administrator
+**I want to** delete an entry
+**So that** I can remove incorrect or duplicate entries
+
+**Acceptance Criteria:**
+- Delete button is visible for each entry in the list
+- Confirmation dialog appears before deletion
+- Entry is removed from the list upon confirmation
+
+**Priority:** High
+**Story Points:** 2
+
+---
+
 ## Feature 003: Person Management
 
 ### US-003-01: View Persons List

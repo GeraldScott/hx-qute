@@ -2,13 +2,15 @@
 
 ## Current Status
 
-**Current Use Case:** Feature 002 Complete
-**Status:** ✅ All Use Cases Complete
+**Current Use Case:** UC-002-05-01: View Title List
+**Status:** 🔲 Not Started
 **Blockers:** None
 
 ---
 
 ## Progress Summary
+
+### Gender Use Cases
 
 | Use Case | Status |
 |----------|--------|
@@ -19,6 +21,18 @@
 | UC-002-03-02: Submit Edit Form | ✅ Complete |
 | UC-002-03-03: Cancel Edit | ✅ Complete |
 | UC-002-04-01: Delete Gender | ✅ Complete |
+
+### Title Use Cases
+
+| Use Case | Status |
+|----------|--------|
+| UC-002-05-01: View Title List | 🔲 Not Started |
+| UC-002-06-01: Display Create Form | 🔲 Not Started |
+| UC-002-06-02: Submit Create Form | 🔲 Not Started |
+| UC-002-07-01: Display Edit Form | 🔲 Not Started |
+| UC-002-07-02: Submit Edit Form | 🔲 Not Started |
+| UC-002-07-03: Cancel Edit | 🔲 Not Started |
+| UC-002-08-01: Delete Title | 🔲 Not Started |
 
 ---
 
@@ -242,9 +256,208 @@ None required - handled client-side via UIkit modal close.
 
 ---
 
+# Title Implementation
+
+---
+
+## UC-002-05-01: View Title List
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-05 - View Title Master Data
+
+**Description:** Display a list of all title codes and descriptions with admin-only access.
+
+**Implementation Tasks:**
+- [ ] Create Flyway migration `V1.0.X__Create_title_table.sql`
+- [ ] Create `entity/Title.java` extending PanacheEntityBase with audit fields
+- [ ] Add static finder methods (`findByCode`, `findByDescription`, `listAllOrdered`)
+- [ ] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks
+- [ ] Create `router/TitleResource.java` with `@RolesAllowed("admin")`
+- [ ] Add `Templates` class with `title()` and fragment methods
+- [ ] Implement `GET /titles` endpoint with HTMX detection
+- [ ] Create `templates/TitleResource/title.html` with fragments
+- [ ] Add Title to Maintenance menu in `templates/base.html`
+- [ ] Update security configuration in `application.properties` to include `/titles/*`
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/titles` | List all titles |
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
+## UC-002-06-01: Display Create Form
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-06 - Create New Title
+
+**Description:** Display modal create form when Add button is clicked.
+
+**Implementation Tasks:**
+- [ ] Add `createForm()` endpoint to TitleResource
+- [ ] Add `Templates.title$modal_create()` template method
+- [ ] Add `modal_create` fragment to `title.html`
+- [ ] Update main page with static modal shell and HTMX dynamic loading
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/titles/create` | Display create form modal |
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
+## UC-002-06-02: Submit Create Form
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-06 - Create New Title
+
+**Description:** Validate and create new title record.
+
+**Implementation Tasks:**
+- [ ] Implement `POST /titles` endpoint
+- [ ] Validate code is not empty
+- [ ] Validate description is not empty
+- [ ] Validate code max length (5 chars)
+- [ ] Validate code uniqueness
+- [ ] Validate description uniqueness
+- [ ] Coerce code to uppercase
+- [ ] Set audit fields (createdBy, updatedBy from SecurityIdentity)
+- [ ] Add `modal_success` fragment with OOB table refresh
+- [ ] Add `Templates.title$modal_success()` template method
+
+**Validation Rules:**
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| code | Required | "Code is required." |
+| code | Max 5 chars | "Code must be at most 5 characters." |
+| code | Unique | "Code already exists." |
+| description | Required | "Description is required." |
+| description | Unique | "Description already exists." |
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/titles` | Create new title |
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
+## UC-002-07-01: Display Edit Form
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-07 - Edit Existing Title
+
+**Description:** Display edit form modal with pre-populated data when Edit button is clicked.
+
+**Implementation Tasks:**
+- [ ] Implement `GET /titles/{id}/edit` endpoint
+- [ ] Add `Templates.title$modal_edit()` template method
+- [ ] Add `modal_edit` fragment to `title.html`
+- [ ] Pre-populate form with current values
+- [ ] Display audit fields (read-only) in expandable section
+- [ ] Add Edit and Delete buttons to table rows
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/titles/{id}/edit` | Display edit form modal content |
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
+## UC-002-07-02: Submit Edit Form
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-07 - Edit Existing Title
+
+**Description:** Validate and update existing title record.
+
+**Implementation Tasks:**
+- [ ] Implement `PUT /titles/{id}` endpoint
+- [ ] Validate code is not empty
+- [ ] Validate description is not empty
+- [ ] Validate code uniqueness (excluding current record)
+- [ ] Validate description uniqueness (excluding current record)
+- [ ] Coerce code to uppercase
+- [ ] Update audit fields (updatedBy, updatedAt)
+- [ ] Add `modal_success_row` fragment with OOB row update
+- [ ] Add `Templates.title$modal_success_row()` template method
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| PUT | `/titles/{id}` | Update title |
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
+## UC-002-07-03: Cancel Edit
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-07 - Edit Existing Title
+
+**Description:** Cancel edit and close modal, discarding any unsaved changes.
+
+**Implementation Notes:**
+With the modal-based architecture, Cancel is handled entirely client-side using UIkit's `uk-modal-close` class. No server endpoint is needed because:
+- The original row data is never modified until Save is clicked
+- Clicking Cancel simply closes the modal via UIkit
+- The table row remains unchanged
+
+**Implementation Tasks:**
+- [ ] Cancel button uses `uk-modal-close` class in `modal_edit` fragment
+- [ ] Modal closes without server request
+- [ ] Original table row data preserved (no modification until Save)
+
+**Endpoints:**
+None required - handled client-side via UIkit modal close.
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
+## UC-002-08-01: Delete Title
+
+**Status:** 🔲 Not Started
+**Parent Story:** US-002-08 - Delete Title
+
+**Description:** Delete title record with confirmation modal.
+
+**Implementation Tasks:**
+- [ ] Implement `GET /titles/{id}/delete` endpoint (confirmation modal)
+- [ ] Implement `DELETE /titles/{id}` endpoint
+- [ ] Add `modal_delete` fragment for confirmation dialog
+- [ ] Add `modal_delete_success` fragment for OOB row removal
+- [ ] Add `Templates.title$modal_delete()` and `Templates.title$modal_delete_success()` methods
+- [ ] Check if title is in use by Person records (deferred - Person entity may not have title field yet)
+
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/titles/{id}/delete` | Display delete confirmation modal |
+| DELETE | `/titles/{id}` | Execute deletion |
+
+**Test Results:**
+*(To be completed after implementation)*
+
+---
+
 ## Test Cases Reference
 
-### Feature 002 Test Cases
+### Gender Test Cases
 
 | Test ID | Description | Use Case | Status |
 |---------|-------------|----------|--------|
@@ -264,5 +477,26 @@ None required - handled client-side via UIkit modal close.
 | TC-002-04-001 | Gender Delete Confirmation | UC-002-04-01 | ✅ |
 | TC-002-04-002 | Gender Delete Success | UC-002-04-01 | ✅ |
 | TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | ✅ |
+
+### Title Test Cases
+
+| Test ID | Description | Use Case | Status |
+|---------|-------------|----------|--------|
+| TC-002-05-001 | Title Page UI Elements | UC-002-05-01 | 🔲 |
+| TC-002-05-002 | Title List Display | UC-002-05-01 | 🔲 |
+| TC-002-05-003 | Title List Empty State | UC-002-05-01 | 🔲 |
+| TC-002-05-004 | Title Access Requires Admin Role | UC-002-05-01 | 🔲 |
+| TC-002-06-001 | Title Create Form Display | UC-002-06-01 | 🔲 |
+| TC-002-06-002 | Title Create Success | UC-002-06-02 | 🔲 |
+| TC-002-06-003 | Title Create Code Uppercase | UC-002-06-02 | 🔲 |
+| TC-002-06-004 | Title Create Duplicate Code Prevention | UC-002-06-02 | 🔲 |
+| TC-002-06-005 | Title Create Duplicate Description Prevention | UC-002-06-02 | 🔲 |
+| TC-002-06-006 | Title Create Code Max Length (5 chars) | UC-002-06-02 | 🔲 |
+| TC-002-07-001 | Title Edit Form Display | UC-002-07-01 | 🔲 |
+| TC-002-07-002 | Title Edit Success | UC-002-07-02 | 🔲 |
+| TC-002-07-003 | Title Edit Cancel | UC-002-07-03 | 🔲 |
+| TC-002-08-001 | Title Delete Confirmation | UC-002-08-01 | 🔲 |
+| TC-002-08-002 | Title Delete Success | UC-002-08-01 | 🔲 |
+| TC-002-08-003 | Title Delete Cancel | UC-002-08-01 | 🔲 |
 
 ---

@@ -200,7 +200,199 @@ This feature provides CRUD operations for master data entities used throughout t
 
 ---
 
+# US-002-05: View Title Master Data
+
+## UC-002-05-01: View Title List
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User is authenticated with admin role |
+| Trigger | User navigates to Title page via Maintenance menu |
+
+**Main Flow:**
+1. System retrieves all Title records
+2. System sorts records by code (ascending)
+3. System displays records in table format (code, description)
+4. System displays Add button
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 1a | No records exist | Display "No title entries found" message |
+
+**Postcondition:** Title list displayed
+
+---
+
+# US-002-06: Create New Title
+
+## UC-002-06-01: Display Create Form
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User is on Title list page |
+| Trigger | User clicks Add button |
+
+**Main Flow:**
+1. System opens modal dialog titled "Add Title"
+2. Modal includes fields: code (max 5 chars), description
+3. Modal includes Save and Cancel buttons in footer
+4. Modal backdrop prevents interaction with underlying page
+
+**Postcondition:** Create form modal is displayed
+
+---
+
+## UC-002-06-02: Submit Create Form
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User has filled create form in modal |
+| Trigger | User clicks Save button |
+
+**Main Flow:**
+1. System coerces code to uppercase
+2. System validates code is not empty
+3. System validates description is not empty
+4. System validates code is max 5 characters
+5. System validates uniqueness of code
+6. System validates uniqueness of description
+7. System sets audit fields (createdBy, createdAt, updatedBy, updatedAt)
+8. System persists new Title record
+9. System closes modal
+10. System displays success notification
+11. System refreshes Title list (OOB swap)
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 2a | Code empty | Display "Code is required." error in modal |
+| 3a | Description empty | Display "Description is required." error in modal |
+| 4a | Code > 5 characters | Display "Code must be at most 5 characters." error in modal |
+| 5a | Code already exists | Display "Code already exists." error in modal |
+| 6a | Description already exists | Display "Description already exists." error in modal |
+
+**Postcondition:** New Title record created; modal closed; list updated
+
+---
+
+# US-002-07: Edit Existing Title
+
+## UC-002-07-01: Display Edit Form
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User is on Title list page |
+| Trigger | User clicks Edit button for a Title entry |
+
+**Main Flow:**
+1. System retrieves Title record by ID
+2. System opens modal dialog titled "Edit Title"
+3. Modal pre-populates code and description fields
+4. Modal displays audit fields (read-only) in details section
+5. Modal includes Save and Cancel buttons in footer
+6. Modal backdrop prevents interaction with underlying page
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 1a | Title not found | Display error notification; do not open modal |
+
+**Postcondition:** Edit form modal displayed with current values
+
+---
+
+## UC-002-07-02: Submit Edit Form
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User has modified edit form in modal |
+| Trigger | User clicks Save button |
+
+**Main Flow:**
+1. System coerces code to uppercase
+2. System validates code is not empty
+3. System validates description is not empty
+4. System validates uniqueness of code (excluding current record)
+5. System validates uniqueness of description (excluding current record)
+6. System updates audit fields (updatedBy, updatedAt)
+7. System persists updated Title record
+8. System closes modal
+9. System displays success notification
+10. System updates the affected row via OOB swap
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 2a | Code empty | Display "Code is required." error in modal |
+| 3a | Description empty | Display "Description is required." error in modal |
+| 4a | Code conflicts with another record | Display "Code already exists." error in modal |
+| 5a | Description conflicts with another record | Display "Description already exists." error in modal |
+
+**Postcondition:** Title record updated; modal closed; row reflects changes
+
+---
+
+## UC-002-07-03: Cancel Edit
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User has edit modal open for a Title entry |
+| Trigger | User clicks Cancel button or modal backdrop or presses Escape |
+
+**Main Flow:**
+1. System discards any unsaved changes
+2. System closes modal
+3. Table row remains unchanged
+
+**Postcondition:** Original values preserved; modal closed
+
+---
+
+# US-002-08: Delete Title
+
+## UC-002-08-01: Delete Title
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Administrator |
+| Precondition | User is on Title list page |
+| Trigger | User clicks Delete button for a Title entry |
+
+**Main Flow:**
+1. System opens confirmation modal dialog
+2. Modal displays warning: "Are you sure you want to delete [code] - [description]?"
+3. Modal includes Delete (danger) and Cancel buttons
+4. User clicks Delete button to confirm
+5. System checks if Title is in use by Person records
+6. System deletes Title record
+7. System closes modal
+8. System removes row from list with animation (OOB swap)
+
+**Alternative Flows:**
+
+| ID | Condition | Action |
+|----|-----------|--------|
+| 4a | User clicks Cancel or presses Escape | Close modal; no action taken |
+| 5a | Title in use by Person records | Display "Cannot delete: Title is in use by X person(s)." error in modal |
+
+**Postcondition:** Title record deleted; modal closed; list updated
+
+---
+
 ## Use Case Summary
+
+### Gender Use Cases
 
 | ID | Use Case | Parent Story | Actor |
 |----|----------|--------------|-------|
@@ -212,9 +404,23 @@ This feature provides CRUD operations for master data entities used throughout t
 | UC-002-03-03 | Cancel Edit | US-002-03 | Administrator |
 | UC-002-04-01 | Delete Gender | US-002-04 | Administrator |
 
+### Title Use Cases
+
+| ID | Use Case | Parent Story | Actor |
+|----|----------|--------------|-------|
+| UC-002-05-01 | View Title List | US-002-05 | Administrator |
+| UC-002-06-01 | Display Create Form | US-002-06 | Administrator |
+| UC-002-06-02 | Submit Create Form | US-002-06 | Administrator |
+| UC-002-07-01 | Display Edit Form | US-002-07 | Administrator |
+| UC-002-07-02 | Submit Edit Form | US-002-07 | Administrator |
+| UC-002-07-03 | Cancel Edit | US-002-07 | Administrator |
+| UC-002-08-01 | Delete Title | US-002-08 | Administrator |
+
 ---
 
 ## Traceability Matrix
+
+### Gender
 
 | User Story | Use Cases |
 |------------|-----------|
@@ -222,3 +428,12 @@ This feature provides CRUD operations for master data entities used throughout t
 | US-002-02: Create New Gender | UC-002-02-01, UC-002-02-02 |
 | US-002-03: Edit Existing Gender | UC-002-03-01, UC-002-03-02, UC-002-03-03 |
 | US-002-04: Delete Gender | UC-002-04-01 |
+
+### Title
+
+| User Story | Use Cases |
+|------------|-----------|
+| US-002-05: View Title Master Data | UC-002-05-01 |
+| US-002-06: Create New Title | UC-002-06-01, UC-002-06-02 |
+| US-002-07: Edit Existing Title | UC-002-07-01, UC-002-07-02, UC-002-07-03 |
+| US-002-08: Delete Title | UC-002-08-01 |
