@@ -12,6 +12,17 @@
 
 <h2 class="uk-heading-small">Person Management</h2>
 
+<!-- Add Button - triggers modal AND loads content via HTMX -->
+<button
+    class="uk-button uk-button-primary uk-margin-bottom"
+    type="button"
+    hx-get="/persons/create"
+    hx-target="#person-modal-body"
+    hx-on::after-request="UIkit.modal('#person-modal').show()"
+>
+    <span uk-icon="plus"></span> Add
+</button>
+
 <!-- Filter Bar - Above Table -->
 <form class="uk-grid-small uk-flex-middle uk-margin-bottom" uk-grid
       hx-get="/persons"
@@ -54,22 +65,11 @@
     </div>
 </form>
 
-<!-- Add Button - triggers modal AND loads content via HTMX -->
-<button
-    class="uk-button uk-button-primary uk-margin-bottom"
-    type="button"
-    hx-get="/persons/create"
-    hx-target="#person-modal-body"
-    hx-on::after-request="UIkit.modal('#person-modal').show()"
->
-    <span uk-icon="plus"></span> Add
-</button>
-
 <div id="person-table-container">{#include $table /}</div>
 
 <!-- Static Modal Shell (always present in DOM) -->
 <div id="person-modal" uk-modal="bg-close: false">
-    <div class="uk-modal-dialog uk-modal-dialog-large">
+    <div class="uk-modal-dialog uk-modal-container">
         <div id="person-modal-body" class="uk-modal-body">
             <!-- Content loaded dynamically via HTMX -->
         </div>
