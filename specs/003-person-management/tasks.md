@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-003-03-01: Display Edit Form
-**Status:** 🔲 Not Started
+**Current Use Case:** All Complete
+**Status:** ✅ Complete
 **Blockers:** None
 
 ---
@@ -15,14 +15,14 @@
 | UC-003-01-01: View Persons List | ✅ Complete |
 | UC-003-02-01: Display Create Form | ✅ Complete |
 | UC-003-02-02: Submit Create Form | ✅ Complete |
-| UC-003-03-01: Display Edit Form | 🔲 Not Started |
-| UC-003-03-02: Submit Edit Form | 🔲 Not Started |
-| UC-003-03-03: Cancel Edit | 🔲 Not Started |
-| UC-003-04-01: Delete Person | 🔲 Not Started |
-| UC-003-05-01: Apply Filter | 🔲 Not Started |
-| UC-003-05-02: Clear Filter | 🔲 Not Started |
-| UC-003-06-01: Apply Sort | 🔲 Not Started |
-| UC-003-06-02: Clear Sort | 🔲 Not Started |
+| UC-003-03-01: Display Edit Form | ✅ Complete |
+| UC-003-03-02: Submit Edit Form | ✅ Complete |
+| UC-003-03-03: Cancel Edit | ✅ Complete |
+| UC-003-04-01: Delete Person | ✅ Complete |
+| UC-003-05-01: Apply Filter | ✅ Complete |
+| UC-003-05-02: Clear Filter | ✅ Complete |
+| UC-003-06-01: Apply Sort | ✅ Complete |
+| UC-003-06-02: Clear Sort | ✅ Complete |
 
 ---
 
@@ -157,15 +157,15 @@
 
 ## UC-003-03-01: Display Edit Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-03 - Edit Existing Person
 
 **Description:** Display edit form in modal with pre-populated data.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /persons/{id}/edit` endpoint
-- [ ] Add `Templates.person$modal_edit()` fragment method
-- [ ] Create `{#fragment id=modal_edit rendered=false}` in person.html
+- [x] Implement `GET /persons/{id}/edit` endpoint
+- [x] Add `Templates.person$modal_edit()` fragment method
+- [x] Create `{#fragment id=modal_edit rendered=false}` in person.html
   - Pre-populate all fields with current values
   - Title dropdown shows current selection
   - Gender dropdown shows current selection
@@ -182,27 +182,32 @@
 
 **Test Cases:** TC-003-03-001
 
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-03-001 | ✅ PASS | Modal displays with title "Edit Person", all fields pre-populated (firstName, lastName, email, phone, title dropdown, gender dropdown), audit info in collapsible section shows createdAt/createdBy/updatedAt/updatedBy, Save/Cancel buttons visible |
+
 ---
 
 ## UC-003-03-02: Submit Edit Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-03 - Edit Existing Person
 
 **Description:** Validate and update existing person record.
 
 **Implementation Tasks:**
-- [ ] Implement `PUT /persons/{id}` endpoint with `@Transactional`
-- [ ] Validate firstName is not empty
-- [ ] Validate lastName is not empty
-- [ ] Validate email is not empty
-- [ ] Validate email format
-- [ ] Validate email uniqueness (excluding current record)
-- [ ] Update title and gender links
-- [ ] Set `updatedBy` from `securityIdentity.getPrincipal().getName()` before merge
-- [ ] Note: `updatedAt` is set automatically by `@PreUpdate` callback
-- [ ] Add `Templates.person$modal_success_row()` fragment method
-- [ ] Create `{#fragment id=modal_success_row rendered=false}` with:
+- [x] Implement `PUT /persons/{id}` endpoint with `@Transactional`
+- [x] Validate firstName is not empty
+- [x] Validate lastName is not empty
+- [x] Validate email is not empty
+- [x] Validate email format
+- [x] Validate email uniqueness (excluding current record)
+- [x] Update title and gender links
+- [x] Set `updatedBy` from `securityIdentity.getPrincipal().getName()` before merge
+- [x] Note: `updatedAt` is set automatically by `@PreUpdate` callback
+- [x] Add `Templates.person$modal_success_row()` fragment method
+- [x] Create `{#fragment id=modal_success_row rendered=false}` with:
   - `hx-on::load` to close modal
   - OOB swap to update specific row
 
@@ -213,39 +218,50 @@
 
 **Test Cases:** TC-003-03-002, TC-003-03-003
 
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-03-002 | ✅ PASS | Person updated: lastName changed to "Updated", modal closed automatically, row updated via OOB swap |
+| TC-003-03-003 | ✅ PASS | "Email already registered." error displayed when changing email to existing one, modal stays open with form preserved |
+
 ---
 
 ## UC-003-03-03: Cancel Edit
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-03 - Edit Existing Person
 
 **Description:** Cancel edit modal without saving changes.
 
 **Implementation Tasks:**
-- [ ] Cancel button uses `uk-modal-close` class (no server request needed)
-- [ ] Modal closes client-side, no changes saved
+- [x] Cancel button uses `uk-modal-close` class (no server request needed)
+- [x] Modal closes client-side, no changes saved
 
 **Test Cases:** TC-003-03-004
+
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-03-004 | ✅ PASS | Modal closed after Cancel click, original values preserved in table (lastName remained "Updated" despite being changed to "ChangedButNotSaved" in form) |
 
 ---
 
 ## UC-003-04-01: Delete Person
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-04 - Delete Person
 
 **Description:** Delete person with modal confirmation.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /persons/{id}/delete` endpoint (confirmation modal)
-- [ ] Add `Templates.person$modal_delete()` fragment method
-- [ ] Create `{#fragment id=modal_delete rendered=false}` with:
+- [x] Implement `GET /persons/{id}/delete` endpoint (confirmation modal)
+- [x] Add `Templates.person$modal_delete()` fragment method
+- [x] Create `{#fragment id=modal_delete rendered=false}` with:
   - Warning message displaying person's name
   - Delete and Cancel buttons
-- [ ] Implement `DELETE /persons/{id}` endpoint with `@Transactional`
-- [ ] Add `Templates.person$modal_delete_success()` fragment method
-- [ ] Create `{#fragment id=modal_delete_success rendered=false}` with:
+- [x] Implement `DELETE /persons/{id}` endpoint with `@Transactional`
+- [x] Add `Templates.person$modal_delete_success()` fragment method
+- [x] Create `{#fragment id=modal_delete_success rendered=false}` with:
   - `hx-on::load` to close modal
   - OOB swap to remove row (using `<template>` wrapper)
 
@@ -257,76 +273,106 @@
 
 **Test Cases:** TC-003-04-001, TC-003-04-002, TC-003-04-003
 
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-04-001 | ✅ PASS | Modal displays with title "Delete Person", warning message shows person's name (Mr Tony Benn), Delete and Cancel buttons available |
+| TC-003-04-002 | ✅ PASS | Person deleted (Mr Jane Updated), modal closed automatically, row removed from table via OOB swap |
+| TC-003-04-003 | ✅ PASS | Modal closed after Cancel click, person (Mr Tony Benn) still exists in table |
+
 ---
 
 ## UC-003-05-01: Apply Filter
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-05 - Filter People
 
 **Description:** Filter persons list by name or email using query parameters.
 
 **Implementation Tasks:**
-- [ ] Add `@QueryParam("filter")` to list endpoint
-- [ ] Implement filter logic in `Person.findByFilter()` method
+- [x] Add `@QueryParam("filter")` to list endpoint
+- [x] Implement filter logic in `Person.findByFilter()` method
   - Match firstName, lastName, or email (case-insensitive, contains)
-- [ ] Add filter bar HTML to person.html
+- [x] Add filter bar HTML to person.html
   - Search input with debounce (300ms via `hx-trigger="input changed delay:300ms"`)
   - Use `hx-push-url="true"` to update URL
   - Use `hx-include="closest form"` for including sort params
 
 **Test Cases:** TC-003-05-001, TC-003-05-002, TC-003-05-004
 
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-05-001 | ✅ PASS | Filter "Marx" returns only "Mr Karl Marx", URL updates to ?filter=Marx |
+| TC-003-05-002 | ✅ PASS | Filter "ZZZZNONEXISTENT" shows "No persons match the filter criteria." message |
+| TC-003-05-004 | ✅ PASS | Direct navigation to /persons?filter=Rosa loads filtered results with input pre-populated |
+
 ---
 
 ## UC-003-05-02: Clear Filter
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-05 - Filter People
 
 **Description:** Clear filter and display all persons.
 
 **Implementation Tasks:**
-- [ ] Add Clear button as link to `/persons` (no query params)
-- [ ] System returns full list with default sort
+- [x] Add Clear button as link to `/persons` (no query params)
+- [x] System returns full list with default sort
 
 **Test Cases:** TC-003-05-003
+
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-05-003 | ✅ PASS | Clear button navigates to /persons, filter field cleared, all 12 records displayed |
 
 ---
 
 ## UC-003-06-01: Apply Sort
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-06 - Sort People
 
 **Description:** Sort persons list by selected field using query parameters.
 
 **Implementation Tasks:**
-- [ ] Add `@QueryParam("sortField")` and `@QueryParam("sortDir")` to list endpoint
-- [ ] Implement sort logic in `Person.findByFilter()` and `Person.buildOrderBy()` methods
+- [x] Add `@QueryParam("sortField")` and `@QueryParam("sortDir")` to list endpoint
+- [x] Implement sort logic in `Person.findByFilter()` and `Person.buildOrderBy()` methods
   - Support fields: firstName, lastName, email
   - Support directions: asc, desc
-- [ ] Add sort dropdowns to filter bar
+- [x] Add sort dropdowns to filter bar
   - Sort field select (Last Name, First Name, Email)
   - Sort direction select (Ascending, Descending)
-- [ ] Use `hx-push-url="true"` to update URL with sort params
+- [x] Use `hx-push-url="true"` to update URL with sort params
 
 **Test Cases:** TC-003-06-001, TC-003-06-003
+
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-06-001 | ✅ PASS | Sort by firstName DESC works: Yanis → Tony → Simone → ... → Antonio; dropdowns show correct selection |
+| TC-003-06-003 | ✅ PASS | URL state ?sortField=firstName&sortDir=desc loads correctly with sorted results and pre-selected dropdowns |
 
 ---
 
 ## UC-003-06-02: Clear Sort
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-06 - Sort People
 
 **Description:** Clear custom sort and restore default order.
 
 **Implementation Tasks:**
-- [ ] Clear button links to `/persons` (clears all params including sort)
-- [ ] System applies default sort (lastName, firstName ASC)
+- [x] Clear button links to `/persons` (clears all params including sort)
+- [x] System applies default sort (lastName, firstName ASC)
 
 **Test Cases:** TC-003-06-002
+
+**Test Results (2025-12-30):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-06-002 | ✅ PASS | Clear button navigates to /persons, sort dropdowns reset (Sort by... + Ascending), records sorted by lastName ASC: Benn → Berlinguer → de Beauvoir → Engels → Gramsci → Iglesias → Luxemburg → Marx → Palme → Sartre → Varoufakis → Zetkin |
 
 ---
 
@@ -347,19 +393,19 @@
 | TC-003-02-005 | Person Create Email Required | UC-003-02-02 | ✅ |
 | TC-003-02-006 | Person Create Email Format Validation | UC-003-02-02 | ✅ |
 | TC-003-02-007 | Person Create Duplicate Email Prevention | UC-003-02-02 | ✅ |
-| TC-003-03-001 | Person Edit Form Display | UC-003-03-01 | 🔲 |
-| TC-003-03-002 | Person Edit Success | UC-003-03-02 | 🔲 |
-| TC-003-03-003 | Person Edit Email Uniqueness | UC-003-03-02 | 🔲 |
-| TC-003-03-004 | Person Edit Cancel | UC-003-03-03 | 🔲 |
-| TC-003-04-001 | Person Delete Confirmation Modal | UC-003-04-01 | 🔲 |
-| TC-003-04-002 | Person Delete Success | UC-003-04-01 | 🔲 |
-| TC-003-04-003 | Person Delete Cancel | UC-003-04-01 | 🔲 |
-| TC-003-05-001 | Persons Filter by Name | UC-003-05-01 | 🔲 |
-| TC-003-05-002 | Persons Filter No Results | UC-003-05-01 | 🔲 |
-| TC-003-05-003 | Persons Filter Clear | UC-003-05-02 | 🔲 |
-| TC-003-05-004 | Persons Filter URL State | UC-003-05-01 | 🔲 |
-| TC-003-06-001 | Persons Sort by Name | UC-003-06-01 | 🔲 |
-| TC-003-06-002 | Persons Sort Clear | UC-003-06-02 | 🔲 |
-| TC-003-06-003 | Persons Sort URL State | UC-003-06-01 | 🔲 |
+| TC-003-03-001 | Person Edit Form Display | UC-003-03-01 | ✅ |
+| TC-003-03-002 | Person Edit Success | UC-003-03-02 | ✅ |
+| TC-003-03-003 | Person Edit Email Uniqueness | UC-003-03-02 | ✅ |
+| TC-003-03-004 | Person Edit Cancel | UC-003-03-03 | ✅ |
+| TC-003-04-001 | Person Delete Confirmation Modal | UC-003-04-01 | ✅ |
+| TC-003-04-002 | Person Delete Success | UC-003-04-01 | ✅ |
+| TC-003-04-003 | Person Delete Cancel | UC-003-04-01 | ✅ |
+| TC-003-05-001 | Persons Filter by Name | UC-003-05-01 | ✅ |
+| TC-003-05-002 | Persons Filter No Results | UC-003-05-01 | ✅ |
+| TC-003-05-003 | Persons Filter Clear | UC-003-05-02 | ✅ |
+| TC-003-05-004 | Persons Filter URL State | UC-003-05-01 | ✅ |
+| TC-003-06-001 | Persons Sort by Name | UC-003-06-01 | ✅ |
+| TC-003-06-002 | Persons Sort Clear | UC-003-06-02 | ✅ |
+| TC-003-06-003 | Persons Sort URL State | UC-003-06-01 | ✅ |
 
 ---

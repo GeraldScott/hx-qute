@@ -57,16 +57,18 @@
                             hx-get="/titles/{t.id}/edit"
                             hx-target="#title-modal-body"
                             hx-on::after-request="UIkit.modal('#title-modal').show()"
+                            uk-tooltip="Edit Title"
                         >
-                            Edit
+                            <span uk-icon="pencil"></span>
                         </button>
                         <button
                             class="uk-button uk-button-small uk-button-danger"
                             hx-get="/titles/{t.id}/delete"
                             hx-target="#title-modal-body"
                             hx-on::after-request="UIkit.modal('#title-modal').show()"
+                            uk-tooltip="Delete Title"
                         >
-                            Delete
+                            <span uk-icon="trash"></span>
                         </button>
                     </div>
                 </td>
@@ -158,14 +160,16 @@
                             <button class="uk-button uk-button-small uk-button-primary"
                                     hx-get="/titles/{t.id}/edit"
                                     hx-target="#title-modal-body"
-                                    hx-on::after-request="UIkit.modal('#title-modal').show()">
-                                Edit
+                                    hx-on::after-request="UIkit.modal('#title-modal').show()"
+                                    uk-tooltip="Edit Title">
+                                <span uk-icon="pencil"></span>
                             </button>
                             <button class="uk-button uk-button-small uk-button-danger"
                                     hx-get="/titles/{t.id}/delete"
                                     hx-target="#title-modal-body"
-                                    hx-on::after-request="UIkit.modal('#title-modal').show()">
-                                Delete
+                                    hx-on::after-request="UIkit.modal('#title-modal').show()"
+                                    uk-tooltip="Delete Title">
+                                <span uk-icon="trash"></span>
                             </button>
                         </div>
                     </td>
@@ -191,14 +195,16 @@
             <button class="uk-button uk-button-small uk-button-primary"
                     hx-get="/titles/{title.id}/edit"
                     hx-target="#title-modal-body"
-                    hx-on::after-request="UIkit.modal('#title-modal').show()">
-                Edit
+                    hx-on::after-request="UIkit.modal('#title-modal').show()"
+                    uk-tooltip="Edit Title">
+                <span uk-icon="pencil"></span>
             </button>
             <button class="uk-button uk-button-small uk-button-danger"
                     hx-get="/titles/{title.id}/delete"
                     hx-target="#title-modal-body"
-                    hx-on::after-request="UIkit.modal('#title-modal').show()">
-                Delete
+                    hx-on::after-request="UIkit.modal('#title-modal').show()"
+                    uk-tooltip="Delete Title">
+                <span uk-icon="trash"></span>
             </button>
         </div>
     </td>
