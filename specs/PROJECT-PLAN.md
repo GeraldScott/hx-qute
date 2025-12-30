@@ -7,7 +7,7 @@
 ## Current Status
 
 **Current Phase:** Feature 002 - Master Data Management (Title)
-**Current Use Case:** UC-002-06-02: Submit Create Form
+**Current Use Case:** UC-002-07-01: Display Edit Form
 **Blockers:** None
 
 ## Feature Plans
@@ -23,9 +23,9 @@
 |---------|-----------|-----------|-----------|
 | Feature 000 - Foundation | 4 | 4 | 0 |
 | Feature 001 - Identity and Access Management | 6 | 6 | 0 |
-| Feature 002 - Master Data Management | 14 | 9 | 5 |
+| Feature 002 - Master Data Management | 14 | 10 | 4 |
 | Feature 003 - Person Management | 11 | 0 | 11 |
-| **Total** | **35** | **19** | **16** |
+| **Total** | **35** | **20** | **15** |
 
 ---
 

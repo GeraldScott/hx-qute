@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-06-02: Submit Create Form
+**Current Use Case:** UC-002-07-01: Display Edit Form
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -28,7 +28,7 @@
 |----------|--------|
 | UC-002-05-01: View Title List | ✅ Complete |
 | UC-002-06-01: Display Create Form | ✅ Complete |
-| UC-002-06-02: Submit Create Form | 🔲 Not Started |
+| UC-002-06-02: Submit Create Form | ✅ Complete |
 | UC-002-07-01: Display Edit Form | 🔲 Not Started |
 | UC-002-07-02: Submit Edit Form | 🔲 Not Started |
 | UC-002-07-03: Cancel Edit | 🔲 Not Started |
@@ -325,22 +325,22 @@ None required - handled client-side via UIkit modal close.
 
 ## UC-002-06-02: Submit Create Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-06 - Create New Title
 
 **Description:** Validate and create new title record.
 
 **Implementation Tasks:**
-- [ ] Implement `POST /titles` endpoint
-- [ ] Validate code is not empty
-- [ ] Validate description is not empty
-- [ ] Validate code max length (5 chars)
-- [ ] Validate code uniqueness
-- [ ] Validate description uniqueness
-- [ ] Coerce code to uppercase
-- [ ] Set audit fields (createdBy, updatedBy from SecurityIdentity)
-- [ ] Add `modal_success` fragment with OOB table refresh
-- [ ] Add `Templates.title$modal_success()` template method
+- [x] Implement `POST /titles` endpoint
+- [x] Validate code is not empty
+- [x] Validate description is not empty
+- [x] Validate code max length (5 chars)
+- [x] Validate code uniqueness
+- [x] Validate description uniqueness
+- [x] Coerce code to uppercase
+- [x] Set audit fields (createdBy, updatedBy from SecurityIdentity)
+- [x] Add `modal_success` fragment with OOB table refresh
+- [x] Add `Templates.title$modal_success()` template method
 
 **Validation Rules:**
 | Field | Rule | Error Message |
@@ -357,7 +357,16 @@ None required - handled client-side via UIkit modal close.
 | POST | `/titles` | Create new title |
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-06-002 | ✅ | Title created successfully, modal closes, table updated via OOB swap |
+| TC-002-06-003 | ✅ | Code "ms" coerced to uppercase "MS" |
+| TC-002-06-004 | ✅ | Error "Code already exists." displayed for duplicate code |
+| TC-002-06-005 | ✅ | Error "Description already exists." displayed for duplicate description |
+| TC-002-06-006 | ✅ | Error "Code must be at most 5 characters." displayed (server-side validation) |
+
+**Run Date:** 2025-12-30
+**Summary:** 5/5 tests passed
 
 ---
 
@@ -498,11 +507,11 @@ None required - handled client-side via UIkit modal close.
 | TC-002-05-003 | Title List Empty State | UC-002-05-01 | 🔲 |
 | TC-002-05-004 | Title Access Requires Admin Role | UC-002-05-01 | 🔲 |
 | TC-002-06-001 | Title Create Form Display | UC-002-06-01 | ✅ |
-| TC-002-06-002 | Title Create Success | UC-002-06-02 | 🔲 |
-| TC-002-06-003 | Title Create Code Uppercase | UC-002-06-02 | 🔲 |
-| TC-002-06-004 | Title Create Duplicate Code Prevention | UC-002-06-02 | 🔲 |
-| TC-002-06-005 | Title Create Duplicate Description Prevention | UC-002-06-02 | 🔲 |
-| TC-002-06-006 | Title Create Code Max Length (5 chars) | UC-002-06-02 | 🔲 |
+| TC-002-06-002 | Title Create Success | UC-002-06-02 | ✅ |
+| TC-002-06-003 | Title Create Code Uppercase | UC-002-06-02 | ✅ |
+| TC-002-06-004 | Title Create Duplicate Code Prevention | UC-002-06-02 | ✅ |
+| TC-002-06-005 | Title Create Duplicate Description Prevention | UC-002-06-02 | ✅ |
+| TC-002-06-006 | Title Create Code Max Length (5 chars) | UC-002-06-02 | ✅ |
 | TC-002-07-001 | Title Edit Form Display | UC-002-07-01 | 🔲 |
 | TC-002-07-002 | Title Edit Success | UC-002-07-02 | 🔲 |
 | TC-002-07-003 | Title Edit Cancel | UC-002-07-03 | 🔲 |
