@@ -145,7 +145,7 @@ quarkus.hibernate-orm.schema-management.strategy=none
 ### 4.2 Migration Best Practices
 
 1. **One change per migration**: Each script should represent a single, atomic schema change
-2. **Never modify applied migrations**: Create new migrations for changes
+2. **Update applied migrations**: This project is still in development so make changes in situ to the existing migrations
 3. **Use descriptive names**: Names should clearly indicate the change
 4. **Include rollback comments**: Document how to reverse the change
 5. **Test migrations**: Verify against a clean database before committing

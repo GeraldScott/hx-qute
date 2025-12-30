@@ -44,7 +44,7 @@ It will be implemented in a phased approach, one feature at a time:
 
 ## Creating New Features
 
-For the development and implementation of new features, use the spec workflow in `specs/`:
+For the development and implementation of new features, do the following:
 
 1. **Create folder**: `NNN-feature-name/` (e.g., `002-master-data-management/`)
    - Use templates from `specs/TEMPLATE/` as starting points
@@ -73,11 +73,11 @@ For the development and implementation of new features, use the spec workflow in
 
 6. **Update PROJECT-PLAN.md**: Add reference to new feature's `tasks.md`
 
-7. **Implement feature**: Work through tasks, checking each as completed
+---
 
-8. **Run tests**: Use chrome-devtools MCP in a sub-agent. Update `tasks.md` with results.
+## Implement new features
 
-**IMPORTANT**: After completing the tests for each use case, STOP and ask for user feedback before proceeding.
+Use the custom command `/implement-feature`
 
 ---
 
@@ -119,13 +119,7 @@ Application URL: http://localhost:9080
 
 ### Pre-Implementation Checklist
 
-Before starting implementation, verify:
-
-1. **User Story Exists**: Every `UC-FFF-SS-NN` links back to a valid `US-FFF-SS` in `docs/USER-STORIES.md`
-2. **Use Case Numbering**: The `FFF-SS` portion of UC must match the parent US
-3. **Test Case Mapping**: Every `TC-FFF-SS-NNN` links back to a valid `UC-FFF-SS-NN` in `use-cases.md`
-4. **Complete Spec Files**: All 4 spec files exist: `use-cases.md`, `spec.md`, `tasks.md`, `test-cases.md`
-5. **Project Plan Reference**: `specs/PROJECT-PLAN.md` references the `tasks.md` for this feature
+Before starting implementation, confirm that the custom command `validate-feature` has been executed.
 
 ---
 
