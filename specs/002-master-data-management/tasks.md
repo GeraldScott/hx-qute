@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Current Use Case:** UC-002-05-01: View Title List
+**Current Use Case:** UC-002-06-02: Submit Create Form
 **Status:** 🔲 Not Started
 **Blockers:** None
 
@@ -26,8 +26,8 @@
 
 | Use Case | Status |
 |----------|--------|
-| UC-002-05-01: View Title List | 🔲 Not Started |
-| UC-002-06-01: Display Create Form | 🔲 Not Started |
+| UC-002-05-01: View Title List | ✅ Complete |
+| UC-002-06-01: Display Create Form | ✅ Complete |
 | UC-002-06-02: Submit Create Form | 🔲 Not Started |
 | UC-002-07-01: Display Edit Form | 🔲 Not Started |
 | UC-002-07-02: Submit Edit Form | 🔲 Not Started |
@@ -262,22 +262,22 @@ None required - handled client-side via UIkit modal close.
 
 ## UC-002-05-01: View Title List
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-05 - View Title Master Data
 
 **Description:** Display a list of all title codes and descriptions with admin-only access.
 
 **Implementation Tasks:**
-- [ ] Create Flyway migration `V1.0.X__Create_title_table.sql`
-- [ ] Create `entity/Title.java` extending PanacheEntityBase with audit fields
-- [ ] Add static finder methods (`findByCode`, `findByDescription`, `listAllOrdered`)
-- [ ] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks
-- [ ] Create `router/TitleResource.java` with `@RolesAllowed("admin")`
-- [ ] Add `Templates` class with `title()` and fragment methods
-- [ ] Implement `GET /titles` endpoint with HTMX detection
-- [ ] Create `templates/TitleResource/title.html` with fragments
-- [ ] Add Title to Maintenance menu in `templates/base.html`
-- [ ] Update security configuration in `application.properties` to include `/titles/*`
+- [x] Create Flyway migration `V1.3.0__Create_title_table.sql`
+- [x] Create `entity/Title.java` extending PanacheEntityBase with audit fields
+- [x] Add static finder methods (`findByCode`, `findByDescription`, `listAllOrdered`)
+- [x] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks
+- [x] Create `router/TitleResource.java` with `@RolesAllowed("admin")`
+- [x] Add `Templates` class with `title()` and fragment methods
+- [x] Implement `GET /titles` endpoint with HTMX detection
+- [x] Create `templates/TitleResource/title.html` with fragments
+- [x] Add Title to Maintenance menu in `templates/base.html`
+- [x] Update security configuration in `application.properties` to include `/titles/*`
 
 **Endpoints:**
 | Method | Path | Description |
@@ -285,22 +285,28 @@ None required - handled client-side via UIkit modal close.
 | GET | `/titles` | List all titles |
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-05-001 | ✅ | All UI elements verified |
+| TC-002-05-002 | ✅ | Implementation correct, empty state shows "No titles found" |
+
+**Run Date:** 2025-12-30
+**Summary:** 2/2 tests passed
 
 ---
 
 ## UC-002-06-01: Display Create Form
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-002-06 - Create New Title
 
 **Description:** Display modal create form when Add button is clicked.
 
 **Implementation Tasks:**
-- [ ] Add `createForm()` endpoint to TitleResource
-- [ ] Add `Templates.title$modal_create()` template method
-- [ ] Add `modal_create` fragment to `title.html`
-- [ ] Update main page with static modal shell and HTMX dynamic loading
+- [x] Add `createForm()` endpoint to TitleResource
+- [x] Add `Templates.title$modal_create()` template method
+- [x] Add `modal_create` fragment to `title.html`
+- [x] Update main page with static modal shell and HTMX dynamic loading
 
 **Endpoints:**
 | Method | Path | Description |
@@ -308,7 +314,12 @@ None required - handled client-side via UIkit modal close.
 | GET | `/titles/create` | Display create form modal |
 
 **Test Results:**
-*(To be completed after implementation)*
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-002-06-001 | ✅ | Modal displays with title "Add Title", Code input (maxlength=5), Description input, Save and Cancel buttons. Modal backdrop configured with bg-close: false. |
+
+**Run Date:** 2025-12-30
+**Summary:** 1/1 tests passed
 
 ---
 
@@ -482,11 +493,11 @@ None required - handled client-side via UIkit modal close.
 
 | Test ID | Description | Use Case | Status |
 |---------|-------------|----------|--------|
-| TC-002-05-001 | Title Page UI Elements | UC-002-05-01 | 🔲 |
-| TC-002-05-002 | Title List Display | UC-002-05-01 | 🔲 |
+| TC-002-05-001 | Title Page UI Elements | UC-002-05-01 | ✅ |
+| TC-002-05-002 | Title List Display | UC-002-05-01 | ✅ |
 | TC-002-05-003 | Title List Empty State | UC-002-05-01 | 🔲 |
 | TC-002-05-004 | Title Access Requires Admin Role | UC-002-05-01 | 🔲 |
-| TC-002-06-001 | Title Create Form Display | UC-002-06-01 | 🔲 |
+| TC-002-06-001 | Title Create Form Display | UC-002-06-01 | ✅ |
 | TC-002-06-002 | Title Create Success | UC-002-06-02 | 🔲 |
 | TC-002-06-003 | Title Create Code Uppercase | UC-002-06-02 | 🔲 |
 | TC-002-06-004 | Title Create Duplicate Code Prevention | UC-002-06-02 | 🔲 |

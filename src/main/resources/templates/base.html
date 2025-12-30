@@ -61,7 +61,7 @@
                             <span class="uk-margin-small-left">Home</span>
                         </a>
                     </li>
-                    <li class="uk-parent {#if currentPage?? == 'gender'}uk-open{/if}">
+                    <li class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}">
                         <a href="#">
                             <span uk-icon="icon: settings; ratio: 1.2"></span>
                             <span class="uk-margin-small-left">Maintenance</span>
@@ -71,6 +71,12 @@
                                 <a href="/genders">
                                     <span uk-icon="icon: users; ratio: 1"></span>
                                     <span class="uk-margin-small-left">Gender</span>
+                                </a>
+                            </li>
+                            <li class="{#if currentPage?? == 'title'}uk-active{/if}">
+                                <a href="/titles">
+                                    <span uk-icon="icon: bookmark; ratio: 1"></span>
+                                    <span class="uk-margin-small-left">Title</span>
                                 </a>
                             </li>
                         </ul>
@@ -130,7 +136,7 @@
                         <span class="uk-margin-small-left">Home</span>
                     </a>
                 </li>
-                <li class="uk-parent {#if currentPage?? == 'gender'}uk-open{/if}">
+                <li class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}">
                     <a href="#">
                         <span uk-icon="icon: settings; ratio: 1.2"></span>
                         <span class="uk-margin-small-left">Maintenance</span>
@@ -140,6 +146,12 @@
                             <a href="/genders">
                                 <span uk-icon="icon: users; ratio: 1"></span>
                                 <span class="uk-margin-small-left">Gender</span>
+                            </a>
+                        </li>
+                        <li class="{#if currentPage?? == 'title'}uk-active{/if}">
+                            <a href="/titles">
+                                <span uk-icon="icon: bookmark; ratio: 1"></span>
+                                <span class="uk-margin-small-left">Title</span>
                             </a>
                         </li>
                     </ul>
