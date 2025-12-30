@@ -7,9 +7,10 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "person", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "email")
-})
+@Table(
+    name = "person",
+    uniqueConstraints = { @UniqueConstraint(columnNames = "email") }
+)
 public class Person extends PanacheEntityBase {
 
     @Id
@@ -51,14 +52,13 @@ public class Person extends PanacheEntityBase {
     @Column(name = "updated_by")
     public String updatedBy;
 
-    public Person() {
-    }
+    public Person() {}
 
     // Display name helper
     public String getDisplayName() {
         StringBuilder sb = new StringBuilder();
         if (title != null) {
-            sb.append(title.code).append(" ");
+            sb.append(title.description).append(" ");
         }
         sb.append(firstName).append(" ").append(lastName);
         return sb.toString().trim();
@@ -73,13 +73,18 @@ public class Person extends PanacheEntityBase {
         return list("ORDER BY lastName ASC, firstName ASC");
     }
 
-    public static List<Person> findByFilter(String filterText, String sortField, String sortDir) {
+    public static List<Person> findByFilter(
+        String filterText,
+        String sortField,
+        String sortDir
+    ) {
         String orderBy = buildOrderBy(sortField, sortDir);
 
         if (filterText != null && !filterText.isBlank()) {
             String pattern = "%" + filterText.toLowerCase().trim() + "%";
             return list(
-                "LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?1 OR LOWER(email) LIKE ?1 " + orderBy,
+                "LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?1 OR LOWER(email) LIKE ?1 " +
+                    orderBy,
                 pattern
             );
         }
