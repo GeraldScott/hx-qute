@@ -4,7 +4,7 @@
 
 **Current Use Case:** UC-003-01-01: View Persons List
 **Status:** 🔲 Not Started
-**Blockers:** Requires Feature 002 (Gender entity) to be complete
+**Blockers:** None (Feature 002 Gender and Title entities complete)
 
 ---
 
@@ -31,32 +31,40 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-01 - View Persons List
 
-**Description:** Display a list of all persons with filter and sort panels.
+**Description:** Display a list of all persons with filter bar and modal shell.
 
 **Implementation Tasks:**
-- [ ] Create `entity/Person.java` extending PanacheEntity
-- [ ] Create migration `V1.1.0__Create_person_table.sql`
-- [ ] Add `@ManyToOne` relationship to Gender
-- [ ] Add static finder methods (`findByEmail`, `listAllOrdered`, `findByNameContaining`)
-- [ ] Add `@PrePersist` and `@PreUpdate` lifecycle callbacks for email normalization
+- [ ] Create migration `V1.3.0__Create_person_table.sql`
+  - Include `title_id` FK to title table
+  - Include `gender_id` FK to gender table
+  - Include audit fields (created_at, updated_at, created_by, updated_by)
+- [ ] Create `entity/Person.java` extending `PanacheEntityBase`
+  - Add explicit `@Id` field with `@GeneratedValue(strategy = GenerationType.IDENTITY)`
+  - Add `@ManyToOne` relationships to Title and Gender
+  - Add audit fields: `createdAt`, `updatedAt`, `createdBy`, `updatedBy`
+  - Add `findByEmail()`, `listAllOrdered()`, `findByFilter()` methods
+  - Add `@PrePersist` callback to set `createdAt` and `updatedAt`
+  - Add `@PreUpdate` callback to set `updatedAt`
+  - **Note:** `createdBy` and `updatedBy` are set in Resource layer (not lifecycle callbacks) using `SecurityIdentity.getPrincipal().getName()`
 - [ ] Create `router/PersonResource.java` with `@RolesAllowed({"user", "admin"})`
-- [ ] Add `Templates` class with `persons()` method
-- [ ] Add `Partials` class with `basePath = "partials"`
-- [ ] Implement `GET /persons` endpoint with HTMX detection
-- [ ] Create `templates/PersonResource/persons.html` (full page)
-- [ ] Create `templates/partials/persons_table.html` (table partial)
-- [ ] Create `templates/partials/person_row.html` (row display mode)
+  - Inject `SecurityIdentity` for populating audit fields (`createdBy`, `updatedBy`)
+- [ ] Add `@CheckedTemplate` class with fragment methods (using `$` separator)
+- [ ] Implement `GET /persons` endpoint with query params (filter, sortField, sortDir)
+- [ ] Create `templates/PersonResource/person.html` with:
+  - Filter bar above table (search input, sort dropdowns, Filter/Clear buttons)
+  - Add button
+  - Table container (`#person-table-container`)
+  - Static modal shell (`#person-modal`)
+  - `{#fragment id=table}` for table content
 - [ ] Update `templates/base.html` sidebar with Persons menu item
+- [ ] Add route protection in `application.properties`
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/persons` | List all persons |
+| GET | `/persons` | List all persons (with filter/sort) |
 
-**Test Results:**
-- Test ID: TC-003-01-001, TC-003-01-002, TC-003-01-003, TC-003-01-004
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-01-001, TC-003-01-002, TC-003-01-003, TC-003-01-004
 
 ---
 
@@ -65,28 +73,22 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-02 - Create New Person
 
-**Description:** Display inline create form when Add button is clicked.
+**Description:** Display create form in modal when Add button is clicked.
 
 **Implementation Tasks:**
-- [ ] Add `createForm()` endpoint to PersonResource
-- [ ] Add `createFormCancel()` endpoint to PersonResource
-- [ ] Add `Partials.person_create_form()` template method
-- [ ] Add `Partials.person_create_button()` template method
-- [ ] Create `templates/partials/person_create_form.html`
-- [ ] Create `templates/partials/person_create_button.html`
-- [ ] Include gender dropdown populated from Gender.listAllOrdered()
-- [ ] Include date picker for dateOfBirth field
+- [ ] Implement `GET /persons/create` endpoint
+- [ ] Add `Templates.person$modal_create()` fragment method
+- [ ] Create `{#fragment id=modal_create rendered=false}` in person.html
+  - Include firstName, lastName, title dropdown, email, phone, dateOfBirth, gender dropdown
+  - Pre-load Title.listAllOrdered() and Gender.listAllOrdered() for dropdowns
+  - Include Save and Cancel buttons
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/persons/create` | Display create form |
-| GET | `/persons/create/cancel` | Return Add button |
+| GET | `/persons/create` | Display create modal content |
 
-**Test Results:**
-- Test ID: TC-003-02-001
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-02-001
 
 ---
 
@@ -98,19 +100,25 @@
 **Description:** Validate and create new person record.
 
 **Implementation Tasks:**
-- [ ] Implement `POST /persons/create` endpoint
+- [ ] Implement `POST /persons` endpoint with `@Transactional`
+- [ ] Validate firstName is not empty
+- [ ] Validate lastName is not empty
 - [ ] Validate email is not empty
 - [ ] Validate email format (regex: `^[^@\s]+@[^@\s]+\.[^@\s]+$`)
 - [ ] Validate email uniqueness (case-insensitive)
-- [ ] Normalize email to lowercase
-- [ ] Set audit fields (createdBy, updatedBy from SecurityIdentity)
+- [ ] Link title if titleId provided
 - [ ] Link gender if genderId provided
-- [ ] Create `templates/partials/person_success.html` with OOB table refresh
-- [ ] Create `templates/partials/person_error.html`
+- [ ] Set `createdBy` and `updatedBy` from `securityIdentity.getPrincipal().getName()` before persist
+- [ ] Add `Templates.person$modal_success()` fragment method
+- [ ] Create `{#fragment id=modal_success rendered=false}` with:
+  - `hx-on::load` to close modal
+  - OOB swap to refresh table container
 
 **Validation Rules:**
 | Field | Rule | Error Message |
 |-------|------|---------------|
+| firstName | Required | "First name is required." |
+| lastName | Required | "Last name is required." |
 | email | Required | "Email is required." |
 | email | Valid format | "Invalid email format." |
 | email | Unique | "Email already registered." |
@@ -118,12 +126,9 @@
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/persons/create` | Create new person |
+| POST | `/persons` | Create new person |
 
-**Test Results:**
-- Test ID: TC-003-02-002, TC-003-02-003, TC-003-02-004, TC-003-02-005
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-02-002, TC-003-02-003, TC-003-02-004, TC-003-02-005, TC-003-02-006, TC-003-02-007
 
 ---
 
@@ -132,25 +137,27 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-03 - Edit Existing Person
 
-**Description:** Display inline edit form in place of row when Edit button is clicked.
+**Description:** Display edit form in modal with pre-populated data.
 
 **Implementation Tasks:**
 - [ ] Implement `GET /persons/{id}/edit` endpoint
-- [ ] Add `Partials.person_row_edit()` template method
-- [ ] Create `templates/partials/person_row_edit.html`
-- [ ] Pre-populate form with current values
-- [ ] Include gender dropdown with current selection
-- [ ] Display audit fields (read-only)
+- [ ] Add `Templates.person$modal_edit()` fragment method
+- [ ] Create `{#fragment id=modal_edit rendered=false}` in person.html
+  - Pre-populate all fields with current values
+  - Title dropdown shows current selection
+  - Gender dropdown shows current selection
+  - Display audit fields in collapsible `<details>` section (read-only):
+    - `createdAt` formatted as date/time
+    - `createdBy` as text
+    - `updatedAt` formatted as date/time
+    - `updatedBy` as text
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/persons/{id}/edit` | Display edit form |
+| GET | `/persons/{id}/edit` | Display edit modal content |
 
-**Test Results:**
-- Test ID: TC-003-03-001
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-03-001
 
 ---
 
@@ -162,24 +169,26 @@
 **Description:** Validate and update existing person record.
 
 **Implementation Tasks:**
-- [ ] Implement `POST /persons/{id}/update` endpoint
+- [ ] Implement `PUT /persons/{id}` endpoint with `@Transactional`
+- [ ] Validate firstName is not empty
+- [ ] Validate lastName is not empty
 - [ ] Validate email is not empty
 - [ ] Validate email format
 - [ ] Validate email uniqueness (excluding current record)
-- [ ] Normalize email to lowercase
-- [ ] Update audit fields (updatedBy, updatedAt)
-- [ ] Return updated `person_row.html` on success
-- [ ] Return `person_row_edit.html` with error on validation failure
+- [ ] Update title and gender links
+- [ ] Set `updatedBy` from `securityIdentity.getPrincipal().getName()` before merge
+- [ ] Note: `updatedAt` is set automatically by `@PreUpdate` callback
+- [ ] Add `Templates.person$modal_success_row()` fragment method
+- [ ] Create `{#fragment id=modal_success_row rendered=false}` with:
+  - `hx-on::load` to close modal
+  - OOB swap to update specific row
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/persons/{id}/update` | Update person |
+| PUT | `/persons/{id}` | Update person |
 
-**Test Results:**
-- Test ID: TC-003-03-002, TC-003-03-003
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-03-002, TC-003-03-003
 
 ---
 
@@ -188,21 +197,13 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-03 - Edit Existing Person
 
-**Description:** Cancel edit and return to display row.
+**Description:** Cancel edit modal without saving changes.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /persons/{id}` endpoint to return row partial
-- [ ] Return `person_row.html` with original values
+- [ ] Cancel button uses `uk-modal-close` class (no server request needed)
+- [ ] Modal closes client-side, no changes saved
 
-**Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/persons/{id}` | Get row partial (cancel) |
-
-**Test Results:**
-- Test ID: TC-003-03-004
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-03-004
 
 ---
 
@@ -211,23 +212,27 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-04 - Delete Person
 
-**Description:** Delete person record with confirmation.
+**Description:** Delete person with modal confirmation.
 
 **Implementation Tasks:**
-- [ ] Implement `DELETE /persons/{id}` endpoint
-- [ ] Delete record and return empty response
-- [ ] HTMX `hx-confirm` handles browser confirmation
-- [ ] HTMX `hx-swap="delete"` removes row from DOM
+- [ ] Implement `GET /persons/{id}/delete` endpoint (confirmation modal)
+- [ ] Add `Templates.person$modal_delete()` fragment method
+- [ ] Create `{#fragment id=modal_delete rendered=false}` with:
+  - Warning message displaying person's name
+  - Delete and Cancel buttons
+- [ ] Implement `DELETE /persons/{id}` endpoint with `@Transactional`
+- [ ] Add `Templates.person$modal_delete_success()` fragment method
+- [ ] Create `{#fragment id=modal_delete_success rendered=false}` with:
+  - `hx-on::load` to close modal
+  - OOB swap to remove row (using `<template>` wrapper)
 
 **Endpoints:**
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | `/persons/{id}/delete` | Display delete confirmation modal |
 | DELETE | `/persons/{id}` | Delete person |
 
-**Test Results:**
-- Test ID: TC-003-04-001, TC-003-04-002, TC-003-04-003
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-04-001, TC-003-04-002, TC-003-04-003
 
 ---
 
@@ -236,26 +241,18 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-05 - Filter People
 
-**Description:** Filter persons list by firstName or lastName.
+**Description:** Filter persons list by name or email using query parameters.
 
 **Implementation Tasks:**
 - [ ] Add `@QueryParam("filter")` to list endpoint
-- [ ] Inject `RoutingContext` for session access
-- [ ] Store filter in session (`persons.filter`)
-- [ ] Add filter form to `persons.html` with debounced input
-- [ ] Use `hx-sync="closest form:abort"` for request synchronization
-- [ ] Query using `Person.findByNameContaining()`
+- [ ] Implement filter logic in `Person.findByFilter()` method
+  - Match firstName, lastName, or email (case-insensitive, contains)
+- [ ] Add filter bar HTML to person.html
+  - Search input with debounce (300ms via `hx-trigger="input changed delay:300ms"`)
+  - Use `hx-push-url="true"` to update URL
+  - Use `hx-include="closest form"` for including sort params
 
-**Filter Form Attributes:**
-- `hx-get="/persons"`
-- `hx-target="#persons-table-container"`
-- `hx-push-url="true"`
-- `hx-sync="this:replace"`
-
-**Test Results:**
-- Test ID: TC-003-05-001, TC-003-05-002, TC-003-05-004
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-05-001, TC-003-05-002, TC-003-05-004
 
 ---
 
@@ -267,19 +264,10 @@
 **Description:** Clear filter and display all persons.
 
 **Implementation Tasks:**
-- [ ] Add `@QueryParam("clear")` to list endpoint
-- [ ] Remove filter from session when `clear=true`
-- [ ] Return full list ordered by default
+- [ ] Add Clear button as link to `/persons` (no query params)
+- [ ] System returns full list with default sort
 
-**Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/persons?clear=true` | Clear filter |
-
-**Test Results:**
-- Test ID: TC-003-05-003
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-05-003
 
 ---
 
@@ -288,20 +276,19 @@
 **Status:** 🔲 Not Started
 **Parent Story:** US-003-06 - Sort People
 
-**Description:** Sort persons list by selected field.
+**Description:** Sort persons list by selected field using query parameters.
 
 **Implementation Tasks:**
 - [ ] Add `@QueryParam("sortField")` and `@QueryParam("sortDir")` to list endpoint
-- [ ] Store sort criteria in session (`persons.sortField`, `persons.sortDir`)
-- [ ] Add sort panel to `persons.html`
-- [ ] Implement `Person.listOrderedBy(field, direction)`
-- [ ] Support fields: firstName, lastName
-- [ ] Support directions: asc, desc
+- [ ] Implement sort logic in `Person.findByFilter()` and `Person.buildOrderBy()` methods
+  - Support fields: firstName, lastName, email
+  - Support directions: asc, desc
+- [ ] Add sort dropdowns to filter bar
+  - Sort field select (Last Name, First Name, Email)
+  - Sort direction select (Ascending, Descending)
+- [ ] Use `hx-push-url="true"` to update URL with sort params
 
-**Test Results:**
-- Test ID: TC-003-06-001, TC-003-06-003
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-06-001, TC-003-06-003
 
 ---
 
@@ -313,19 +300,10 @@
 **Description:** Clear custom sort and restore default order.
 
 **Implementation Tasks:**
-- [ ] Add `@QueryParam("clearSort")` to list endpoint
-- [ ] Remove sort criteria from session when `clearSort=true`
-- [ ] Return list with default order (lastName, firstName ASC)
+- [ ] Clear button links to `/persons` (clears all params including sort)
+- [ ] System applies default sort (lastName, firstName ASC)
 
-**Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/persons?clearSort=true` | Clear sort |
-
-**Test Results:**
-- Test ID: TC-003-06-002
-- Status: 🔲 Not Tested
-- Notes:
+**Test Cases:** TC-003-06-002
 
 ---
 
@@ -341,22 +319,24 @@
 | TC-003-01-004 | Persons Access Requires Authentication | UC-003-01-01 | 🔲 |
 | TC-003-02-001 | Person Create Form Display | UC-003-02-01 | 🔲 |
 | TC-003-02-002 | Person Create Success | UC-003-02-02 | 🔲 |
-| TC-003-02-003 | Person Create Email Required | UC-003-02-02 | 🔲 |
-| TC-003-02-004 | Person Create Email Format Validation | UC-003-02-02 | 🔲 |
-| TC-003-02-005 | Person Create Duplicate Email Prevention | UC-003-02-02 | 🔲 |
+| TC-003-02-003 | Person Create First Name Required | UC-003-02-02 | 🔲 |
+| TC-003-02-004 | Person Create Last Name Required | UC-003-02-02 | 🔲 |
+| TC-003-02-005 | Person Create Email Required | UC-003-02-02 | 🔲 |
+| TC-003-02-006 | Person Create Email Format Validation | UC-003-02-02 | 🔲 |
+| TC-003-02-007 | Person Create Duplicate Email Prevention | UC-003-02-02 | 🔲 |
 | TC-003-03-001 | Person Edit Form Display | UC-003-03-01 | 🔲 |
 | TC-003-03-002 | Person Edit Success | UC-003-03-02 | 🔲 |
 | TC-003-03-003 | Person Edit Email Uniqueness | UC-003-03-02 | 🔲 |
 | TC-003-03-004 | Person Edit Cancel | UC-003-03-03 | 🔲 |
-| TC-003-04-001 | Person Delete Confirmation | UC-003-04-01 | 🔲 |
+| TC-003-04-001 | Person Delete Confirmation Modal | UC-003-04-01 | 🔲 |
 | TC-003-04-002 | Person Delete Success | UC-003-04-01 | 🔲 |
 | TC-003-04-003 | Person Delete Cancel | UC-003-04-01 | 🔲 |
 | TC-003-05-001 | Persons Filter by Name | UC-003-05-01 | 🔲 |
 | TC-003-05-002 | Persons Filter No Results | UC-003-05-01 | 🔲 |
 | TC-003-05-003 | Persons Filter Clear | UC-003-05-02 | 🔲 |
-| TC-003-05-004 | Persons Filter Persistence | UC-003-05-01 | 🔲 |
+| TC-003-05-004 | Persons Filter URL State | UC-003-05-01 | 🔲 |
 | TC-003-06-001 | Persons Sort by Name | UC-003-06-01 | 🔲 |
 | TC-003-06-002 | Persons Sort Clear | UC-003-06-02 | 🔲 |
-| TC-003-06-003 | Persons Sort Persistence | UC-003-06-01 | 🔲 |
+| TC-003-06-003 | Persons Sort URL State | UC-003-06-01 | 🔲 |
 
 ---
