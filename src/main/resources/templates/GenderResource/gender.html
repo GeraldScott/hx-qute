@@ -4,8 +4,23 @@
 
 <h2 class="uk-heading-small">Gender Code Maintenance</h2>
 
+<button class="uk-button uk-button-primary uk-margin-bottom" type="button" uk-toggle="target: #add-gender-modal">
+    <span uk-icon="plus"></span> Add Gender
+</button>
+
 <div id="gender-table-container">
     {#include $table /}
+</div>
+
+<!-- Add Gender Modal -->
+<div id="add-gender-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Add Gender</h2>
+        <p>Form content will go here.</p>
+        <div class="uk-margin-top uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        </div>
+    </div>
 </div>
 
 {/include}
