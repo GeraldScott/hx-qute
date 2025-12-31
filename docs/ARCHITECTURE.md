@@ -610,7 +610,7 @@ Qute fragments allow defining reusable template sections within a single file. T
 **Key attributes:**
 - `id='name'` — Fragment identifier, accessed as `$name` or via `Templates.entity$name()`
 - `rendered=false` — Fragment is not rendered in main output; only accessible programmatically
-- `{#capture name}` — Alias for `{#fragment id='name' rendered=false}` (cleaner syntax for hidden fragments. See [Qute Hidden Fragments Documentation](https://quarkus.io/guides/qute-reference#hidden-fragments-capture))
+- `{#capture name}` — Alias for `{#fragment id='name' rendered=false}` (cleaner syntax for hidden fragments. Hidden fragments can be included multiple times within the same template using the cap: namespace resolver ({#include cap:fragmentName /}), which is useful for DRY patterns. See [Qute Hidden Fragments Documentation](https://quarkus.io/guides/qute-reference#hidden-fragments-capture))
 
 **Accessing fragments from Java:**
 ```java
