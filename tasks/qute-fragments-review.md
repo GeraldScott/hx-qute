@@ -53,7 +53,7 @@ Documentation correctly describes this attribute. Additional options:
 
 ### 3. Including Fragments Within Fragments
 
-**Status:** DOCUMENTATION CORRECT, IMPLEMENTATION DEVIATES
+**Status:** DONE
 
 **Documentation (section 7.5.4) shows DRY pattern:**
 ```html
@@ -65,12 +65,7 @@ Documentation correctly describes this attribute. Additional options:
 {/fragment}
 ```
 
-**Actual implementation duplicates entire table (~40 lines per template):**
-- `gender.html` lines 136-182
-- `title.html` lines 136-182
-- `person.html` lines 267-324
-
-This creates maintenance burden - table markup must be kept in sync in two places.
+**Action Taken:** Refactored all `modal_success` fragments to use `{#include $table /}`.
 
 ---
 
@@ -125,7 +120,7 @@ Current project embeds OOB elements directly in success fragments (valid approac
 
 ### High Priority
 
-- [ ] **Refactor success fragments to use `{#include $table /}`**
+- [x] **Refactor success fragments to use `{#include $table /}`**
   - Eliminates ~40 lines of duplicated table markup per template
   - Reduces maintenance burden
   - Matches documented best practice
@@ -159,6 +154,12 @@ Current project embeds OOB elements directly in success fragments (valid approac
 ---
 
 ## Completed Items
+
+- [x] **Refactor success fragments to use `{#include $table /}`**
+  - Replaced duplicated table HTML with fragment includes
+  - gender.html: `{#include $table genders=genders /}`
+  - title.html: `{#include $table titles=titles /}`
+  - person.html: `{#include $table persons=persons filterText=filterText /}`
 
 - [x] **Use quoted syntax for fragment IDs** (commit c4e6c88)
   - Updated documentation section 7.4

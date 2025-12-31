@@ -270,57 +270,7 @@
 {@String filterText}
 <div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
 <div id="person-table-container" hx-swap-oob="innerHTML">
-    {#if persons.isEmpty()}
-    {#if filterText??}
-    <p class="uk-text-muted">No persons match the filter criteria.</p>
-    {#else}
-    <p class="uk-text-muted">No persons found.</p>
-    {/if}
-    {#else}
-    <div class="uk-overflow-auto">
-        <table id="person-table" class="uk-table uk-table-hover uk-table-divider">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Date of Birth</th>
-                    <th>Gender</th>
-                    <th class="uk-width-small">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="person-table-body">
-                {#for p in persons}
-                <tr id="person-row-{p.id}">
-                    <td>{p.getDisplayName()}</td>
-                    <td>{p.email}</td>
-                    <td>{p.phone ?: ''}</td>
-                    <td>{p.dateOfBirth ?: ''}</td>
-                    <td>{#if p.gender??}{p.gender.description}{/if}</td>
-                    <td>
-                        <div class="uk-button-group">
-                            <button class="uk-button uk-button-small uk-button-primary"
-                                    hx-get="/persons/{p.id}/edit"
-                                    hx-target="#person-modal-body"
-                                    hx-on::after-request="UIkit.modal('#person-modal').show()"
-                                    uk-tooltip="Edit Person">
-                                <span uk-icon="pencil"></span>
-                            </button>
-                            <button class="uk-button uk-button-small uk-button-danger"
-                                    hx-get="/persons/{p.id}/delete"
-                                    hx-target="#person-modal-body"
-                                    hx-on::after-request="UIkit.modal('#person-modal').show()"
-                                    uk-tooltip="Delete Person">
-                                <span uk-icon="trash"></span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {/for}
-            </tbody>
-        </table>
-    </div>
-    {/if}
+    {#include $table persons=persons filterText=filterText /}
 </div>
 {/fragment}
 
