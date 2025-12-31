@@ -141,7 +141,7 @@ Current project embeds OOB elements directly in success fragments (valid approac
   - Section 7.4 should mention this caveat
   - Include workarounds
 
-- [ ] **Document `{#capture}` alias more prominently**
+- [x] **Document `{#capture}` alias more prominently**
   - Currently only mentioned in key attributes list
   - Consider adding example usage
 
