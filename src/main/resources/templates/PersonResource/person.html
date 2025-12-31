@@ -11,8 +11,8 @@
 
 <h2 class="uk-heading-small">People Management</h2>
 
-<!-- Add Button - triggers modal AND loads content via HTMX -->
 <button
+    <!-- Add new person -->
     class="uk-button uk-button-primary uk-button-small uk-margin-bottom"
     type="button"
     hx-get="/persons/create"
@@ -23,8 +23,8 @@
     <span uk-icon="plus"></span>
 </button>
 
-<!-- Filter Bar - Above Table -->
 <form class="uk-grid-small uk-flex-middle uk-margin-bottom" uk-grid
+    <!-- Filter bar above the table -->
       hx-get="/persons"
       hx-target="#person-table-container"
       hx-push-url="true">
@@ -60,14 +60,14 @@
 
     <!-- Buttons -->
     <div class="uk-width-auto@s">
-        <button type="submit" class="uk-button uk-button-primary">Filter</button>
+        <button type="submit" class="uk-button uk-button-primary">Search</button>
         <a href="/persons" class="uk-button uk-button-default">Clear</a>
     </div>
 </form>
 
 <div id="person-table-container">{#include $table /}</div>
 
-<!-- Static Modal Shell (always present in DOM) -->
+<!-- Static Modal Shell -->
 <div id="person-modal" uk-modal="bg-close: false">
     <div class="uk-modal-dialog uk-modal-container">
         <div id="person-modal-body" class="uk-modal-body">
@@ -163,7 +163,7 @@
         <select class="uk-select" name="titleId">
             <option value="">-- Select Title --</option>
             {#for t in titleChoices}
-            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.code} - {t.description}</option>
+            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.description}</option>
             {/for}
         </select>
     </div>
@@ -222,7 +222,7 @@
         <select class="uk-select" name="titleId">
             <option value="">-- Select Title --</option>
             {#for t in titleChoices}
-            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.code} - {t.description}</option>
+            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.description}</option>
             {/for}
         </select>
     </div>
