@@ -618,31 +618,31 @@ This application uses UIkit modals with HTMX for Create, Edit, and Delete operat
 ### 7.5.1 Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Main Page                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  Add Button                                               │   │
+┌──────────────────────────────────────────────────────┐
+│                        Main Page                                │
+│  ┌────────────────────────────────────────────────┐   │
+│  │  Add Button                                              │   │
 │  │  hx-get="/entities/create"                               │   │
 │  │  hx-target="#entity-modal-body"                          │   │
 │  │  hx-on::after-request="UIkit.modal(...).show()"          │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
+│  └────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌────────────────────────────────────────────────┐   │
 │  │  Table Container (#entity-table-container)               │   │
-│  │  ┌─────────────────────────────────────────────────────┐ │   │
+│  │  ┌────────────────────────────────────────────┐ │   │
 │  │  │ Row 1: [Data] [Edit] [Delete]                       │ │   │
 │  │  │ Row 2: [Data] [Edit] [Delete]                       │ │   │
-│  │  └─────────────────────────────────────────────────────┘ │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  └────────────────────────────────────────────┘ │   │
+│  └────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌────────────────────────────────────────────────┐   │
 │  │  Static Modal Shell (#entity-modal)                      │   │
-│  │  ┌─────────────────────────────────────────────────────┐ │   │
+│  │  ┌────────────────────────────────────────────┐ │   │
 │  │  │ Modal Body (#entity-modal-body)                     │ │   │
 │  │  │ ← Content loaded dynamically via HTMX               │ │   │
-│  │  └─────────────────────────────────────────────────────┘ │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+│  │  └────────────────────────────────────────────┘ │   │
+│  └────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────┘
 ```
 
 **Key Principles:**
@@ -1125,6 +1125,260 @@ public class EntityResource {
 - Delete uses `uk-button-danger` (red)
 - Save uses `uk-button-primary` (blue)
 - Cancel uses `uk-button-default` (gray)
+
+### 7.5.8 Validation Pattern
+
+This project uses a **server-driven validation** approach where the server is the single source of truth for all business rules. This eliminates duplication between client and server validation logic.
+
+#### Validation Philosophy
+
+| Principle | Implementation |
+|-----------|----------------|
+| Server as authority | All validation logic lives in the Resource class |
+| Modal stays open on error | Server re-renders form with error message |
+| Modal closes on success | Server sends close trigger via `hx-on::load` |
+| Preserve user input | Form values repopulated from submitted data |
+| Single error message | One alert box at top of modal form |
+
+#### Validation Flow
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                        User Submits Form                             │
+└──────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌──────────────────────────────────────────────────────────┐
+│  Layer 1: HTML5 Validation (Client)                                  │
+│  • required attribute prevents empty required fields                 │
+│  • type="email" validates email format                               │
+│  • maxlength limits input length                                     │
+│  • If fails: Browser shows native error, request NOT sent            │
+└──────────────────────────────────────────────────────────┘
+                                  │ passes
+                                  ▼
+┌──────────────────────────────────────────────────────────┐
+│  Layer 2: Server Validation (Resource Class)                         │
+│  • Required field checks (null/empty)                                │
+│  • Format validation (email, phone patterns)                         │
+│  • Business rules (uniqueness, relationships)                        │
+│  • Database constraints (foreign keys, in-use checks)                │
+└──────────────────────────────────────────────────────────┘
+                    │                               │
+              validation fails                 validation passes
+                    │                               │
+                    ▼                               ▼
+┌─────────────────────────────┐   ┌─────────────────────────┐
+│  Return Modal Form Fragment       │   │  Return Success Fragment      │
+│  • Same form with error msg       │   │  • hx-on::load closes modal   │
+│  • User input preserved           │   │  • OOB swap updates table     │
+│  • Modal stays open               │   │  • Modal closes automatically │
+└─────────────────────────────┘   └─────────────────────────┘
+```
+
+#### HTML5 Validation Attributes
+
+Use HTML5 attributes for immediate client-side feedback:
+
+```html
+<input class="uk-input" type="text" name="code"
+       maxlength="5"           <!-- Length constraint -->
+       value="{entity.code ?: ''}"
+       required />             <!-- Required field -->
+
+<input class="uk-input" type="email" name="email"
+       maxlength="255"
+       value="{entity.email ?: ''}"
+       required />             <!-- Email format + required -->
+
+<input class="uk-input" type="tel" name="phone"
+       maxlength="50"
+       value="{entity.phone ?: ''}" />  <!-- Optional field -->
+
+<input class="uk-input" type="date" name="dateOfBirth"
+       value="{entity.dateOfBirth ?: ''}" />  <!-- Date picker -->
+```
+
+**Key attributes:**
+| Attribute | Purpose |
+|-----------|---------|
+| `required` | Prevents form submission if empty |
+| `type="email"` | Browser validates email format |
+| `type="tel"` | Mobile keyboards show number pad |
+| `type="date"` | Native date picker |
+| `maxlength` | Enforces maximum character count |
+
+#### Template Error Display Pattern
+
+Every modal form fragment includes an error display section:
+
+```html
+{#fragment id=modal_create rendered=false}
+{@io.archton.scaffold.entity.Entity entity}
+{@String error}
+
+<h2 class="uk-modal-title">Add Entity</h2>
+
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+
+<form hx-post="/entities" hx-target="#entity-modal-body">
+    <!-- Form fields with preserved values -->
+    <div class="uk-margin">
+        <label class="uk-form-label">Name *</label>
+        <input class="uk-input" type="text" name="name"
+               value="{entity.name ?: ''}" required />
+    </div>
+    <!-- ... more fields ... -->
+</form>
+{/fragment}
+```
+
+**Key points:**
+- `{@String error}` parameter receives validation message (null if no error)
+- `{#if error??}` null-safe check before displaying alert
+- `uk-alert-danger` provides red error styling
+- Form values use `{entity.field ?: ''}` to preserve user input
+
+#### Resource Class Validation Pattern
+
+```java
+@POST
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+@Produces(MediaType.TEXT_HTML)
+@Transactional
+public TemplateInstance create(
+        @FormParam("code") String code,
+        @FormParam("description") String description) {
+
+    // Build entity with submitted values (for repopulating form on error)
+    Entity entity = new Entity();
+    entity.code = code;
+    entity.description = description;
+
+    // 1. Required field validation
+    if (code == null || code.trim().isEmpty()) {
+        return Templates.entity$modal_create(entity, "Code is required.");
+    }
+
+    // 2. Format/length validation
+    if (code.trim().length() > 5) {
+        return Templates.entity$modal_create(entity, "Code must be 5 characters or less.");
+    }
+
+    // 3. Uniqueness validation
+    if (Entity.findByCode(code.trim()) != null) {
+        return Templates.entity$modal_create(entity, "Code already exists.");
+    }
+
+    // 4. Business rule validation (example: email format)
+    if (email != null && !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+        return Templates.entity$modal_create(entity, "Invalid email format.");
+    }
+
+    // All validations passed - save entity
+    entity.code = code.trim();
+    entity.description = description;
+    entity.createdBy = getCurrentUsername();
+    entity.persist();
+
+    // Return success fragment (closes modal, updates table)
+    return Templates.entity$modal_success("Entity created.", Entity.listAllOrdered());
+}
+```
+
+#### Validation for Update Operations
+
+Update validation must exclude the current record when checking uniqueness:
+
+```java
+@PUT
+@Path("/{id}")
+@Transactional
+public TemplateInstance update(
+        @PathParam("id") Long id,
+        @FormParam("code") String code,
+        @FormParam("description") String description) {
+
+    Entity entity = Entity.findById(id);
+    if (entity == null) {
+        throw new NotFoundException("Entity not found");
+    }
+
+    // Required validation
+    if (code == null || code.trim().isEmpty()) {
+        return Templates.entity$modal_edit(entity, "Code is required.");
+    }
+
+    // Uniqueness check - EXCLUDE current record
+    Entity existing = Entity.findByCode(code.trim());
+    if (existing != null && !existing.id.equals(id)) {
+        return Templates.entity$modal_edit(entity, "Code already exists.");
+    }
+
+    // Update and return success
+    entity.code = code.trim();
+    entity.description = description;
+    entity.updatedBy = getCurrentUsername();
+
+    return Templates.entity$modal_success_row("Entity updated.", entity);
+}
+```
+
+#### Validation for Delete Operations
+
+Delete validation checks for referential integrity:
+
+```java
+@DELETE
+@Path("/{id}")
+@Transactional
+public TemplateInstance delete(@PathParam("id") Long id) {
+    Entity entity = Entity.findById(id);
+    if (entity == null) {
+        throw new NotFoundException("Entity not found");
+    }
+
+    // Check if entity is referenced by other records
+    long usageCount = Person.count("entity.id", id);
+    if (usageCount > 0) {
+        return Templates.entity$modal_delete(entity,
+            "Cannot delete: Entity is assigned to " + usageCount + " person(s).");
+    }
+
+    entity.delete();
+    return Templates.entity$modal_delete_success(id);
+}
+```
+
+#### Common Validation Checks
+
+| Validation Type | Check | Example Error Message |
+|-----------------|-------|----------------------|
+| Required field | `field == null \|\| field.trim().isEmpty()` | "Name is required." |
+| Max length | `field.length() > maxLength` | "Code must be 5 characters or less." |
+| Uniqueness (create) | `Entity.findByField(field) != null` | "Code already exists." |
+| Uniqueness (update) | `existing != null && !existing.id.equals(id)` | "Code already exists." |
+| Email format | `!email.matches(EMAIL_REGEX)` | "Invalid email format." |
+| Foreign key exists | `RelatedEntity.findById(fkId) == null` | "Invalid selection." |
+| In-use check | `RelatedEntity.count("field.id", id) > 0` | "Cannot delete: Entity is in use." |
+| Date range | `startDate.isAfter(endDate)` | "Start date must be before end date." |
+
+#### Why Server-Driven Validation?
+
+| Advantage | Explanation |
+|-----------|-------------|
+| Single source of truth | Validation logic exists only on server, no client/server drift |
+| Database validation | Uniqueness and FK checks require database access |
+| Security | Client validation can be bypassed; server validation cannot |
+| Simplicity | No JavaScript validation code to maintain |
+| Consistency | Same validation for API and form submissions |
+
+**When to consider client-side validation:**
+- Instant feedback for complex patterns (optional enhancement)
+- Reducing server round-trips for obviously invalid data
+- If added, always duplicate validation on server (defense in depth)
 
 ---
 
