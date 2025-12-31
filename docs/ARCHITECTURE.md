@@ -920,6 +920,35 @@ Success responses close the modal and update the table using Out-of-Band (OOB) s
 
 **Important:** When using OOB swaps with `<tr>` elements, wrap them in `<template>` tags to prevent browser parsing issues.
 
+#### DRY Pattern: Reuse Table Fragment in Success Responses
+
+> **Best Practice:** Always use `{#include $table /}` in `modal_success` fragments instead of duplicating the table HTML.
+
+**Why this matters:**
+| Concern | Duplication Problem | Include Solution |
+|---------|---------------------|------------------|
+| Maintenance | Table changes require updating 2+ places | Single source of truth |
+| Consistency | Risk of drift between fragments | Guaranteed identical output |
+| Code size | ~40-50 extra lines per template | ~1 line per template |
+
+**Correct pattern:**
+```html
+{#fragment id='modal_success' rendered=false}
+{@String message}
+{@java.util.List<Entity> entities}
+<div hx-on::load="UIkit.modal('#entity-modal').hide()"></div>
+<div id="entity-table-container" hx-swap-oob="innerHTML">
+    {#include $table entities=entities /}
+</div>
+{/fragment}
+```
+
+**Parameter passing:** When including fragments, explicitly pass required parameters:
+```html
+{#include $table entities=entities /}              {!-- simple case --}
+{#include $table items=items filterText=filter /}  {!-- multiple params --}
+```
+
 ### 7.5.5 Resource Class Pattern
 
 ```java
