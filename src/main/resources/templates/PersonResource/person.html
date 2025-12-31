@@ -79,7 +79,7 @@
 
 {/include}
 
-{#fragment id=table}
+{#fragment id='table'}
 {@java.util.List<io.archton.scaffold.entity.Person> persons}
 {@String filterText}
 {#if persons.isEmpty()}
@@ -139,7 +139,7 @@
 {/if}
 {/fragment}
 
-{#fragment id=modal_create rendered=false}
+{#fragment id='modal_create' rendered=false}
 {@io.archton.scaffold.entity.Person person}
 {@java.util.List<io.archton.scaffold.entity.Title> titleChoices}
 {@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
@@ -198,7 +198,7 @@
 </form>
 {/fragment}
 
-{#fragment id=modal_edit rendered=false}
+{#fragment id='modal_edit' rendered=false}
 {@io.archton.scaffold.entity.Person person}
 {@java.util.List<io.archton.scaffold.entity.Title> titleChoices}
 {@java.util.List<io.archton.scaffold.entity.Gender> genderChoices}
@@ -264,7 +264,7 @@
 </form>
 {/fragment}
 
-{#fragment id=modal_success rendered=false}
+{#fragment id='modal_success' rendered=false}
 {@String message}
 {@java.util.List<io.archton.scaffold.entity.Person> persons}
 {@String filterText}
@@ -324,7 +324,7 @@
 </div>
 {/fragment}
 
-{#fragment id=modal_success_row rendered=false}
+{#fragment id='modal_success_row' rendered=false}
 {@String message}
 {@io.archton.scaffold.entity.Person person}
 <div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
@@ -357,7 +357,7 @@
 </template>
 {/fragment}
 
-{#fragment id=modal_delete rendered=false}
+{#fragment id='modal_delete' rendered=false}
 {@io.archton.scaffold.entity.Person person}
 {@String error}
 <h2 class="uk-modal-title">Delete Person</h2>
@@ -381,7 +381,7 @@
 </div>
 {/fragment}
 
-{#fragment id=modal_delete_success rendered=false}
+{#fragment id='modal_delete_success' rendered=false}
 {@Long deletedId}
 <div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
 <template><tr id="person-row-{deletedId}" hx-swap-oob="delete"></tr></template>

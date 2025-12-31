@@ -578,7 +578,7 @@ The base template (`templates/base.html`) provides the master layout with a resp
 | `{@Type name}` | Parameter declaration | `{@String title}` |
 | `{item ?: 'default'}` | Elvis operator | `{name ?: 'Unknown'}` |
 | `{item.raw}` | Unescaped output | `{htmlContent.raw}` |
-| `{#fragment id=name}` | Named fragment | `{#fragment id=table}...{/fragment}` |
+| `{#fragment id='name'}` | Named fragment | `{#fragment id='table'}...{/fragment}` |
 | `{#include $fragment}` | Include fragment | `{#include $table /}` |
 
 ### 7.4 Qute Fragments
@@ -587,20 +587,30 @@ Qute fragments allow defining reusable template sections within a single file. T
 
 **Defining fragments:**
 ```html
-{#fragment id=table}
+{#fragment id='table'}
 <!-- Table content -->
 {/fragment}
 
-{#fragment id=modal_create rendered=false}
+{#fragment id='modal_create' rendered=false}
 {@Entity entity}
 {@String error}
 <!-- Modal content for create form -->
 {/fragment}
 ```
 
+**Fragment ID syntax options:**
+```html
+{#fragment price}           {!-- bare identifier --}
+{#fragment id=price}        {!-- attribute form --}
+{#fragment id='price'}      {!-- quoted attribute (recommended) --}
+```
+
+> **Recommendation:** Use the quoted form `id='name'` for consistency with standard Qute expression syntax, where bare identifiers are typically variable references.
+
 **Key attributes:**
-- `id=name` — Fragment identifier, accessed as `$name` or via `Templates.entity$name()`
+- `id='name'` — Fragment identifier, accessed as `$name` or via `Templates.entity$name()`
 - `rendered=false` — Fragment is not rendered in main output; only accessible programmatically
+- `{#capture name}` — Alias for `{#fragment id='name' rendered=false}` (cleaner syntax for hidden fragments)
 
 **Accessing fragments from Java:**
 ```java
@@ -697,7 +707,7 @@ Common HTMX events: `after-request`, `before-request`, `load`, `after-swap`
 {/include}
 
 {!-- Table Fragment --}
-{#fragment id=table}
+{#fragment id='table'}
 <table class="uk-table uk-table-hover uk-table-divider">
     <thead>
         <tr>
@@ -738,7 +748,7 @@ Common HTMX events: `after-request`, `before-request`, `load`, `after-swap`
 
 **Create Form Fragment:**
 ```html
-{#fragment id=modal_create rendered=false}
+{#fragment id='modal_create' rendered=false}
 {@io.archton.scaffold.entity.Entity entity}
 {@String error}
 
@@ -773,7 +783,7 @@ Common HTMX events: `after-request`, `before-request`, `load`, `after-swap`
 
 **Edit Form Fragment:**
 ```html
-{#fragment id=modal_edit rendered=false}
+{#fragment id='modal_edit' rendered=false}
 {@io.archton.scaffold.entity.Entity entity}
 {@String error}
 
@@ -808,7 +818,7 @@ Common HTMX events: `after-request`, `before-request`, `load`, `after-swap`
 
 **Delete Confirmation Fragment:**
 ```html
-{#fragment id=modal_delete rendered=false}
+{#fragment id='modal_delete' rendered=false}
 {@io.archton.scaffold.entity.Entity entity}
 {@String error}
 
@@ -844,7 +854,7 @@ Success responses close the modal and update the table using Out-of-Band (OOB) s
 
 **Create Success (refresh entire table):**
 ```html
-{#fragment id=modal_success rendered=false}
+{#fragment id='modal_success' rendered=false}
 {@String message}
 {@java.util.List<io.archton.scaffold.entity.Entity> entities}
 
@@ -860,7 +870,7 @@ Success responses close the modal and update the table using Out-of-Band (OOB) s
 
 **Edit Success (update single row):**
 ```html
-{#fragment id=modal_success_row rendered=false}
+{#fragment id='modal_success_row' rendered=false}
 {@String message}
 {@io.archton.scaffold.entity.Entity entity}
 
@@ -895,7 +905,7 @@ Success responses close the modal and update the table using Out-of-Band (OOB) s
 
 **Delete Success (remove row):**
 ```html
-{#fragment id=modal_delete_success rendered=false}
+{#fragment id='modal_delete_success' rendered=false}
 {@Long deletedId}
 
 <!-- Close modal -->
@@ -1213,7 +1223,7 @@ Use HTML5 attributes for immediate client-side feedback:
 Every modal form fragment includes an error display section:
 
 ```html
-{#fragment id=modal_create rendered=false}
+{#fragment id='modal_create' rendered=false}
 {@io.archton.scaffold.entity.Entity entity}
 {@String error}
 

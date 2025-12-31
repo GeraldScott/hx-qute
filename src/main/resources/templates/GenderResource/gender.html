@@ -32,7 +32,7 @@
 
 {/include}
 
-{#fragment id=table}
+{#fragment id='table'}
 {#if genders.isEmpty()}
 <p class="uk-text-muted">No genders found.</p>
 {#else}
@@ -80,7 +80,7 @@
 {/if}
 {/fragment}
 
-{#fragment id=modal_create rendered=false}
+{#fragment id='modal_create' rendered=false}
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
 <h2 class="uk-modal-title">Add Gender</h2>
@@ -103,7 +103,7 @@
 </form>
 {/fragment}
 
-{#fragment id=modal_edit rendered=false}
+{#fragment id='modal_edit' rendered=false}
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
 <h2 class="uk-modal-title">Edit Gender</h2>
@@ -133,7 +133,7 @@
 </form>
 {/fragment}
 
-{#fragment id=modal_success rendered=false}
+{#fragment id='modal_success' rendered=false}
 {@String message}
 {@java.util.List<io.archton.scaffold.entity.Gender> genders}
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
@@ -182,7 +182,7 @@
 </div>
 {/fragment}
 
-{#fragment id=modal_success_row rendered=false}
+{#fragment id='modal_success_row' rendered=false}
 {@String message}
 {@io.archton.scaffold.entity.Gender gender}
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
@@ -212,7 +212,7 @@
 </template>
 {/fragment}
 
-{#fragment id=modal_delete rendered=false}
+{#fragment id='modal_delete' rendered=false}
 {@io.archton.scaffold.entity.Gender gender}
 {@String error}
 <h2 class="uk-modal-title">Delete Gender</h2>
@@ -236,7 +236,7 @@
 </div>
 {/fragment}
 
-{#fragment id=modal_delete_success rendered=false}
+{#fragment id='modal_delete_success' rendered=false}
 {@Long deletedId}
 <div hx-on::load="UIkit.modal('#gender-modal').hide()"></div>
 <template><tr id="gender-row-{deletedId}" hx-swap-oob="delete"></tr></template>
