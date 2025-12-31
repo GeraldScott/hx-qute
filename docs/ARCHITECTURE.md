@@ -619,6 +619,28 @@ public static native TemplateInstance entity$table(List<Entity> entities);
 public static native TemplateInstance entity$modal_create(Entity entity, String error);
 ```
 
+#### Value Resolver Limitation
+
+> **Important:** When using `{#include $fragment /}`, the Qute type-safe value resolver cannot detect expressions used in the included fragment. This can cause runtime errors if parameters are not properly declared.
+
+**Problem:** The generated value resolver doesn't cover expressions in included templates:
+```html
+{!-- This may fail at runtime if 'entities' is not resolved --}
+{#include $table /}
+```
+
+**Solution:** Always declare parameters explicitly in fragments that will be included:
+```html
+{#fragment id='table'}
+{@java.util.List<Entity> entities}  {!-- Explicit declaration --}
+{#for e in entities}
+    ...
+{/for}
+{/fragment}
+```
+
+**Alternative workaround:** Use `@TemplateData` annotation on entity classes for automatic value resolution.
+
 ---
 
 ## 7.5 Modal-Based CRUD Pattern

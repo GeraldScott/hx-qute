@@ -71,7 +71,7 @@ Documentation correctly describes this attribute. Additional options:
 
 ### 4. Value Resolver Limitation
 
-**Status:** NOT DOCUMENTED
+**Status:** DONE
 
 From official docs:
 > "The generated value resolver does not cover the expression used in the included template... Unfortunately, we can't detect the usage in an included template."
@@ -106,13 +106,17 @@ Current project embeds OOB elements directly in success fragments (valid approac
 
 ### 6. Table Fragment Parameter Declarations
 
-**Status:** INCONSISTENT IN CODEBASE
+**Status:** DONE
 
-| Template | Has Own Parameter Declarations |
-|----------|-------------------------------|
-| `gender.html` | No - uses page-level `genders` |
-| `title.html` | No - uses page-level `titles` |
-| `person.html` | Yes - redeclares `persons` and `filterText` |
+All table fragments now declare their own parameters for self-containment:
+
+| Template | Parameter Declaration |
+|----------|----------------------|
+| `gender.html` | `{@java.util.List<...Gender> genders}` |
+| `title.html` | `{@java.util.List<...Title> titles}` |
+| `person.html` | `{@java.util.List<...Person> persons}` + `{@String filterText}` |
+
+**Action Taken:** Added explicit parameter declarations to gender.html and title.html table fragments.
 
 ---
 
@@ -126,13 +130,13 @@ Current project embeds OOB elements directly in success fragments (valid approac
   - Matches documented best practice
   - Files: `gender.html`, `title.html`, `person.html`
 
-- [ ] **Standardize table fragment parameter declarations**
+- [x] **Standardize table fragment parameter declarations**
   - Decide: Should fragments declare their own params or use page-level?
   - Apply consistently across all templates
 
 ### Medium Priority
 
-- [ ] **Add value resolver limitation note to documentation**
+- [x] **Add value resolver limitation note to documentation**
   - Section 7.4 should mention this caveat
   - Include workarounds
 
@@ -154,6 +158,16 @@ Current project embeds OOB elements directly in success fragments (valid approac
 ---
 
 ## Completed Items
+
+- [x] **Standardize table fragment parameter declarations**
+  - Added explicit `{@Type param}` declarations to all table fragments
+  - Ensures self-contained fragments that work with `{#include /}`
+  - Addresses value resolver limitation
+
+- [x] **Add value resolver limitation note to documentation**
+  - Added section 7.4 "Value Resolver Limitation"
+  - Documents the problem with included fragments
+  - Provides solution (explicit declarations) and alternative (@TemplateData)
 
 - [x] **Refactor success fragments to use `{#include $table /}`**
   - Replaced duplicated table HTML with fragment includes
