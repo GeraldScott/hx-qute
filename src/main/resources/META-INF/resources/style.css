@@ -65,8 +65,8 @@ h2 {
     font-weight: bold;
 }
 
-/* Feature cards styling */
-.feature-card {
+/* Tech cards styling */
+.tech-card {
     border-left: 4px solid #1e87f0;
     background-color: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -75,19 +75,19 @@ h2 {
         box-shadow 0.2s ease-in-out;
 }
 
-.feature-card:hover {
+.tech-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.feature-card .uk-card-title {
+.tech-card .uk-card-title {
     font-size: 1.1rem;
     font-weight: 600;
     color: #333;
     margin-bottom: 0.5rem;
 }
 
-.feature-card p {
+.tech-card p {
     color: #666;
     line-height: 1.5;
 }
