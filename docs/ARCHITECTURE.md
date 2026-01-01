@@ -16,10 +16,10 @@ A comprehensive technical reference for developing features in this Quarkus + HT
 8. [Resource Layer](#8-resource-layer)
 9. [Template System](#9-template-system)
 10. [HTMX Integration](#10-htmx-integration)
-11. [Security Architecture](#11-security-architecture)
-12. [Configuration Reference](#12-configuration-reference)
-13. [Testing Patterns](#13-testing-patterns)
-14. [Development Workflow](#14-development-workflow)
+11. [Creating New Entities - Complete Checklist](#11-creating-new-entities---complete-checklist)
+12. [Testing Patterns](#12-testing-patterns)
+13. [Configuration Reference](#13-configuration-reference)
+14. [Anti-Patterns](#14-anti-patterns)
 
 ---
 
@@ -378,14 +378,14 @@ public class CategoryRepository implements PanacheRepository<Category> {
 
 ### 6.2 Repository with Referential Integrity Queries
 
-For entities that are referenced by other entities, the repository should include methods to check if the entity is in use:
+For entities that are referenced by other entities, the repository should include methods to check if the entity is in use. Inject the referencing repository and use Panache's `count()` method:
 
 ```java
 @ApplicationScoped
 public class CategoryRepository implements PanacheRepository<Category> {
 
     @Inject
-    EntityManager em;
+    ItemRepository itemRepository;
 
     // ... finder methods from above ...
 
@@ -394,21 +394,14 @@ public class CategoryRepository implements PanacheRepository<Category> {
      * Used to prevent deletion when referential integrity would be violated.
      */
     public boolean isReferencedByItem(Long categoryId) {
-        Long count = em.createQuery(
-            "SELECT COUNT(i) FROM Item i WHERE i.category.id = :categoryId", Long.class)
-            .setParameter("categoryId", categoryId)
-            .getSingleResult();
-        return count > 0;
+        return itemRepository.count("category.id", categoryId) > 0;
     }
 
     /**
      * Count how many Item records reference this category.
      */
     public long countItemReferences(Long categoryId) {
-        return em.createQuery(
-            "SELECT COUNT(i) FROM Item i WHERE i.category.id = :categoryId", Long.class)
-            .setParameter("categoryId", categoryId)
-            .getSingleResult();
+        return itemRepository.count("category.id", categoryId);
     }
 }
 ```
@@ -1391,6 +1384,136 @@ quarkus.http.auth.permission.authenticated.policy=authenticated
 
 ---
 
-*Document Version: 2.0*
+## 14. Anti-Patterns
+
+### 14.1 Avoid JPQL/EntityManager for Simple Queries
+
+**Anti-Pattern**: Using `EntityManager` with JPQL queries when Panache methods suffice.
+
+```java
+// ❌ WRONG: Verbose JPQL with EntityManager
+@Inject
+EntityManager em;
+
+public boolean isReferencedByItem(Long categoryId) {
+    Long count = em.createQuery(
+        "SELECT COUNT(i) FROM Item i WHERE i.category.id = :categoryId", Long.class)
+        .setParameter("categoryId", categoryId)
+        .getSingleResult();
+    return count > 0;
+}
+
+public long countByStatus(String status) {
+    return em.createQuery(
+        "SELECT COUNT(e) FROM Entity e WHERE e.status = :status", Long.class)
+        .setParameter("status", status)
+        .getSingleResult();
+}
+```
+
+**Correct Pattern**: Use Panache's built-in methods for cleaner, type-safe queries.
+
+```java
+// ✅ CORRECT: Clean Panache methods
+@Inject
+ItemRepository itemRepository;
+
+public boolean isReferencedByItem(Long categoryId) {
+    return itemRepository.count("category.id", categoryId) > 0;
+}
+
+public long countByStatus(String status) {
+    return count("status", status);
+}
+```
+
+**Why Panache is preferred**:
+- Less boilerplate code
+- Compile-time safety for field names (with proper IDE support)
+- Consistent with the rest of the codebase
+- Automatic parameter binding
+- No need to manage `EntityManager` lifecycle
+
+### 14.2 Avoid Nullable Returns for Finder Methods
+
+**Anti-Pattern**: Returning nullable entities from finder methods.
+
+```java
+// ❌ WRONG: Returns null if not found
+public Category findByCode(String code) {
+    return find("code", code).firstResult();
+}
+
+// Caller must remember to check for null
+Category cat = repo.findByCode("ABC");
+if (cat != null) { ... }  // Easy to forget!
+```
+
+**Correct Pattern**: Return `Optional<Entity>` for explicit null handling.
+
+```java
+// ✅ CORRECT: Returns Optional
+public Optional<Category> findByCode(String code) {
+    return find("code", code).firstResultOptional();
+}
+
+// Caller is forced to handle absence
+repo.findByCode("ABC")
+    .orElseThrow(() -> new EntityNotFoundException("Category", "ABC"));
+```
+
+### 14.3 Avoid Business Logic in Entities
+
+**Anti-Pattern**: Placing business logic or data access in entity classes.
+
+```java
+// ❌ WRONG: Entity with business logic
+@Entity
+public class Order extends PanacheEntity {
+    public BigDecimal total;
+
+    public void applyDiscount(BigDecimal percent) {
+        this.total = this.total.multiply(BigDecimal.ONE.subtract(percent));
+    }
+
+    public static List<Order> findPendingOrders() {
+        return list("status", "PENDING");
+    }
+}
+```
+
+**Correct Pattern**: Keep entities as plain POJOs; use Services for logic and Repositories for data access.
+
+```java
+// ✅ CORRECT: Plain entity
+@Entity
+public class Order {
+    public Long id;
+    public BigDecimal total;
+    public String status;
+}
+
+// Business logic in Service
+@ApplicationScoped
+public class OrderService {
+    @Inject OrderRepository orderRepository;
+
+    public void applyDiscount(Order order, BigDecimal percent) {
+        order.total = order.total.multiply(BigDecimal.ONE.subtract(percent));
+    }
+}
+
+// Data access in Repository
+@ApplicationScoped
+public class OrderRepository implements PanacheRepository<Order> {
+    public List<Order> findPending() {
+        return list("status", "PENDING");
+    }
+}
+```
+
+---
+
+*Document Version: 2.1*
 *Pattern: PanacheRepository with Service Layer*
 *Last Updated: 2026-01-01*
