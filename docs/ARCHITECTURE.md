@@ -11,6 +11,7 @@ Technical reference for developing features in this Quarkus + HTMX + Qute applic
 3. [Database Layer](#3-database-layer)
 4. [Entity Layer](#4-entity-layer)
 5. [Repository Layer](#5-repository-layer)
+   - [5.5 Eager Loading with Entity Graphs](#55-eager-loading-with-entity-graphs)
 6. [Service Layer](#6-service-layer)
 7. [Resource Layer](#7-resource-layer)
 8. [Template System](#8-template-system)
@@ -446,6 +447,122 @@ public class ItemRepository implements PanacheRepository<Item> {
 | `list(query, params)` | Query returning list |
 | `stream(query, params)` | Query returning stream |
 | `getEntityManager()` | Access underlying EntityManager |
+
+### 5.5 Eager Loading with Entity Graphs
+
+When you need to eagerly load associations (avoiding N+1 queries), use **JPA Entity Graphs** instead of raw JPQL with `JOIN FETCH`. Entity Graphs integrate cleanly with Panache's fluent API.
+
+**Why Entity Graphs over JPQL JOIN FETCH:**
+- Declarative fetch strategy defined on the entity
+- Reusable across multiple repository methods
+- No string concatenation for JPQL queries
+- Supports nested associations via subgraphs
+- Works with Panache's `find()`, `findAll()`, and `list()` methods
+
+#### Define Entity Graph on Entity
+
+```java
+@Entity
+@NamedEntityGraphs({
+    @NamedEntityGraph(
+        name = "Order.withItems",
+        attributeNodes = {
+            @NamedAttributeNode(value = "items", subgraph = "items-product"),
+            @NamedAttributeNode("customer")
+        },
+        subgraphs = @NamedSubgraph(
+            name = "items-product",
+            attributeNodes = @NamedAttributeNode("product")
+        )
+    )
+})
+public class Order {
+    @ManyToOne(fetch = FetchType.LAZY)
+    public Customer customer;
+
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    public List<OrderItem> items;
+}
+```
+
+#### Use with Panache Fluent API
+
+```java
+@ApplicationScoped
+public class OrderRepository implements PanacheRepository<Order> {
+
+    private static final String FETCH_GRAPH_HINT = "jakarta.persistence.fetchgraph";
+
+    /**
+     * Find orders with items and products eagerly loaded.
+     */
+    public List<Order> findByCustomerWithItems(Long customerId) {
+        EntityGraph<?> graph = getEntityManager().getEntityGraph("Order.withItems");
+
+        return find("customer.id", customerId)
+            .withHint(FETCH_GRAPH_HINT, graph)
+            .list();
+    }
+
+    /**
+     * Find all orders with eager loading for reporting.
+     */
+    public List<Order> findAllForReport() {
+        EntityGraph<?> graph = getEntityManager().getEntityGraph("Order.withItems");
+
+        return findAll()
+            .withHint(FETCH_GRAPH_HINT, graph)
+            .list();
+    }
+}
+```
+
+#### Multiple Entity Graphs
+
+Define multiple graphs for different use cases:
+
+```java
+@NamedEntityGraphs({
+    @NamedEntityGraph(
+        name = "Person.withTitle",
+        attributeNodes = @NamedAttributeNode("title")
+    ),
+    @NamedEntityGraph(
+        name = "Person.full",
+        attributeNodes = {
+            @NamedAttributeNode("title"),
+            @NamedAttributeNode("gender"),
+            @NamedAttributeNode("relationships")
+        }
+    )
+})
+@Entity
+public class Person { ... }
+```
+
+**Anti-Pattern to Avoid:**
+
+```java
+// ❌ WRONG: Raw JPQL with JOIN FETCH
+public List<Order> findWithItems(Long customerId) {
+    return getEntityManager()
+        .createQuery(
+            "SELECT o FROM Order o " +
+            "JOIN FETCH o.items i " +
+            "JOIN FETCH i.product " +
+            "WHERE o.customer.id = ?1", Order.class)
+        .setParameter(1, customerId)
+        .getResultList();
+}
+
+// ✅ CORRECT: Entity Graph with Panache
+public List<Order> findWithItems(Long customerId) {
+    EntityGraph<?> graph = getEntityManager().getEntityGraph("Order.withItems");
+    return find("customer.id", customerId)
+        .withHint(FETCH_GRAPH_HINT, graph)
+        .list();
+}
+```
 
 ---
 
@@ -1446,6 +1563,6 @@ public class GenderResource {
 
 ---
 
-*Document Version: 2.3*
+*Document Version: 2.4*
 *Pattern: PanacheRepository with Optional Service Layer*
 *Last Updated: 2026-01-01*
