@@ -41,4 +41,12 @@ public class PersonRepository implements PanacheRepository<Person> {
         };
         return "ORDER BY " + orderBy;
     }
+
+    public boolean existsByEmail(String email) {
+        return count("LOWER(email) = LOWER(?1)", email.trim()) > 0;
+    }
+
+    public boolean existsByEmailAndIdNot(String email, Long id) {
+        return count("LOWER(email) = LOWER(?1) AND id != ?2", email.trim(), id) > 0;
+    }
 }

@@ -20,4 +20,20 @@ public class TitleRepository implements PanacheRepository<Title> {
     public List<Title> listAllOrdered() {
         return list("ORDER BY code ASC");
     }
+
+    public boolean existsByCode(String code) {
+        return count("code", code) > 0;
+    }
+
+    public boolean existsByCodeAndIdNot(String code, Long id) {
+        return count("code = ?1 AND id != ?2", code, id) > 0;
+    }
+
+    public boolean existsByDescription(String description) {
+        return count("description", description) > 0;
+    }
+
+    public boolean existsByDescriptionAndIdNot(String description, Long id) {
+        return count("description = ?1 AND id != ?2", description, id) > 0;
+    }
 }

@@ -124,11 +124,11 @@ public class RelationshipResource {
         relationship.code = code.toUpperCase();
 
         // Check uniqueness
-        if (relationshipRepository.findByCode(relationship.code).isPresent()) {
+        if (relationshipRepository.existsByCode(relationship.code)) {
             return Templates.relationship$modal_create(relationship, "Code already exists.");
         }
 
-        if (relationshipRepository.findByDescription(description).isPresent()) {
+        if (relationshipRepository.existsByDescription(description)) {
             return Templates.relationship$modal_create(relationship, "Description already exists.");
         }
 
@@ -178,13 +178,11 @@ public class RelationshipResource {
         formData.code = upperCode;
 
         // Check uniqueness (excluding current record) - before loading managed entity
-        var existingByCode = relationshipRepository.findByCode(upperCode);
-        if (existingByCode.isPresent() && !existingByCode.get().id.equals(id)) {
+        if (relationshipRepository.existsByCodeAndIdNot(upperCode, id)) {
             return Templates.relationship$modal_edit(formData, "Code already exists.");
         }
 
-        var existingByDescription = relationshipRepository.findByDescription(description);
-        if (existingByDescription.isPresent() && !existingByDescription.get().id.equals(id)) {
+        if (relationshipRepository.existsByDescriptionAndIdNot(description, id)) {
             return Templates.relationship$modal_edit(formData, "Description already exists.");
         }
 

@@ -124,11 +124,11 @@ public class GenderResource {
         gender.code = code.toUpperCase();
         
         // Check uniqueness
-        if (genderRepository.findByCode(gender.code).isPresent()) {
+        if (genderRepository.existsByCode(gender.code)) {
             return Templates.gender$modal_create(gender, "Code already exists.");
         }
 
-        if (genderRepository.findByDescription(description).isPresent()) {
+        if (genderRepository.existsByDescription(description)) {
             return Templates.gender$modal_create(gender, "Description already exists.");
         }
         
@@ -186,13 +186,11 @@ public class GenderResource {
         gender.code = code.toUpperCase();
 
         // Check uniqueness (excluding current record)
-        var existingByCode = genderRepository.findByCode(gender.code);
-        if (existingByCode.isPresent() && !existingByCode.get().id.equals(id)) {
+        if (genderRepository.existsByCodeAndIdNot(gender.code, id)) {
             return Templates.gender$modal_edit(gender, "Code already exists.");
         }
 
-        var existingByDescription = genderRepository.findByDescription(description);
-        if (existingByDescription.isPresent() && !existingByDescription.get().id.equals(id)) {
+        if (genderRepository.existsByDescriptionAndIdNot(description, id)) {
             return Templates.gender$modal_edit(gender, "Description already exists.");
         }
 

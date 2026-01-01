@@ -213,7 +213,7 @@ public class PersonResource {
         }
 
         // Check email uniqueness (case-insensitive)
-        if (personRepository.findByEmail(email).isPresent()) {
+        if (personRepository.existsByEmail(email)) {
             return Templates.person$modal_create(person, titleChoices, genderChoices, "Email already registered.");
         }
 
@@ -301,8 +301,7 @@ public class PersonResource {
         }
 
         // Check email uniqueness (case-insensitive, excluding current record)
-        var existingByEmail = personRepository.findByEmail(email);
-        if (existingByEmail.isPresent() && !existingByEmail.get().id.equals(id)) {
+        if (personRepository.existsByEmailAndIdNot(email, id)) {
             return Templates.person$modal_edit(formPerson, titleChoices, genderChoices, "Email already registered.");
         }
 

@@ -124,11 +124,11 @@ public class TitleResource {
         title.code = code.toUpperCase();
 
         // Check uniqueness
-        if (titleRepository.findByCode(title.code).isPresent()) {
+        if (titleRepository.existsByCode(title.code)) {
             return Templates.title$modal_create(title, "Code already exists.");
         }
 
-        if (titleRepository.findByDescription(description).isPresent()) {
+        if (titleRepository.existsByDescription(description)) {
             return Templates.title$modal_create(title, "Description already exists.");
         }
 
@@ -186,13 +186,11 @@ public class TitleResource {
         title.code = code.toUpperCase();
 
         // Check uniqueness (excluding current record)
-        var existingByCode = titleRepository.findByCode(title.code);
-        if (existingByCode.isPresent() && !existingByCode.get().id.equals(id)) {
+        if (titleRepository.existsByCodeAndIdNot(title.code, id)) {
             return Templates.title$modal_edit(title, "Code already exists.");
         }
 
-        var existingByDescription = titleRepository.findByDescription(description);
-        if (existingByDescription.isPresent() && !existingByDescription.get().id.equals(id)) {
+        if (titleRepository.existsByDescriptionAndIdNot(description, id)) {
             return Templates.title$modal_edit(title, "Description already exists.");
         }
 
