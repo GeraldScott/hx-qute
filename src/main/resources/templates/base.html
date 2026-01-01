@@ -109,7 +109,56 @@
                     {#include $navigation /}
                 </div>
             </div>
+
+            <!-- Login Modal -->
+            <div id="login-modal" uk-modal>
+                <div class="uk-modal-dialog uk-modal-body">
+                    <button class="uk-modal-close-default" type="button" uk-close></button>
+                    <h2 class="uk-modal-title">Login</h2>
+
+                    <div id="login-error"></div>
+
+                    <form action="/j_security_check" method="POST" class="uk-form-stacked"
+                          onsubmit="document.getElementById('j_username').value = document.getElementById('j_username').value.toLowerCase().trim();">
+                        <div class="uk-margin">
+                            <label class="uk-form-label" for="j_username">Email</label>
+                            <input class="uk-input" type="email" id="j_username" name="j_username"
+                                   placeholder="Enter email" required />
+                        </div>
+
+                        <div class="uk-margin">
+                            <label class="uk-form-label" for="j_password">Password</label>
+                            <input class="uk-input" type="password" id="j_password" name="j_password"
+                                   placeholder="Enter password" required />
+                        </div>
+
+                        <div class="uk-margin">
+                            <button type="submit" class="uk-button uk-button-primary">Login</button>
+                        </div>
+                    </form>
+
+                    <p class="uk-text-small">
+                        Don't have an account? <a href="/signup" class="uk-modal-close">Sign up</a>
+                    </p>
+                </div>
+            </div>
         </div>
+
+        <script>
+            (function() {
+                var params = new URLSearchParams(window.location.search);
+                if (params.has('login')) {
+                    UIkit.modal('#login-modal').show();
+                    if (params.has('error')) {
+                        document.getElementById('login-error').innerHTML =
+                            '<div class="uk-alert uk-alert-danger" uk-alert>' +
+                            '<a class="uk-alert-close" uk-close></a>' +
+                            '<p>Invalid email or password.</p></div>';
+                    }
+                    history.replaceState(null, '', window.location.pathname);
+                }
+            })();
+        </script>
     </body>
 </html>
 
@@ -156,7 +205,7 @@
     </li>
     {#else}
     <li>
-        <a href="/login">
+        <a href="#login-modal" uk-toggle>
             <span uk-icon="icon: sign-in; ratio: 1.2"></span>
             <span class="uk-margin-small-left">Login</span>
         </a>
