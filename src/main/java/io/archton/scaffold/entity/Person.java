@@ -31,11 +31,11 @@ public class Person {
     public LocalDate dateOfBirth;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "title_id")
+    @JoinColumn(name = "title_id", foreignKey = @ForeignKey(name = "fk_person_title"))
     public Title title;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gender_id")
+    @JoinColumn(name = "gender_id", foreignKey = @ForeignKey(name = "fk_person_gender"))
     public Gender gender;
 
     @Column(name = "created_at")
