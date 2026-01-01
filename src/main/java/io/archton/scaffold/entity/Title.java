@@ -5,8 +5,8 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "title", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "code"),
-    @UniqueConstraint(columnNames = "description")
+    @UniqueConstraint(name = "uk_title_code", columnNames = "code"),
+    @UniqueConstraint(name = "uk_title_description", columnNames = "description")
 })
 public class Title {
 

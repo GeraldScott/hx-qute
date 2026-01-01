@@ -7,7 +7,7 @@ import java.time.Instant;
 @Entity
 @Table(
     name = "person",
-    uniqueConstraints = { @UniqueConstraint(columnNames = "email") }
+    uniqueConstraints = { @UniqueConstraint(name = "uk_person_email", columnNames = "email") }
 )
 public class Person {
 
