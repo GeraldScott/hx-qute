@@ -45,7 +45,7 @@
             <div class="uk-grid-collapse" uk-grid>
                 <!-- Sidebar (visible on large screens) -->
                 <div class="uk-width-auto@l uk-visible@l sidebar-container">
-                    <aside class="sidebar uk-height-viewport">
+                    <aside class="sidebar uk-height-viewport uk-flex uk-flex-column">
                         <!-- Logo -->
                         <div class="uk-padding-small">
                             <a
@@ -67,6 +67,13 @@
 
                         <!-- Navigation -->
                         {#include $navigation /}
+
+                        <!-- Copyright -->
+                        <div class="uk-padding-small uk-margin-auto-top uk-text-small">
+                            ©
+                            <a href="https://archton.io" target="_blank">Archton.io</a>
+                            <script>document.write(new Date().getFullYear())</script>
+                        </div>
                     </aside>
                 </div>
 
