@@ -106,7 +106,7 @@
                 <td>{p.getDisplayName()}</td>
                 <td>{p.email}</td>
                 <td>{p.phone ?: ''}</td>
-                <td>{p.dateOfBirth ?: ''}</td>
+                <td>{#if p.dateOfBirth}{p.dateOfBirth.format('dd MMM yyyy')}{/if}</td>
                 <td>{#if p.gender??}{p.gender.description}{/if}</td>
                 <td>
                     <div class="uk-button-group">
@@ -149,46 +149,48 @@
 {/if}
 <form hx-post="/persons" hx-target="#person-modal-body" class="uk-form-stacked">
     <div class="uk-grid-small" uk-grid>
-        <div class="uk-width-1-2@s">
+        <div class="uk-width-1-3@s">
             <label class="uk-form-label" for="create-firstName">First Name *</label>
             <input class="uk-input" type="text" id="create-firstName" name="firstName" maxlength="100" value="{person.firstName ?: ''}" required />
         </div>
-        <div class="uk-width-1-2@s">
+        <div class="uk-width-1-3@s">
             <label class="uk-form-label" for="create-lastName">Last Name *</label>
             <input class="uk-input" type="text" id="create-lastName" name="lastName" maxlength="100" value="{person.lastName ?: ''}" required />
         </div>
+        <div class="uk-width-1-3@s">
+            <label class="uk-form-label" for="create-titleId">Title</label>
+            <select class="uk-select" id="create-titleId" name="titleId">
+                <option value="">Select title...</option>
+                {#for t in titleChoices}
+                <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.description}</option>
+                {/for}
+            </select>
+        </div>
     </div>
-    <div class="uk-margin">
-        <label class="uk-form-label" for="create-titleId">Title</label>
-        <select class="uk-select" id="create-titleId" name="titleId">
-            <option value="">-- Select Title --</option>
-            {#for t in titleChoices}
-            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.description}</option>
-            {/for}
-        </select>
-    </div>
-    <div class="uk-margin">
-        <label class="uk-form-label" for="create-email">Email *</label>
-        <input class="uk-input" type="email" id="create-email" name="email" maxlength="255" value="{person.email ?: ''}" required />
-    </div>
-    <div class="uk-grid-small" uk-grid>
+    <div class="uk-grid-small uk-margin" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label" for="create-email">Email *</label>
+            <input class="uk-input" type="email" id="create-email" name="email" maxlength="255" value="{person.email ?: ''}" required />
+        </div>
         <div class="uk-width-1-2@s">
             <label class="uk-form-label" for="create-phone">Phone</label>
             <input class="uk-input" type="tel" id="create-phone" name="phone" maxlength="50" value="{person.phone ?: ''}" />
+        </div>
+    </div>
+    <div class="uk-grid-small uk-margin" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label" for="create-genderId">Gender</label>
+            <select class="uk-select" id="create-genderId" name="genderId">
+                <option value="">Select gender...</option>
+                {#for g in genderChoices}
+                <option value="{g.id}" {#if person.gender?? && person.gender.id == g.id}selected{/if}>{g.description}</option>
+                {/for}
+            </select>
         </div>
         <div class="uk-width-1-2@s">
             <label class="uk-form-label" for="create-dateOfBirth">Date of Birth</label>
             <input class="uk-input" type="date" id="create-dateOfBirth" name="dateOfBirth" value="{person.dateOfBirth ?: ''}" />
         </div>
-    </div>
-    <div class="uk-margin">
-        <label class="uk-form-label" for="create-genderId">Gender</label>
-        <select class="uk-select" id="create-genderId" name="genderId">
-            <option value="">-- Select Gender --</option>
-            {#for g in genderChoices}
-            <option value="{g.id}" {#if person.gender?? && person.gender.id == g.id}selected{/if}>{g.description}</option>
-            {/for}
-        </select>
     </div>
     <div class="uk-margin uk-text-right">
         <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
@@ -208,46 +210,48 @@
 {/if}
 <form hx-put="/persons/{person.id}" hx-target="#person-modal-body" class="uk-form-stacked">
     <div class="uk-grid-small" uk-grid>
-        <div class="uk-width-1-2@s">
+        <div class="uk-width-1-3@s">
             <label class="uk-form-label" for="edit-firstName">First Name *</label>
             <input class="uk-input" type="text" id="edit-firstName" name="firstName" maxlength="100" value="{person.firstName ?: ''}" required />
         </div>
-        <div class="uk-width-1-2@s">
+        <div class="uk-width-1-3@s">
             <label class="uk-form-label" for="edit-lastName">Last Name *</label>
             <input class="uk-input" type="text" id="edit-lastName" name="lastName" maxlength="100" value="{person.lastName ?: ''}" required />
         </div>
+        <div class="uk-width-1-3@s">
+            <label class="uk-form-label" for="edit-titleId">Title</label>
+            <select class="uk-select" id="edit-titleId" name="titleId">
+                <option value="">Select title...</option>
+                {#for t in titleChoices}
+                <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.description}</option>
+                {/for}
+            </select>
+        </div>
     </div>
-    <div class="uk-margin">
-        <label class="uk-form-label" for="edit-titleId">Title</label>
-        <select class="uk-select" id="edit-titleId" name="titleId">
-            <option value="">-- Select Title --</option>
-            {#for t in titleChoices}
-            <option value="{t.id}" {#if person.title?? && person.title.id == t.id}selected{/if}>{t.description}</option>
-            {/for}
-        </select>
-    </div>
-    <div class="uk-margin">
-        <label class="uk-form-label" for="edit-email">Email *</label>
-        <input class="uk-input" type="email" id="edit-email" name="email" maxlength="255" value="{person.email ?: ''}" required />
-    </div>
-    <div class="uk-grid-small" uk-grid>
+    <div class="uk-grid-small uk-margin" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label" for="edit-email">Email *</label>
+            <input class="uk-input" type="email" id="edit-email" name="email" maxlength="255" value="{person.email ?: ''}" required />
+        </div>
         <div class="uk-width-1-2@s">
             <label class="uk-form-label" for="edit-phone">Phone</label>
             <input class="uk-input" type="tel" id="edit-phone" name="phone" maxlength="50" value="{person.phone ?: ''}" />
+        </div>
+    </div>
+    <div class="uk-grid-small uk-margin" uk-grid>
+        <div class="uk-width-1-2@s">
+            <label class="uk-form-label" for="edit-genderId">Gender</label>
+            <select class="uk-select" id="edit-genderId" name="genderId">
+                <option value="">Select gender...</option>
+                {#for g in genderChoices}
+                <option value="{g.id}" {#if person.gender?? && person.gender.id == g.id}selected{/if}>{g.description}</option>
+                {/for}
+            </select>
         </div>
         <div class="uk-width-1-2@s">
             <label class="uk-form-label" for="edit-dateOfBirth">Date of Birth</label>
             <input class="uk-input" type="date" id="edit-dateOfBirth" name="dateOfBirth" value="{person.dateOfBirth ?: ''}" />
         </div>
-    </div>
-    <div class="uk-margin">
-        <label class="uk-form-label" for="edit-genderId">Gender</label>
-        <select class="uk-select" id="edit-genderId" name="genderId">
-            <option value="">-- Select Gender --</option>
-            {#for g in genderChoices}
-            <option value="{g.id}" {#if person.gender?? && person.gender.id == g.id}selected{/if}>{g.description}</option>
-            {/for}
-        </select>
     </div>
     <details class="uk-margin">
         <summary class="uk-text-muted">Audit Information</summary>
@@ -282,7 +286,7 @@
     <td>{person.getDisplayName()}</td>
     <td>{person.email}</td>
     <td>{person.phone ?: ''}</td>
-    <td>{person.dateOfBirth ?: ''}</td>
+    <td>{#if person.dateOfBirth}{person.dateOfBirth.format('dd MMM yyyy')}{/if}</td>
     <td>{#if person.gender??}{person.gender.description}{/if}</td>
     <td>
         <div class="uk-button-group">
