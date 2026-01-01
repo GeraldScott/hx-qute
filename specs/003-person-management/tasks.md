@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-003-07-06: Delete Relationship
-**Status:** 🔲 Not Started
+**Current Use Case:** All Complete
+**Status:** ✅ Complete
 **Blockers:** None
 
 ---
@@ -28,11 +28,11 @@
 | UC-003-07-03: Submit Add Relationship Form | ✅ Complete |
 | UC-003-07-04: Display Edit Relationship Form | ✅ Complete |
 | UC-003-07-05: Submit Edit Relationship Form | ✅ Complete |
-| UC-003-07-06: Delete Relationship | 🔲 Not Started |
-| UC-003-07-07: Apply Relationship Filter | 🔲 Not Started |
-| UC-003-07-08: Clear Relationship Filter | 🔲 Not Started |
-| UC-003-07-09: Apply Relationship Sort | 🔲 Not Started |
-| UC-003-07-10: Clear Relationship Sort | 🔲 Not Started |
+| UC-003-07-06: Delete Relationship | ✅ Complete |
+| UC-003-07-07: Apply Relationship Filter | ✅ Complete |
+| UC-003-07-08: Clear Relationship Filter | ✅ Complete |
+| UC-003-07-09: Apply Relationship Sort | ✅ Complete |
+| UC-003-07-10: Clear Relationship Sort | ✅ Complete |
 
 ---
 
@@ -587,22 +587,22 @@
 
 ## UC-003-07-06: Delete Relationship
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-07 - Build Relationships Between People
 
 **Description:** Delete relationship with modal confirmation.
 
 **Implementation Tasks:**
-- [ ] Implement `GET /persons/{personId}/relationships/{id}/delete` endpoint (confirmation modal)
-- [ ] Add `Templates.personRelationship$modal_delete()` fragment method
-- [ ] Create `{#fragment id=modal_delete rendered=false}` with:
+- [x] Implement `GET /persons/{personId}/relationships/{id}/delete` endpoint (confirmation modal)
+- [x] Add `Templates.personRelationship$modal_delete()` fragment method (already exists)
+- [x] Create `{#fragment id=modal_delete rendered=false}` with:
   - Warning message displaying related person name and relationship type
-  - Delete and Cancel buttons
-- [ ] Implement `DELETE /persons/{personId}/relationships/{id}` endpoint with `@Transactional`
-- [ ] Add `Templates.personRelationship$modal_delete_success()` fragment method
-- [ ] Create `{#fragment id=modal_delete_success rendered=false}` with:
+  - Delete and Cancel buttons (already exists)
+- [x] Implement `DELETE /persons/{personId}/relationships/{id}` endpoint with `@Transactional`
+- [x] Add `Templates.personRelationship$modal_delete_success()` fragment method (already exists)
+- [x] Create `{#fragment id=modal_delete_success rendered=false}` with:
   - `hx-on::load` to close modal
-  - OOB swap to remove row (using `<template>` wrapper)
+  - OOB swap to remove row (using `<template>` wrapper) (already exists)
 
 **Endpoints:**
 | Method | Path | Description |
@@ -612,101 +612,104 @@
 
 **Test Cases:** TC-003-07-013, TC-003-07-014, TC-003-07-015
 
-**Test Results:**
-- Test ID: TC-003-07-013, TC-003-07-014, TC-003-07-015
-- Status: 🔲 Not Tested
-- Notes:
+**Test Results (2026-01-01):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-07-013 | ✅ PASS | Modal displays with title "Delete Relationship", warning "Are you sure you want to remove the relationship with Ms Rosa Luxemburg (Friend)?", Delete and Cancel buttons available |
+| TC-003-07-014 | ✅ PASS | Relationship deleted (Ms Rosa Luxemburg, Friend), modal closed automatically, row removed from table via OOB swap |
+| TC-003-07-015 | ✅ PASS | Modal closed after Cancel click, relationship still exists in table |
 
 ---
 
 ## UC-003-07-07: Apply Relationship Filter
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-07 - Build Relationships Between People
 
 **Description:** Filter relationships list by related person name or relationship type.
 
 **Implementation Tasks:**
-- [ ] Add `@QueryParam("filter")` to list endpoint
-- [ ] Implement filter logic in `PersonRelationshipRepository.findBySourcePersonWithFilter()` method
+- [x] Add `@QueryParam("filter")` to list endpoint (implemented in UC-003-07-01)
+- [x] Implement filter logic in `PersonRelationshipRepository.findBySourcePersonWithFilter()` method (implemented in UC-003-07-01)
   - Match relatedPerson.firstName, relatedPerson.lastName, or relationship.description (case-insensitive, contains)
-- [ ] Add filter bar HTML to personRelationship.html
+- [x] Add filter bar HTML to personRelationship.html (implemented in UC-003-07-01)
   - Search input with debounce (300ms via `hx-trigger="input changed delay:300ms"`)
   - Use `hx-push-url="true"` to update URL
   - Use `hx-include="closest form"` for including sort params
 
 **Test Cases:** TC-003-07-016, TC-003-07-017
 
-**Test Results:**
-- Test ID: TC-003-07-016, TC-003-07-017
-- Status: 🔲 Not Tested
-- Notes:
+**Test Results (2026-01-01):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-07-016 | ✅ PASS | Filter "Rosa" shows only Rosa Luxemburg, URL updated with filter param |
+| TC-003-07-017 | ✅ PASS | Filter "ZZZZNONEXISTENT" shows "No relationships match the filter criteria." |
 
 ---
 
 ## UC-003-07-08: Clear Relationship Filter
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-07 - Build Relationships Between People
 
 **Description:** Clear filter and display all relationships for the person.
 
 **Implementation Tasks:**
-- [ ] Add Clear button as link to `/persons/{personId}/relationships` (no filter param, preserves sort if any)
-- [ ] System returns full list with current or default sort
+- [x] Add Clear button as link to `/persons/{personId}/relationships` (implemented in UC-003-07-01)
+- [x] System returns full list with current or default sort
 
 **Test Cases:** TC-003-07-018
 
-**Test Results:**
-- Test ID: TC-003-07-018
-- Status: 🔲 Not Tested
-- Notes:
+**Test Results (2026-01-01):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-07-018 | ✅ PASS | Clear button resets filter, all relationships displayed, filter field cleared |
 
 ---
 
 ## UC-003-07-09: Apply Relationship Sort
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-07 - Build Relationships Between People
 
 **Description:** Sort relationships list by selected field.
 
 **Implementation Tasks:**
-- [ ] Add `@QueryParam("sortField")` and `@QueryParam("sortDir")` to list endpoint
-- [ ] Implement sort logic in `PersonRelationshipRepository.findBySourcePersonWithFilter()` and `buildOrderBy()` methods
+- [x] Add `@QueryParam("sortField")` and `@QueryParam("sortDir")` to list endpoint (implemented in UC-003-07-01)
+- [x] Implement sort logic in `PersonRelationshipRepository.findBySourcePersonWithFilter()` and `buildOrderBy()` methods (implemented in UC-003-07-01)
   - Support fields: firstName (relatedPerson), lastName (relatedPerson), relationship (description)
   - Support directions: asc, desc
-- [ ] Add sort dropdowns to filter bar
+- [x] Add sort dropdowns to filter bar (implemented in UC-003-07-01)
   - Sort field select (Last Name, First Name, Relationship)
   - Sort direction select (Ascending, Descending)
-- [ ] Use `hx-push-url="true"` to update URL with sort params
+- [x] Use `hx-push-url="true"` to update URL with sort params (implemented in UC-003-07-01)
 
 **Test Cases:** TC-003-07-019
 
-**Test Results:**
-- Test ID: TC-003-07-019
-- Status: 🔲 Not Tested
-- Notes:
+**Test Results (2026-01-01):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-07-019 | ✅ PASS | Sort by Relationship descending: Friend before Colleague, URL updated with sort params |
 
 ---
 
 ## UC-003-07-10: Clear Relationship Sort
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-003-07 - Build Relationships Between People
 
 **Description:** Clear custom sort and restore default order.
 
 **Implementation Tasks:**
-- [ ] Clear button links to `/persons/{personId}/relationships` (clears sort params, preserves filter if any)
-- [ ] System applies default sort (relatedPerson.lastName, relatedPerson.firstName ASC)
+- [x] Clear button links to `/persons/{personId}/relationships` (implemented in UC-003-07-01)
+- [x] System applies default sort (relatedPerson.lastName, relatedPerson.firstName ASC)
 
 **Test Cases:** TC-003-07-020
 
-**Test Results:**
-- Test ID: TC-003-07-020
-- Status: 🔲 Not Tested
-- Notes:
+**Test Results (2026-01-01):**
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-003-07-020 | ✅ PASS | Clear button resets sort, default order restored (Engels before Luxemburg by lastName), dropdowns reset |
 
 ---
 

@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -348,6 +349,62 @@ public class PersonRelationshipResource {
             "Relationship updated successfully.",
             existingRelationship
         )).build();
+    }
+
+    @GET
+    @Path("/{id}/delete")
+    @Produces(MediaType.TEXT_HTML)
+    public Response deleteConfirm(
+            @PathParam("personId") Long personId,
+            @PathParam("id") Long id) {
+
+        Person sourcePerson = personRepository.findById(personId);
+        if (sourcePerson == null) {
+            return Response.seeOther(URI.create("/persons")).build();
+        }
+
+        PersonRelationship relationship = personRelationshipRepository.findById(id);
+        if (relationship == null || !relationship.sourcePerson.id.equals(personId)) {
+            return Response.ok(Templates.personRelationship$modal_delete(
+                sourcePerson,
+                new PersonRelationship(),
+                "Relationship not found."
+            )).build();
+        }
+
+        return Response.ok(Templates.personRelationship$modal_delete(
+            sourcePerson,
+            relationship,
+            null
+        )).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    @Transactional
+    public Response delete(
+            @PathParam("personId") Long personId,
+            @PathParam("id") Long id) {
+
+        Person sourcePerson = personRepository.findById(personId);
+        if (sourcePerson == null) {
+            return Response.seeOther(URI.create("/persons")).build();
+        }
+
+        PersonRelationship relationship = personRelationshipRepository.findById(id);
+        if (relationship == null || !relationship.sourcePerson.id.equals(personId)) {
+            return Response.ok(Templates.personRelationship$modal_delete(
+                sourcePerson,
+                new PersonRelationship(),
+                "Relationship not found."
+            )).build();
+        }
+
+        Long deletedId = relationship.id;
+        personRelationshipRepository.delete(relationship);
+
+        return Response.ok(Templates.personRelationship$modal_delete_success(deletedId)).build();
     }
 
     @GET
