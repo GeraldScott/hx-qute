@@ -387,6 +387,36 @@
 
 ---
 
+### TC-003-04-004: Person Edit Non-Existent
+**Parent Use Case:** [UC-003-03-01: Display Edit Form](use-cases.md#uc-003-03-01-display-edit-form)
+
+**Objective:** Verify editing non-existent person shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate directly to `/persons/99999/edit` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Person not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
+### TC-003-04-005: Person Delete Non-Existent
+**Parent Use Case:** [UC-003-04-01: Delete Person](use-cases.md#uc-003-04-01-delete-person)
+
+**Objective:** Verify deleting non-existent person shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Attempt DELETE request to `/persons/99999` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Person not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
 # US-003-05: Filter People
 
 ### TC-003-05-001: Persons Filter by Name
@@ -541,6 +571,8 @@
 | TC-003-04-001 | Person Delete Modal | UC-003-04-01 | [ ] | |
 | TC-003-04-002 | Person Delete Success | UC-003-04-01 | [ ] | |
 | TC-003-04-003 | Person Delete Cancel | UC-003-04-01 | [ ] | |
+| TC-003-04-004 | Person Edit Non-Existent | UC-003-03-01 | [ ] | EntityNotFoundException |
+| TC-003-04-005 | Person Delete Non-Existent | UC-003-04-01 | [ ] | EntityNotFoundException |
 | TC-003-05-001 | Persons Filter Name | UC-003-05-01 | [ ] | |
 | TC-003-05-002 | Persons Filter No Results | UC-003-05-01 | [ ] | |
 | TC-003-05-003 | Persons Filter Clear | UC-003-05-02 | [ ] | |
@@ -558,6 +590,6 @@
 | US-003-01: View Persons List | UC-003-01-01 | TC-003-01-001, TC-003-01-002, TC-003-01-003, TC-003-01-004 |
 | US-003-02: Create New Person | UC-003-02-01, UC-003-02-02 | TC-003-02-001, TC-003-02-002, TC-003-02-003, TC-003-02-004, TC-003-02-005, TC-003-02-006, TC-003-02-007 |
 | US-003-03: Edit Existing Person | UC-003-03-01, UC-003-03-02, UC-003-03-03 | TC-003-03-001, TC-003-03-002, TC-003-03-003, TC-003-03-004 |
-| US-003-04: Delete Person | UC-003-04-01 | TC-003-04-001, TC-003-04-002, TC-003-04-003 |
+| US-003-04: Delete Person | UC-003-04-01 | TC-003-04-001, TC-003-04-002, TC-003-04-003, TC-003-04-004, TC-003-04-005 |
 | US-003-05: Filter People | UC-003-05-01, UC-003-05-02 | TC-003-05-001, TC-003-05-002, TC-003-05-003, TC-003-05-004 |
 | US-003-06: Sort People | UC-003-06-01, UC-003-06-02 | TC-003-06-001, TC-003-06-002, TC-003-06-003 |

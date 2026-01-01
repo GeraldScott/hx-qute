@@ -1,5 +1,8 @@
 package io.archton.scaffold.error;
 
+import io.archton.scaffold.service.exception.EntityNotFoundException;
+import io.archton.scaffold.service.exception.ReferentialIntegrityException;
+import io.archton.scaffold.service.exception.UniqueConstraintException;
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import jakarta.inject.Inject;
@@ -42,7 +45,19 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
         String statusText;
         String message;
 
-        if (exception instanceof WebApplicationException wae) {
+        if (exception instanceof EntityNotFoundException enf) {
+            status = 404;
+            statusText = "Not Found";
+            message = enf.getMessage();
+        } else if (exception instanceof UniqueConstraintException uce) {
+            status = 409;
+            statusText = "Conflict";
+            message = uce.getMessage();
+        } else if (exception instanceof ReferentialIntegrityException rie) {
+            status = 409;
+            statusText = "Conflict";
+            message = rie.getMessage();
+        } else if (exception instanceof WebApplicationException wae) {
             Response response = wae.getResponse();
             status = response.getStatus();
             statusText = Response.Status.fromStatusCode(status).getReasonPhrase();

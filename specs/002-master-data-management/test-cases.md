@@ -383,6 +383,57 @@
 
 ---
 
+### TC-002-04-004: Gender Delete Referential Integrity
+**Parent Use Case:** [UC-002-04-01: Delete Gender](use-cases.md#uc-002-04-01-delete-gender)
+
+**Objective:** Verify gender in use by Person cannot be deleted (ReferentialIntegrityException).
+
+**Precondition:** Gender record exists and is referenced by at least one Person
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/genders`
+3. Click Delete button for a gender that is in use
+4. Click Delete button in confirmation modal
+
+**Expected:**
+- [ ] Error message displayed: "Cannot delete: Gender is in use by X person(s)."
+- [ ] Modal remains open with error
+- [ ] Gender record NOT deleted
+- [ ] HTTP status 409 Conflict returned
+
+---
+
+### TC-002-04-005: Gender Edit Non-Existent
+**Parent Use Case:** [UC-002-03-01: Display Edit Form](use-cases.md#uc-002-03-01-display-edit-form)
+
+**Objective:** Verify editing non-existent gender shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate directly to `/genders/99999/edit` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Gender not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
+### TC-002-04-006: Gender Delete Non-Existent
+**Parent Use Case:** [UC-002-04-01: Delete Gender](use-cases.md#uc-002-04-01-delete-gender)
+
+**Objective:** Verify deleting non-existent gender shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Attempt DELETE request to `/genders/99999` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Gender not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
 # US-002-05: View Title Master Data
 
 ### TC-002-05-001: Title Page UI Elements
@@ -749,6 +800,57 @@
 - [ ] Modal closes
 - [ ] Entry still exists in list
 - [ ] No changes to data
+
+---
+
+### TC-002-08-004: Title Delete Referential Integrity
+**Parent Use Case:** [UC-002-08-01: Delete Title](use-cases.md#uc-002-08-01-delete-title)
+
+**Objective:** Verify title in use by Person cannot be deleted (ReferentialIntegrityException).
+
+**Precondition:** Title record exists and is referenced by at least one Person
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/titles`
+3. Click Delete button for a title that is in use
+4. Click Delete button in confirmation modal
+
+**Expected:**
+- [ ] Error message displayed: "Cannot delete: Title is in use by X person(s)."
+- [ ] Modal remains open with error
+- [ ] Title record NOT deleted
+- [ ] HTTP status 409 Conflict returned
+
+---
+
+### TC-002-08-005: Title Edit Non-Existent
+**Parent Use Case:** [UC-002-07-01: Display Edit Form](use-cases.md#uc-002-07-01-display-edit-form)
+
+**Objective:** Verify editing non-existent title shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate directly to `/titles/99999/edit` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Title not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
+### TC-002-08-006: Title Delete Non-Existent
+**Parent Use Case:** [UC-002-08-01: Delete Title](use-cases.md#uc-002-08-01-delete-title)
+
+**Objective:** Verify deleting non-existent title shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Attempt DELETE request to `/titles/99999` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Title not found"
+- [ ] HTTP status 404 Not Found returned
 
 ---
 
@@ -1121,6 +1223,36 @@
 
 ---
 
+### TC-002-12-004: Relationship Edit Non-Existent
+**Parent Use Case:** [UC-002-11-01: Display Edit Form](use-cases.md#uc-002-11-01-display-edit-form)
+
+**Objective:** Verify editing non-existent relationship shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate directly to `/relationships/99999/edit` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Relationship not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
+### TC-002-12-005: Relationship Delete Non-Existent
+**Parent Use Case:** [UC-002-12-01: Delete Relationship](use-cases.md#uc-002-12-01-delete-relationship)
+
+**Objective:** Verify deleting non-existent relationship shows error (EntityNotFoundException).
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Attempt DELETE request to `/relationships/99999` (non-existent ID)
+
+**Expected:**
+- [ ] Error displayed: "Relationship not found"
+- [ ] HTTP status 404 Not Found returned
+
+---
+
 ## Test Summary
 
 ### Gender Tests
@@ -1145,6 +1277,9 @@
 | TC-002-04-001 | Gender Delete Confirm Modal | UC-002-04-01 | [ ] | |
 | TC-002-04-002 | Gender Delete Success | UC-002-04-01 | [ ] | |
 | TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | [ ] | |
+| TC-002-04-004 | Gender Delete Referential Integrity | UC-002-04-01 | [ ] | ReferentialIntegrityException |
+| TC-002-04-005 | Gender Edit Non-Existent | UC-002-03-01 | [ ] | EntityNotFoundException |
+| TC-002-04-006 | Gender Delete Non-Existent | UC-002-04-01 | [ ] | EntityNotFoundException |
 
 ### Title Tests
 
@@ -1168,6 +1303,9 @@
 | TC-002-08-001 | Title Delete Confirm Modal | UC-002-08-01 | [ ] | |
 | TC-002-08-002 | Title Delete Success | UC-002-08-01 | [ ] | |
 | TC-002-08-003 | Title Delete Cancel | UC-002-08-01 | [ ] | |
+| TC-002-08-004 | Title Delete Referential Integrity | UC-002-08-01 | [ ] | ReferentialIntegrityException |
+| TC-002-08-005 | Title Edit Non-Existent | UC-002-07-01 | [ ] | EntityNotFoundException |
+| TC-002-08-006 | Title Delete Non-Existent | UC-002-08-01 | [ ] | EntityNotFoundException |
 
 ### Relationship Tests
 
@@ -1191,6 +1329,8 @@
 | TC-002-12-001 | Relationship Delete Confirm Modal | UC-002-12-01 | [ ] | |
 | TC-002-12-002 | Relationship Delete Success | UC-002-12-01 | [ ] | |
 | TC-002-12-003 | Relationship Delete Cancel | UC-002-12-01 | [ ] | |
+| TC-002-12-004 | Relationship Edit Non-Existent | UC-002-11-01 | [ ] | EntityNotFoundException |
+| TC-002-12-005 | Relationship Delete Non-Existent | UC-002-12-01 | [ ] | EntityNotFoundException |
 
 ---
 
@@ -1203,7 +1343,7 @@
 | US-002-01: View Gender Master Data | UC-002-01-01 | TC-002-01-001, TC-002-01-002, TC-002-01-003, TC-002-01-004 |
 | US-002-02: Create New Gender | UC-002-02-01, UC-002-02-02 | TC-002-02-001, TC-002-02-002, TC-002-02-003, TC-002-02-004, TC-002-02-005, TC-002-02-006 |
 | US-002-03: Edit Existing Gender | UC-002-03-01, UC-002-03-02, UC-002-03-03 | TC-002-03-001, TC-002-03-002, TC-002-03-003, TC-002-03-004, TC-002-03-005 |
-| US-002-04: Delete Gender | UC-002-04-01 | TC-002-04-001, TC-002-04-002, TC-002-04-003 |
+| US-002-04: Delete Gender | UC-002-04-01 | TC-002-04-001, TC-002-04-002, TC-002-04-003, TC-002-04-004, TC-002-04-005, TC-002-04-006 |
 
 ### Title
 
@@ -1212,7 +1352,7 @@
 | US-002-05: View Title Master Data | UC-002-05-01 | TC-002-05-001, TC-002-05-002, TC-002-05-003, TC-002-05-004 |
 | US-002-06: Create New Title | UC-002-06-01, UC-002-06-02 | TC-002-06-001, TC-002-06-002, TC-002-06-003, TC-002-06-004, TC-002-06-005, TC-002-06-006 |
 | US-002-07: Edit Existing Title | UC-002-07-01, UC-002-07-02, UC-002-07-03 | TC-002-07-001, TC-002-07-002, TC-002-07-003, TC-002-07-004, TC-002-07-005 |
-| US-002-08: Delete Title | UC-002-08-01 | TC-002-08-001, TC-002-08-002, TC-002-08-003 |
+| US-002-08: Delete Title | UC-002-08-01 | TC-002-08-001, TC-002-08-002, TC-002-08-003, TC-002-08-004, TC-002-08-005, TC-002-08-006 |
 
 ### Relationship
 
@@ -1221,4 +1361,4 @@
 | US-002-09: View Relationship Master Data | UC-002-09-01 | TC-002-09-001, TC-002-09-002, TC-002-09-003, TC-002-09-004 |
 | US-002-10: Create New Relationship | UC-002-10-01, UC-002-10-02 | TC-002-10-001, TC-002-10-002, TC-002-10-003, TC-002-10-004, TC-002-10-005, TC-002-10-006 |
 | US-002-11: Edit Existing Relationship | UC-002-11-01, UC-002-11-02, UC-002-11-03 | TC-002-11-001, TC-002-11-002, TC-002-11-003, TC-002-11-004, TC-002-11-005 |
-| US-002-12: Delete Relationship | UC-002-12-01 | TC-002-12-001, TC-002-12-002, TC-002-12-003 |
+| US-002-12: Delete Relationship | UC-002-12-01 | TC-002-12-001, TC-002-12-002, TC-002-12-003, TC-002-12-004, TC-002-12-005 |
