@@ -432,3 +432,40 @@ The user stories are grouped into domain-specific features that deliver business
 
 **Priority:** Medium
 **Story Points:** 3
+
+---
+
+### US-003-07: Build relationships between people 
+**As an** authenticated user
+**I want to** connect one person to another
+**So that** I can display the nature of relationships between people
+
+**Acceptance Criteria:**
+- Link button is visible on the table of people 
+- Link button opens a new screen to show relationships between the selected person and their related people
+- I can see the related people in a table with the nature of the relationship
+- I can sort the list of related people
+- I can filter the table to restrict the rerlationships
+- I can add, edit and remove related people
+- Sorted results update the persons table
+- Sorts persist during the session
+- The sort criteria can be cleared
+
+**Priority:** Medium
+**Story Points:** 3
+
+---
+
+### US-003-08: Display a network diagram of the relationships between people 
+**As an** authenticated user
+**I want to** see a visual display of the connections between one person to another
+**So that** I can exaplore the relationships between people
+
+**Acceptance Criteria:**
+- There is a navbar entry labelled "Graph" that opens screen with an interactive network diagram of people as nodes and the relationships between them as edges
+- The Graph view uses a force-directed graph layout algorithm so that people that are more connected tend to cluster together, and I can drag people around and watch them settle back into position
+- I can right-click on a node to open a modal that displays the person's details
+- The modal has a hyperlink to the screen that manages the relationships with that person 
+
+**Priority:** Medium
+**Story Points:** 3

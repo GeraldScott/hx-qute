@@ -1,6 +1,6 @@
 **# HX Qute Architecture Guide
 
-A comprehensive technical reference for developing features in this Quarkus + HTMX + Qute application.
+Technical reference for developing features in this Quarkus + HTMX + Qute application.
 
 ---
 
@@ -8,18 +8,17 @@ A comprehensive technical reference for developing features in this Quarkus + HT
 
 1. [Overview](#1-overview)
 2. [Technology Stack](#2-technology-stack)
-3. [Project Structure](#3-project-structure)
-4. [Database Layer](#4-database-layer)
-5. [Entity Layer](#5-entity-layer)
-6. [Repository Layer](#6-repository-layer)
-7. [Service Layer](#7-service-layer)
-8. [Resource Layer](#8-resource-layer)
-9. [Template System](#9-template-system)
-10. [HTMX Integration](#10-htmx-integration)
-11. [Creating New Entities - Complete Checklist](#11-creating-new-entities---complete-checklist)
-12. [Testing Patterns](#12-testing-patterns)
-13. [Configuration Reference](#13-configuration-reference)
-14. [Anti-Patterns](#14-anti-patterns)
+3. [Database Layer](#3-database-layer)
+4. [Entity Layer](#4-entity-layer)
+5. [Repository Layer](#5-repository-layer)
+6. [Service Layer](#6-service-layer)
+7. [Resource Layer](#7-resource-layer)
+8. [Template System](#8-template-system)
+9. [HTMX Integration](#9-htmx-integration)
+10. [Creating New Entities - Complete Checklist](#10-creating-new-entities---complete-checklist)
+11. [Testing Patterns](#11-testing-patterns)
+12. [Configuration Reference](#12-configuration-reference)
+13. [Anti-Patterns](#13-anti-patterns)
 
 ---
 
@@ -93,110 +92,9 @@ flowchart TB
 
 ---
 
-## 3. Project Structure
+## 3. Database Layer
 
-```
-src/main/java/com/example/app/
-├── entity/                    # JPA Entities (POJOs)
-│   ├── Category.java          # Lookup/reference entity
-│   ├── Item.java              # Main entity with relationships
-│   └── UserLogin.java         # Security entity
-├── repository/                # PanacheRepository implementations
-│   ├── CategoryRepository.java
-│   ├── ItemRepository.java
-│   └── UserLoginRepository.java
-├── service/                   # Business logic and validation
-│   ├── CategoryService.java
-│   ├── ItemService.java
-│   └── exception/
-│       ├── ValidationException.java
-│       ├── UniqueConstraintException.java
-│       └── ReferentialIntegrityException.java
-├── router/                    # JAX-RS Resources (Controllers)
-│   ├── CategoryResource.java
-│   ├── ItemResource.java
-│   └── AuthResource.java
-└── filter/                    # HTTP Filters
-    └── SecurityFilter.java
-
-src/main/resources/
-├── templates/
-│   ├── base.html              # Base layout
-│   ├── CategoryResource/
-│   │   └── category.html      # Full page + fragments
-│   └── ItemResource/
-│       └── item.html
-├── db/migration/              # Flyway migrations
-│   ├── V001__Create_user_login_table.sql
-│   ├── V002__Create_category_table.sql
-│   └── V003__Create_item_table.sql
-└── application.properties
-```
-
-### 3.1 File Naming Conventions
-
-| Layer | Naming Pattern | Location |
-|-------|----------------|----------|
-| Entity | `{EntityName}.java` | `src/main/java/.../entity/` |
-| Repository | `{EntityName}Repository.java` | `src/main/java/.../repository/` |
-| Service | `{EntityName}Service.java` | `src/main/java/.../service/` |
-| Resource | `{EntityName}Resource.java` | `src/main/java/.../router/` |
-| Template | `{entityname}.html` | `src/main/resources/templates/{EntityName}Resource/` |
-| Migration | `V{NNN}__{description}.sql` | `src/main/resources/db/migration/` |
-
-**Examples for a `Person` entity:**
-
-| Layer | File Name | Full Path |
-|-------|-----------|-----------|
-| Entity | `Person.java` | `src/main/java/.../entity/Person.java` |
-| Repository | `PersonRepository.java` | `src/main/java/.../repository/PersonRepository.java` |
-| Service | `PersonService.java` | `src/main/java/.../service/PersonService.java` |
-| Resource | `PersonResource.java` | `src/main/java/.../router/PersonResource.java` |
-| Template | `person.html` | `src/main/resources/templates/PersonResource/person.html` |
-| Migration | `V004__Create_person_table.sql` | `src/main/resources/db/migration/V004__Create_person_table.sql` |
-
-**Notes:**
-- Entity names use PascalCase (e.g., `UserLogin`, `OrderItem`)
-- Template filenames use lowercase (e.g., `userlogin.html`, `orderitem.html`)
-- Template directories match the Resource class name exactly
-- Migration version numbers are zero-padded to 3 digits for proper ordering
-
-### 3.2 Fragment Naming Conventions
-
-Qute fragments use `{#fragment id=...}` in templates and are accessed via `$` notation in Java:
-
-| Fragment ID | Java Method | Purpose |
-|-------------|-------------|---------|
-| `{#fragment id=table}` | `Templates.entity$table(...)` | Data table partial |
-| `{#fragment id=modal_create}` | `Templates.entity$modal_create(...)` | Create form modal |
-| `{#fragment id=modal_edit}` | `Templates.entity$modal_edit(...)` | Edit form modal |
-| `{#fragment id=modal_delete}` | `Templates.entity$modal_delete(...)` | Delete confirmation modal |
-| `{#fragment id=modal_success}` | `Templates.entity$modal_success(...)` | Success message with OOB update |
-| `{#fragment id=modal_delete_success}` | `Templates.entity$modal_delete_success(...)` | Delete success with OOB row removal |
-
-**Pattern:** `{#fragment id=name}` → `Templates.{templatefile}${fragmentid}(...)`
-
-**Example for `person.html`:**
-
-```java
-// In PersonResource.java
-@CheckedTemplate
-public static class Templates {
-    public static native TemplateInstance person(...);                    // Full page
-    public static native TemplateInstance person$table(...);              // {#fragment id=table}
-    public static native TemplateInstance person$modal_create(...);       // {#fragment id=modal_create}
-    public static native TemplateInstance person$modal_edit(...);         // {#fragment id=modal_edit}
-    public static native TemplateInstance person$modal_delete(...);       // {#fragment id=modal_delete}
-    public static native TemplateInstance person$modal_success(...);      // {#fragment id=modal_success}
-    public static native TemplateInstance person$modal_delete_success(...); // {#fragment id=modal_delete_success}
-}
-```
-
----
-
-## 4. Database Layer
-
-### 4.1 Migration Strategy
+### 3.1 Migration Strategy
 
 Flyway manages schema evolution with versioned SQL scripts:
 
@@ -208,7 +106,7 @@ Flyway manages schema evolution with versioned SQL scripts:
 - Modify existing migrations because this is a prototype application
 - Use `BIGSERIAL` for primary keys with `GenerationType.IDENTITY` in JPA. Do NOT use sequences with Panache entities.
 
-### 4.2 PostgreSQL-Specific Patterns
+### 3.2 PostgreSQL-Specific Patterns
 
 ```sql
 -- Lookup/reference table pattern
@@ -240,16 +138,16 @@ CREATE TABLE item (
 
 ---
 
-## 5. Entity Layer
+## 4. Entity Layer
 
-### 5.1 Entity Pattern (Panache Public Fields)
+### 4.1 Entity Pattern
 
 Entities use **public fields** following the Quarkus Panache recommendation. Panache automatically generates getters and setters at bytecode level during build time, providing proper encapsulation at runtime without boilerplate code.
 
 **Why public fields are safe in Quarkus:**
 - Quarkus builds in a "closed world" where all code is known at compile time
 - Hibernate needs getter/setter interception for lazy loading and dirty tracking
-- Panache generates these accessors automatically—when code reads `entity.field`, it actually calls `getField()`
+- Panache generates these accessors automatically
 - You only write explicit accessors when you need custom logic (e.g., transformations)
 
 Entities contain NO business logic or data access methods. This follows the Repository pattern where entities are simple data containers.
@@ -307,7 +205,7 @@ public class Category {
 }
 ```
 
-### 5.2 Entity with Foreign Key Relationships
+### 4.2 Entity with Foreign Key Relationships
 
 ```java
 @Entity
@@ -336,7 +234,7 @@ public class Item {
 }
 ```
 
-### 5.3 UserLogin Entity (Security)
+### 4.3 UserLogin Entity (Security)
 
 ```java
 @Entity
@@ -366,9 +264,9 @@ public class UserLogin {
 
 ---
 
-## 6. Repository Layer
+## 5. Repository Layer
 
-### 6.1 PanacheRepository Pattern
+### 5.1 PanacheRepository Pattern
 
 Repositories implement `PanacheRepository<Entity, ID>` and contain all data access logic. This separates data access concerns from entities, enabling better testability and clearer code organization.
 
@@ -435,7 +333,7 @@ public class CategoryRepository implements PanacheRepository<Category> {
 }
 ```
 
-### 6.2 Repository with Referential Integrity Queries
+### 5.2 Repository with Referential Integrity Queries
 
 For entities that are referenced by other entities, the repository should include methods to check if the entity is in use. Inject the referencing repository and use Panache's `count()` method:
 
@@ -465,11 +363,14 @@ public class CategoryRepository implements PanacheRepository<Category> {
 }
 ```
 
-### 6.3 Repository with Search and Foreign Key Validation
+### 5.3 Repository with Search and Foreign Key Validation
 
 ```java
 @ApplicationScoped
 public class ItemRepository implements PanacheRepository<Item> {
+
+    @Inject
+    CategoryRepository categoryRepository;
 
     /**
      * Find by unique name (case-insensitive).
@@ -522,15 +423,12 @@ public class ItemRepository implements PanacheRepository<Item> {
      * Validate that a foreign key reference exists.
      */
     public boolean categoryExists(Long categoryId) {
-        return getEntityManager()
-            .createQuery("SELECT COUNT(c) FROM Category c WHERE c.id = :id", Long.class)
-            .setParameter("id", categoryId)
-            .getSingleResult() > 0;
+        return categoryRepository.findByIdOptional(categoryId).isPresent();
     }
 }
 ```
 
-### 6.4 Standard Repository Methods (Inherited from PanacheRepository)
+### 5.4 Standard Repository Methods
 
 `PanacheRepository` provides these methods automatically:
 
@@ -551,231 +449,103 @@ public class ItemRepository implements PanacheRepository<Item> {
 
 ---
 
-## 7. Service Layer
+## 6. Service Layer
 
-### 7.1 Service Pattern
+### 6.0 When to Use a Service Layer
 
-Services contain business logic and validation. They orchestrate repository calls and enforce constraints before data is persisted.
+The service layer is **optional per entity**, not mandatory. Use it to implement business rules and complex validation logic.
+
+#### When a Service Layer is Required
+
+| Scenario | Example |
+|----------|---------|
+| **Security-sensitive operations** | Password hashing with BCrypt, token generation |
+| **Multi-entity transactions** | Creating an order with line items atomically |
+| **Complex business rules** | Discount calculations, eligibility checks |
+| **Cross-cutting orchestration** | Operations requiring multiple repository calls |
+| **Reusable business operations** | Logic called from multiple resources |
+
+#### When a Service Layer is Unnecessary
+
+| Scenario | Better Approach |
+|----------|-----------------|
+| **Simple CRUD** | Resource → Repository directly |
+| **Lookup tables** (Gender, Title, Status) | Resource → Repository directly |
+| **Basic field validation** | Bean Validation (`@Valid`) or inline in Resource |
+| **Single repository calls** | No service indirection needed |
+
+#### Decision Guide
+
+```
+Does the operation involve:
+├─ Password hashing or security tokens? → Use Service
+├─ Multiple repository calls in one transaction? → Use Service
+├─ Complex business rules beyond validation? → Use Service
+├─ Just CRUD with field validation? → Skip Service (Resource → Repository)
+└─ Lookup table management? → Skip Service (Resource → Repository)
+```
+
+### 6.1 Service Example: Security-Sensitive Operations
+
+This example shows a justified service layer for user authentication—password hashing requires BCrypt, which is security-sensitive logic that doesn't belong in a Resource.
 
 ```java
 package com.example.app.service;
 
-import com.example.app.entity.Category;
-import com.example.app.repository.CategoryRepository;
+import com.example.app.entity.UserLogin;
+import com.example.app.repository.UserLoginRepository;
 import com.example.app.service.exception.UniqueConstraintException;
-import com.example.app.service.exception.ReferentialIntegrityException;
-import com.example.app.service.exception.EntityNotFoundException;
+import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
-public class CategoryService {
+public class UserLoginService {
 
     @Inject
-    CategoryRepository categoryRepository;
+    UserLoginRepository userLoginRepository;
 
     /**
-     * List all categories ordered by code.
-     */
-    public List<Category> listAll() {
-        return categoryRepository.listAllOrdered();
-    }
-
-    /**
-     * Find category by ID.
-     */
-    public Optional<Category> findById(Long id) {
-        return categoryRepository.findByIdOptional(id);
-    }
-
-    /**
-     * Create a new category with constraint validation.
+     * Create a new user with hashed password.
+     * Password is hashed using BCrypt with cost factor 12.
      *
-     * @throws UniqueConstraintException if code or name already exists
+     * @throws UniqueConstraintException if email already exists
      */
     @Transactional
-    public Category create(String code, String name, String createdBy) {
-        // Validate unique constraints BEFORE attempting to persist
-        validateUniqueConstraintsForCreate(code, name);
+    public UserLogin create(String email, String plainPassword, String role) {
+        String normalizedEmail = email.toLowerCase().trim();
 
-        Category category = new Category();
-        category.code = code.toUpperCase().trim();
-        category.name = name.trim();
-        category.createdBy = createdBy;
-        category.updatedBy = createdBy;
+        // Validate unique constraint
+        if (userLoginRepository.emailExists(normalizedEmail)) {
+            throw new UniqueConstraintException("email", normalizedEmail,
+                "A user with email '" + normalizedEmail + "' already exists.");
+        }
 
-        categoryRepository.persist(category);
-        return category;
+        UserLogin user = new UserLogin();
+        user.email = normalizedEmail;
+        user.password = BcryptUtil.bcryptHash(plainPassword, 12);  // Security-sensitive!
+        user.role = role;
+
+        userLoginRepository.persist(user);
+        return user;
     }
 
     /**
-     * Update an existing category with constraint validation.
-     *
-     * @throws EntityNotFoundException if category not found
-     * @throws UniqueConstraintException if code or name conflicts with another record
+     * Check if email exists.
      */
-    @Transactional
-    public Category update(Long id, String code, String name, String updatedBy) {
-        Category category = categoryRepository.findByIdOptional(id)
-            .orElseThrow(() -> new EntityNotFoundException("Category", id));
-
-        // Validate unique constraints, excluding current entity
-        validateUniqueConstraintsForUpdate(id, code, name);
-
-        category.code = code.toUpperCase().trim();
-        category.name = name.trim();
-        category.updatedBy = updatedBy;
-
-        // No explicit persist needed - entity is managed
-        return category;
-    }
-
-    /**
-     * Delete a category with referential integrity check.
-     *
-     * @throws EntityNotFoundException if category not found
-     * @throws ReferentialIntegrityException if category is referenced by Item records
-     */
-    @Transactional
-    public void delete(Long id) {
-        Category category = categoryRepository.findByIdOptional(id)
-            .orElseThrow(() -> new EntityNotFoundException("Category", id));
-
-        // Check referential integrity BEFORE attempting to delete
-        validateReferentialIntegrityForDelete(id);
-
-        categoryRepository.delete(category);
-    }
-
-    // ========== Constraint Validation Methods ==========
-
-    private void validateUniqueConstraintsForCreate(String code, String name) {
-        if (categoryRepository.existsByCode(code.toUpperCase().trim())) {
-            throw new UniqueConstraintException("code", code,
-                "A category with code '" + code + "' already exists.");
-        }
-
-        if (categoryRepository.existsByName(name.trim())) {
-            throw new UniqueConstraintException("name", name,
-                "A category with name '" + name + "' already exists.");
-        }
-    }
-
-    private void validateUniqueConstraintsForUpdate(Long id, String code, String name) {
-        if (categoryRepository.existsByCodeAndIdNot(code.toUpperCase().trim(), id)) {
-            throw new UniqueConstraintException("code", code,
-                "A category with code '" + code + "' already exists.");
-        }
-
-        if (categoryRepository.existsByNameAndIdNot(name.trim(), id)) {
-            throw new UniqueConstraintException("name", name,
-                "A category with name '" + name + "' already exists.");
-        }
-    }
-
-    private void validateReferentialIntegrityForDelete(Long id) {
-        if (categoryRepository.isReferencedByItem(id)) {
-            long count = categoryRepository.countItemReferences(id);
-            throw new ReferentialIntegrityException("Category", id, "Item", count,
-                "Cannot delete category: It is referenced by " + count + " item(s).");
-        }
+    public boolean emailExists(String email) {
+        return userLoginRepository.emailExists(email.toLowerCase().trim());
     }
 }
 ```
 
-### 7.2 Service with Foreign Key Validation
+**Why this warrants a service:**
+- BCrypt password hashing is security-sensitive (belongs in service, not resource)
+- Password validation rules may be complex (length, complexity requirements)
+- User creation is a business operation, not just data storage
 
-For services that create/update entities with foreign key relationships:
-
-```java
-@ApplicationScoped
-public class ItemService {
-
-    @Inject
-    ItemRepository itemRepository;
-
-    @Inject
-    CategoryRepository categoryRepository;
-
-    /**
-     * Create a new item with constraint validation.
-     *
-     * @throws UniqueConstraintException if name already exists
-     * @throws ReferentialIntegrityException if category doesn't exist
-     */
-    @Transactional
-    public Item create(String name, String description, Long categoryId, String createdBy) {
-        // 1. Validate unique constraints
-        validateUniqueConstraintsForCreate(name);
-
-        // 2. Validate foreign key references exist
-        Category category = validateAndFetchCategory(categoryId);
-
-        // 3. Create entity
-        Item item = new Item();
-        item.name = name.trim();
-        item.description = description;
-        item.category = category;
-        item.createdBy = createdBy;
-        item.updatedBy = createdBy;
-
-        itemRepository.persist(item);
-        return item;
-    }
-
-    /**
-     * Update an existing item with constraint validation.
-     */
-    @Transactional
-    public Item update(Long id, String name, String description, Long categoryId, String updatedBy) {
-        Item item = itemRepository.findByIdOptional(id)
-            .orElseThrow(() -> new EntityNotFoundException("Item", id));
-
-        // 1. Validate unique constraints (excluding current entity)
-        validateUniqueConstraintsForUpdate(id, name);
-
-        // 2. Validate foreign key references if changed
-        if (!item.category.id.equals(categoryId)) {
-            item.category = validateAndFetchCategory(categoryId);
-        }
-
-        // 3. Update fields
-        item.name = name.trim();
-        item.description = description;
-        item.updatedBy = updatedBy;
-
-        return item;
-    }
-
-    // ========== Validation Helper Methods ==========
-
-    private void validateUniqueConstraintsForCreate(String name) {
-        if (itemRepository.existsByName(name)) {
-            throw new UniqueConstraintException("name", name,
-                "An item with name '" + name + "' already exists.");
-        }
-    }
-
-    private void validateUniqueConstraintsForUpdate(Long id, String name) {
-        if (itemRepository.existsByNameAndIdNot(name, id)) {
-            throw new UniqueConstraintException("name", name,
-                "An item with name '" + name + "' already exists.");
-        }
-    }
-
-    private Category validateAndFetchCategory(Long categoryId) {
-        return categoryRepository.findByIdOptional(categoryId)
-            .orElseThrow(() -> new ReferentialIntegrityException(
-                "Item", null, "Category", categoryId,
-                "Invalid category selection. The selected category does not exist."));
-    }
-}
-```
-
-### 7.3 Custom Exception Classes
+### 6.2 Custom Exception Classes
 
 ```java
 package com.example.app.service.exception;
@@ -835,55 +605,19 @@ public class EntityNotFoundException extends RuntimeException {
 }
 ```
 
-### 7.4 Constraint Validation Summary
-
-| Operation | Unique Constraints | Referential Integrity |
-|-----------|-------------------|----------------------|
-| **CREATE** | Check field doesn't exist | Verify FK references exist |
-| **READ** | N/A | N/A |
-| **UPDATE** | Check field doesn't exist for OTHER records | Verify FK references exist (if changed) |
-| **DELETE** | N/A | Check no dependent records exist |
-
-### 7.5 Validation Flow Diagram
-
-```
-CREATE Operation:
-┌─────────────────┐     ┌────────────────────────┐     ┌───────────────────────┐
-│ Resource Layer  │────▶│    Service Layer       │────▶│   Repository Layer    │
-│ (HTTP Request)  │     │ 1. Unique constraints  │     │   persist(entity)     │
-└─────────────────┘     │ 2. FK reference exists │     └───────────────────────┘
-                        └────────────────────────┘
-                               │ Error?
-                               ▼
-                        ┌─────────────────────────┐
-                        │ UniqueConstraintException│
-                        │ or ReferentialIntegrity │
-                        │ Exception               │
-                        └─────────────────────────┘
-
-UPDATE Operation:
-┌─────────────────┐     ┌───────────────────────────┐     ┌───────────────────────┐
-│ Resource Layer  │────▶│      Service Layer        │────▶│   Repository Layer    │
-│ (HTTP Request)  │     │ 1. Entity exists?         │     │   (managed entity)    │
-└─────────────────┘     │ 2. Unique (excl. self)    │     └───────────────────────┘
-                        │ 3. FK references exist    │
-                        └───────────────────────────┘
-
-DELETE Operation:
-┌─────────────────┐     ┌───────────────────────────┐     ┌───────────────────────┐
-│ Resource Layer  │────▶│      Service Layer        │────▶│   Repository Layer    │
-│ (HTTP Request)  │     │ 1. Entity exists?         │     │   delete(entity)      │
-└─────────────────┘     │ 2. No dependent records?  │     └───────────────────────┘
-                        └───────────────────────────┘
-```
-
 ---
 
-## 8. Resource Layer
+## 7. Resource Layer
 
-### 8.1 Resource Pattern
+### 7.1 Resource Pattern
 
-Resources serve as controllers, handling HTTP requests and delegating to services. They return TemplateInstance for HTML responses.
+Resources serve as controllers, handling HTTP requests and returning TemplateInstance for HTML responses.
+
+**Choose your injection based on entity complexity:**
+- **Simple CRUD** (lookup tables): inject Repository directly. See [Anti-Pattern 13.4](#134-avoid-anemicpass-through-services).
+- **Complex entities** (security, transactions): inject Service. Example below.
+
+The following example shows a Resource using a Service. For simple CRUD without a service, adapt by injecting the Repository and adding `@Transactional` to mutating methods.
 
 ```java
 @Path("/categories")
@@ -891,7 +625,7 @@ Resources serve as controllers, handling HTTP requests and delegating to service
 public class CategoryResource {
 
     @Inject
-    CategoryService categoryService;
+    CategoryService categoryService;  // Use Repository directly for simple CRUD
 
     @Inject
     SecurityIdentity securityIdentity;
@@ -1027,7 +761,7 @@ public class CategoryResource {
 }
 ```
 
-### 8.2 Standard CRUD Endpoints
+### 7.2 Standard CRUD Endpoints
 
 | Method | Path | Handler | Description |
 |--------|------|---------|-------------|
@@ -1039,7 +773,7 @@ public class CategoryResource {
 | GET | `/entities/{id}/delete` | `deleteConfirm()` | Return delete confirmation modal |
 | DELETE | `/entities/{id}` | `delete()` | Execute deletion |
 
-### 8.3 Exception Handling in Resources
+### 7.3 Exception Handling in Resources
 
 ```java
 // Map service exceptions to HTTP responses
@@ -1075,9 +809,40 @@ public class ServiceExceptionMapper implements ExceptionMapper<RuntimeException>
 
 ---
 
-## 9. Template System
+## 8. Template System
 
-### 9.1 Qute Fragments for HTMX
+### 8.1 Fragment Naming Conventions
+
+Qute fragments use `{#fragment id=...}` in templates and are accessed via `$` notation in Java:
+
+| Fragment ID | Java Method | Purpose |
+|-------------|-------------|---------|
+| `{#fragment id=table}` | `Templates.entity$table(...)` | Data table partial |
+| `{#fragment id=modal_create}` | `Templates.entity$modal_create(...)` | Create form modal |
+| `{#fragment id=modal_edit}` | `Templates.entity$modal_edit(...)` | Edit form modal |
+| `{#fragment id=modal_delete}` | `Templates.entity$modal_delete(...)` | Delete confirmation modal |
+| `{#fragment id=modal_success}` | `Templates.entity$modal_success(...)` | Success message with OOB update |
+| `{#fragment id=modal_delete_success}` | `Templates.entity$modal_delete_success(...)` | Delete success with OOB row removal |
+
+**Pattern:** `{#fragment id=name}` → `Templates.{templatefile}${fragmentid}(...)`
+
+**Example for `person.html`:**
+
+```java
+// In PersonResource.java
+@CheckedTemplate
+public static class Templates {
+    public static native TemplateInstance person(...);                    // Full page
+    public static native TemplateInstance person$table(...);              // {#fragment id=table}
+    public static native TemplateInstance person$modal_create(...);       // {#fragment id=modal_create}
+    public static native TemplateInstance person$modal_edit(...);         // {#fragment id=modal_edit}
+    public static native TemplateInstance person$modal_delete(...);       // {#fragment id=modal_delete}
+    public static native TemplateInstance person$modal_success(...);      // {#fragment id=modal_success}
+    public static native TemplateInstance person$modal_delete_success(...); // {#fragment id=modal_delete_success}
+}
+```
+
+### 8.2 Qute Fragments for HTMX
 
 Templates use `{#fragment}` sections for partial responses:
 
@@ -1226,9 +991,9 @@ Templates use `{#fragment}` sections for partial responses:
 
 ---
 
-## 10. HTMX Integration
+## 9. HTMX Integration
 
-### 10.1 Core HTMX Attributes
+### 9.1 Core HTMX Attributes
 
 | Attribute | Purpose | Example |
 |-----------|---------|---------|
@@ -1242,7 +1007,7 @@ Templates use `{#fragment}` sections for partial responses:
 | `hx-trigger` | Event trigger | `hx-trigger="click"` |
 | `hx-on::event` | Inline handler | `hx-on::load="closeModal()"` |
 
-### 10.2 Modal-Based CRUD Pattern
+### 9.2 Modal-Based CRUD Pattern
 
 ```
 User clicks "Add" ──▶ GET /entities/create ──▶ Modal opens with form
@@ -1260,11 +1025,39 @@ User submits form ──▶ POST /entities ────────────�
 
 ---
 
-## 11. Creating New Entities - Complete Checklist
+## 10. Creating New Entities - Complete Checklist
 
 When creating a new data entity, follow this checklist:
 
-### 11.1 Database Layer
+### 10.0 File Naming Conventions
+
+| Layer | Naming Pattern | Location |
+|-------|----------------|----------|
+| Entity | `{EntityName}.java` | `src/main/java/.../entity/` |
+| Repository | `{EntityName}Repository.java` | `src/main/java/.../repository/` |
+| Service | `{EntityName}Service.java` | `src/main/java/.../service/` |
+| Resource | `{EntityName}Resource.java` | `src/main/java/.../router/` |
+| Template | `{entityname}.html` | `src/main/resources/templates/{EntityName}Resource/` |
+| Migration | `V{NNN}__{description}.sql` | `src/main/resources/db/migration/` |
+
+**Examples for a `Person` entity:**
+
+| Layer | File Name | Full Path |
+|-------|-----------|-----------|
+| Entity | `Person.java` | `src/main/java/.../entity/Person.java` |
+| Repository | `PersonRepository.java` | `src/main/java/.../repository/PersonRepository.java` |
+| Service | `PersonService.java` | `src/main/java/.../service/PersonService.java` |
+| Resource | `PersonResource.java` | `src/main/java/.../router/PersonResource.java` |
+| Template | `person.html` | `src/main/resources/templates/PersonResource/person.html` |
+| Migration | `V004__Create_person_table.sql` | `src/main/resources/db/migration/V004__Create_person_table.sql` |
+
+**Notes:**
+- Entity names use PascalCase (e.g., `UserLogin`, `OrderItem`)
+- Template filenames use lowercase (e.g., `userlogin.html`, `orderitem.html`)
+- Template directories match the Resource class name exactly
+- Migration version numbers are zero-padded to 3 digits for proper ordering
+
+### 10.1 Database Layer
 
 - [ ] Create Flyway migration: `VXXX__Create_entity_table.sql`
 - [ ] Define primary key with `BIGSERIAL`
@@ -1272,7 +1065,7 @@ When creating a new data entity, follow this checklist:
 - [ ] Add foreign key constraints with named constraints
 - [ ] Add audit columns (created_at, updated_at, created_by, updated_by)
 
-### 11.2 Entity Layer
+### 10.2 Entity Layer
 
 - [ ] Create entity class in `entity/` package
 - [ ] Add JPA annotations (@Entity, @Table, @Column)
@@ -1283,7 +1076,7 @@ When creating a new data entity, follow this checklist:
 - [ ] Add @PrePersist and @PreUpdate for audit timestamps
 - [ ] Only add explicit getters/setters for custom logic (e.g., transformations)
 
-### 11.3 Repository Layer
+### 10.3 Repository Layer
 
 - [ ] Create repository class implementing `PanacheRepository<Entity, Long>`
 - [ ] Add @ApplicationScoped annotation
@@ -1293,7 +1086,11 @@ When creating a new data entity, follow this checklist:
 - [ ] Implement `isReferencedByXxx` methods if entity can be referenced
 - [ ] Implement `listAllOrdered` for default listing
 
-### 11.4 Service Layer
+### 10.4 Service Layer (When Required)
+
+**Skip this section** for simple CRUD entities (lookup tables, basic entities). See [Section 6.0](#60-when-to-use-a-service-layer) for guidance.
+
+**Create a service when** the entity involves: password hashing, multi-entity transactions, complex business rules, or reusable operations.
 
 - [ ] Create service class with @ApplicationScoped
 - [ ] Inject repository and related repositories
@@ -1304,20 +1101,22 @@ When creating a new data entity, follow this checklist:
 - [ ] Implement `delete()` with referential integrity validation
 - [ ] Add @Transactional to write methods
 
-### 11.5 Resource Layer
+### 10.5 Resource Layer
 
 - [ ] Create resource class with @Path
 - [ ] Add security annotations (@RolesAllowed)
+- [ ] Inject either **Service** (complex entities) or **Repository** (simple CRUD)
 - [ ] Define @CheckedTemplate inner class with all fragment methods
 - [ ] Implement list() endpoint (full page + HTMX fragment)
 - [ ] Implement createForm() endpoint
-- [ ] Implement create() endpoint with exception handling
+- [ ] Implement create() endpoint with validation (inline for simple CRUD, or via service)
 - [ ] Implement editForm() endpoint
-- [ ] Implement update() endpoint with exception handling
+- [ ] Implement update() endpoint with validation
 - [ ] Implement deleteConfirm() endpoint
-- [ ] Implement delete() endpoint with exception handling
+- [ ] Implement delete() endpoint with referential integrity check
+- [ ] Add @Transactional to mutating methods (if using repository directly)
 
-### 11.6 Template Layer
+### 10.6 Template Layer
 
 - [ ] Create template file: `templates/EntityResource/entity.html`
 - [ ] Define type declarations for all variables
@@ -1330,9 +1129,9 @@ When creating a new data entity, follow this checklist:
 
 ---
 
-## 12. Testing Patterns
+## 11. Testing Patterns
 
-### 12.1 Repository Tests
+### 11.1 Repository Tests
 
 ```java
 @QuarkusTest
@@ -1369,7 +1168,7 @@ class CategoryRepositoryTest {
 }
 ```
 
-### 12.2 Service Tests
+### 11.2 Service Tests
 
 ```java
 @QuarkusTest
@@ -1405,9 +1204,9 @@ class CategoryServiceTest {
 
 ---
 
-## 13. Configuration Reference
+## 12. Configuration Reference
 
-### 13.1 Database Configuration
+### 12.1 Database Configuration
 
 ```properties
 # PostgreSQL connection
@@ -1425,7 +1224,7 @@ quarkus.flyway.migrate-at-start=true
 quarkus.flyway.locations=db/migration
 ```
 
-### 13.2 Security Configuration
+### 12.2 Security Configuration
 
 ```properties
 # Form authentication
@@ -1443,9 +1242,9 @@ quarkus.http.auth.permission.authenticated.policy=authenticated
 
 ---
 
-## 14. Anti-Patterns
+## 13. Anti-Patterns
 
-### 14.1 Avoid JPQL/EntityManager for Simple Queries
+### 13.1 Avoid JPQL/EntityManager for Simple Queries
 
 **Anti-Pattern**: Using `EntityManager` with JPQL queries when Panache methods suffice.
 
@@ -1493,7 +1292,7 @@ public long countByStatus(String status) {
 - Automatic parameter binding
 - No need to manage `EntityManager` lifecycle
 
-### 14.2 Avoid Nullable Returns for Finder Methods
+### 13.2 Avoid Nullable Returns for Finder Methods
 
 **Anti-Pattern**: Returning nullable entities from finder methods.
 
@@ -1521,7 +1320,7 @@ repo.findByCode("ABC")
     .orElseThrow(() -> new EntityNotFoundException("Category", "ABC"));
 ```
 
-### 14.3 Avoid Business Logic in Entities
+### 13.3 Avoid Business Logic in Entities
 
 **Anti-Pattern**: Placing business logic or data access in entity classes.
 
@@ -1571,8 +1370,82 @@ public class OrderRepository implements PanacheRepository<Order> {
 }
 ```
 
+### 13.4 Avoid Anemic/Pass-Through Services
+
+**Anti-Pattern**: Creating service classes that merely proxy repository methods without adding business value.
+
+```java
+// ❌ WRONG: Anemic service - just delegates to repository
+@ApplicationScoped
+public class GenderService {
+
+    @Inject
+    GenderRepository genderRepository;
+
+    public List<Gender> listAll() {
+        return genderRepository.listAll();  // No added value
+    }
+
+    public Gender findById(Long id) {
+        return genderRepository.findById(id);  // No added value
+    }
+
+    public void create(Gender gender) {
+        genderRepository.persist(gender);  // No added value
+    }
+
+    public void delete(Long id) {
+        genderRepository.deleteById(id);  // No added value
+    }
+}
+```
+
+**Why this is problematic**:
+- Adds meaningless indirection without business value
+- Violates YAGNI (You Ain't Gonna Need It)
+- Makes the codebase harder to navigate
+- Creates the [Anemic Domain Model](https://martinfowler.com/bliki/AnemicDomainModel.html) anti-pattern
+
+**Correct Pattern**: For simple CRUD entities, inject the repository directly into the resource.
+
+```java
+// ✅ CORRECT: Resource uses repository directly for simple CRUD
+@Path("/genders")
+@RolesAllowed("admin")
+public class GenderResource {
+
+    @Inject
+    GenderRepository genderRepository;
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance list() {
+        List<Gender> genders = genderRepository.listAllOrdered();
+        return Templates.gender(genders);
+    }
+
+    @POST
+    @Transactional
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance create(@FormParam("code") String code) {
+        // Validation inline or via @Valid
+        if (genderRepository.existsByCode(code)) {
+            return Templates.gender$modal_create(gender, "Code already exists.");
+        }
+
+        Gender gender = new Gender();
+        gender.code = code;
+        genderRepository.persist(gender);
+
+        return Templates.gender$modal_success("Created.", genderRepository.listAllOrdered());
+    }
+}
+```
+
+**When to add a service layer**: Only when there's genuine business logic beyond CRUD operations—such as password hashing, multi-step transactions, or complex validation rules. See [Section 6.0](#60-when-to-use-a-service-layer).
+
 ---
 
-*Document Version: 2.1*
-*Pattern: PanacheRepository with Service Layer*
-*Last Updated: 2026-01-01***
+*Document Version: 2.3*
+*Pattern: PanacheRepository with Optional Service Layer*
+*Last Updated: 2026-01-01*
