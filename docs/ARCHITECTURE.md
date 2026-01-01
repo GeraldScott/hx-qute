@@ -40,38 +40,16 @@ HX Qute is a reference implementation demonstrating modern server-side web devel
 
 ### Architectural Layers
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                        Resource Layer (REST)                        │
-│            Handles HTTP requests, returns TemplateInstance          │
-└──────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Service Layer (CDI)                          │
-│         Business logic, validation, constraint checking             │
-└─────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Repository Layer (Panache)                     │
-│             Data access, queries, CRUD operations                   │
-└─────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Entity Layer (JPA)                           │
-│              Plain POJOs with JPA annotations                       │
-└─────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Database (PostgreSQL)                         │
-│              Tables, constraints, indexes                           │
-└─────────────────────────────────────────────────────────────────────┘
-```
+```mermaid
+flowchart TB
+    Resource["Resource Layer (REST)<br/><i>HTTP requests → TemplateInstance</i>"]
+    Service["Service Layer (CDI)<br/><i>Business logic, validation</i>"]
+    Repository["Repository Layer (Panache)<br/><i>Data access, CRUD</i>"]
+    Entity["Entity Layer (JPA)<br/><i>Plain POJOs</i>"]
+    Database[("Database (PostgreSQL)<br/><i>Tables, constraints, indexes</i>")]
 
----
+    Resource --> Service --> Repository --> Entity --> Database
+```
 
 ## 2. Technology Stack
 
@@ -118,29 +96,25 @@ HX Qute is a reference implementation demonstrating modern server-side web devel
 ## 3. Project Structure
 
 ```
-src/main/java/io/archton/scaffold/
+src/main/java/com/example/app/
 ├── entity/                    # JPA Entities (POJOs)
-│   ├── Gender.java
-│   ├── Title.java
-│   ├── Person.java
-│   └── UserLogin.java
+│   ├── Category.java          # Lookup/reference entity
+│   ├── Item.java              # Main entity with relationships
+│   └── UserLogin.java         # Security entity
 ├── repository/                # PanacheRepository implementations
-│   ├── GenderRepository.java
-│   ├── TitleRepository.java
-│   ├── PersonRepository.java
+│   ├── CategoryRepository.java
+│   ├── ItemRepository.java
 │   └── UserLoginRepository.java
 ├── service/                   # Business logic and validation
-│   ├── GenderService.java
-│   ├── TitleService.java
-│   ├── PersonService.java
+│   ├── CategoryService.java
+│   ├── ItemService.java
 │   └── exception/
 │       ├── ValidationException.java
 │       ├── UniqueConstraintException.java
 │       └── ReferentialIntegrityException.java
 ├── router/                    # JAX-RS Resources (Controllers)
-│   ├── GenderResource.java
-│   ├── TitleResource.java
-│   ├── PersonResource.java
+│   ├── CategoryResource.java
+│   ├── ItemResource.java
 │   └── AuthResource.java
 └── filter/                    # HTTP Filters
     └── SecurityFilter.java
@@ -148,16 +122,14 @@ src/main/java/io/archton/scaffold/
 src/main/resources/
 ├── templates/
 │   ├── base.html              # Base layout
-│   ├── GenderResource/
-│   │   └── gender.html        # Full page + fragments
-│   ├── TitleResource/
-│   │   └── title.html
-│   └── PersonResource/
-│       └── person.html
+│   ├── CategoryResource/
+│   │   └── category.html      # Full page + fragments
+│   └── ItemResource/
+│       └── item.html
 ├── db/migration/              # Flyway migrations
 │   ├── V001__Create_user_login_table.sql
-│   ├── V002__Create_gender_table.sql
-│   └── V003__Create_title_table.sql
+│   ├── V002__Create_category_table.sql
+│   └── V003__Create_item_table.sql
 └── application.properties
 ```
 
@@ -171,39 +143,41 @@ Flyway manages schema evolution with versioned SQL scripts:
 
 **Naming Convention**: `V{version}__{description}.sql`
 
-**Example**: `V002__Create_gender_table.sql`
+**Example**: `V002__Create_category_table.sql`
 
 **Best Practices**:
-- Never modify existing migrations in production
-- Test migrations against a clean database before committing
-- Use `BIGSERIAL` for primary keys with `GenerationType.IDENTITY`
+- Modify existing migrations because this is a prototype application
+- Use `BIGSERIAL` for primary keys with `GenerationType.IDENTITY` in JPA. Do NOT use sequences with Panache entities.
 
 ### 4.2 PostgreSQL-Specific Patterns
 
-**Identity Columns** (use BIGSERIAL for auto-increment):
-
 ```sql
-CREATE TABLE entity_name (
+-- Lookup/reference table pattern
+CREATE TABLE category (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(10) NOT NULL,
-    description VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
-    
-    -- Unique constraints
-    CONSTRAINT uk_entity_name_code UNIQUE (code),
-    CONSTRAINT uk_entity_name_description UNIQUE (description)
+
+    CONSTRAINT uk_category_code UNIQUE (code),
+    CONSTRAINT uk_category_name UNIQUE (name)
 );
 
--- Foreign key example
-ALTER TABLE person 
-    ADD CONSTRAINT fk_person_gender 
-    FOREIGN KEY (gender_id) REFERENCES gender(id);
-```
+-- Main entity with foreign key
+CREATE TABLE item (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    category_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-**Important**: Use `BIGSERIAL` with `GenerationType.IDENTITY` in JPA. Do NOT use sequences with Panache entities.
+    CONSTRAINT fk_item_category FOREIGN KEY (category_id) REFERENCES category(id)
+);
+```
 
 ---
 
@@ -222,27 +196,27 @@ Entities use **public fields** following the Quarkus Panache recommendation. Pan
 Entities contain NO business logic or data access methods. This follows the Repository pattern where entities are simple data containers.
 
 ```java
-package io.archton.scaffold.entity;
+package com.example.app.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "gender", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_gender_code", columnNames = "code"),
-    @UniqueConstraint(name = "uk_gender_description", columnNames = "description")
+@Table(name = "category", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_category_code", columnNames = "code"),
+    @UniqueConstraint(name = "uk_category_name", columnNames = "name")
 })
-public class Gender {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(name = "code", nullable = false, unique = true, length = 1)
+    @Column(name = "code", nullable = false, length = 10)
     public String code;
 
-    @Column(name = "description", nullable = false, unique = true, length = 255)
-    public String description;
+    @Column(name = "name", nullable = false, length = 255)
+    public String name;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
@@ -278,33 +252,26 @@ public class Gender {
 
 ```java
 @Entity
-@Table(name = "person")
-public class Person {
+@Table(name = "item", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_item_name", columnNames = "name")
+})
+public class Item {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(name = "first_name", nullable = false, length = 100)
-    public String firstName;
+    @Column(name = "name", nullable = false, length = 100)
+    public String name;
 
-    @Column(name = "last_name", nullable = false, length = 100)
-    public String lastName;
+    @Column(name = "description")
+    public String description;
 
-    @Column(name = "email", nullable = false, unique = true, length = 255)
-    public String email;
-
-    // Many-to-One: Person has one Gender
+    // Many-to-One: Item belongs to one Category
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gender_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_person_gender"))
-    public Gender gender;
-
-    // Many-to-One: Person has one Title
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "title_id",
-        foreignKey = @ForeignKey(name = "fk_person_title"))
-    public Title title;
+    @JoinColumn(name = "category_id", nullable = false,
+        foreignKey = @ForeignKey(name = "fk_item_category"))
+    public Category category;
 
     // Audit fields and lifecycle callbacks...
 }
@@ -347,29 +314,29 @@ public class UserLogin {
 Repositories implement `PanacheRepository<Entity, ID>` and contain all data access logic. This separates data access concerns from entities, enabling better testability and clearer code organization.
 
 ```java
-package io.archton.scaffold.repository;
+package com.example.app.repository;
 
-import io.archton.scaffold.entity.Gender;
+import com.example.app.entity.Category;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class GenderRepository implements PanacheRepository<Gender> {
+public class CategoryRepository implements PanacheRepository<Category> {
 
     /**
-     * Find gender by unique code.
+     * Find by unique code.
      */
-    public Optional<Gender> findByCode(String code) {
+    public Optional<Category> findByCode(String code) {
         return find("code", code).firstResultOptional();
     }
 
     /**
-     * Find gender by unique description.
+     * Find by unique name.
      */
-    public Optional<Gender> findByDescription(String description) {
-        return find("description", description).firstResultOptional();
+    public Optional<Category> findByName(String name) {
+        return find("name", name).firstResultOptional();
     }
 
     /**
@@ -387,23 +354,23 @@ public class GenderRepository implements PanacheRepository<Gender> {
     }
 
     /**
-     * Check if a description exists (for unique constraint validation).
+     * Check if a name exists (for unique constraint validation).
      */
-    public boolean existsByDescription(String description) {
-        return count("description", description) > 0;
+    public boolean existsByName(String name) {
+        return count("name", name) > 0;
     }
 
     /**
-     * Check if a description exists for a different entity (for update validation).
+     * Check if a name exists for a different entity (for update validation).
      */
-    public boolean existsByDescriptionAndIdNot(String description, Long id) {
-        return count("description = ?1 AND id != ?2", description, id) > 0;
+    public boolean existsByNameAndIdNot(String name, Long id) {
+        return count("name = ?1 AND id != ?2", name, id) > 0;
     }
 
     /**
-     * List all genders ordered by code.
+     * List all ordered by code.
      */
-    public List<Gender> listAllOrdered() {
+    public List<Category> listAllOrdered() {
         return list("ORDER BY code ASC");
     }
 }
@@ -415,7 +382,7 @@ For entities that are referenced by other entities, the repository should includ
 
 ```java
 @ApplicationScoped
-public class GenderRepository implements PanacheRepository<Gender> {
+public class CategoryRepository implements PanacheRepository<Category> {
 
     @Inject
     EntityManager em;
@@ -423,108 +390,89 @@ public class GenderRepository implements PanacheRepository<Gender> {
     // ... finder methods from above ...
 
     /**
-     * Check if gender is referenced by any Person records.
+     * Check if category is referenced by any Item records.
      * Used to prevent deletion when referential integrity would be violated.
      */
-    public boolean isReferencedByPerson(Long genderId) {
+    public boolean isReferencedByItem(Long categoryId) {
         Long count = em.createQuery(
-            "SELECT COUNT(p) FROM Person p WHERE p.gender.id = :genderId", Long.class)
-            .setParameter("genderId", genderId)
+            "SELECT COUNT(i) FROM Item i WHERE i.category.id = :categoryId", Long.class)
+            .setParameter("categoryId", categoryId)
             .getSingleResult();
         return count > 0;
     }
 
     /**
-     * Count how many Person records reference this gender.
+     * Count how many Item records reference this category.
      */
-    public long countPersonReferences(Long genderId) {
+    public long countItemReferences(Long categoryId) {
         return em.createQuery(
-            "SELECT COUNT(p) FROM Person p WHERE p.gender.id = :genderId", Long.class)
-            .setParameter("genderId", genderId)
+            "SELECT COUNT(i) FROM Item i WHERE i.category.id = :categoryId", Long.class)
+            .setParameter("categoryId", categoryId)
             .getSingleResult();
     }
 }
 ```
 
-### 6.3 Repository with Complex Queries
+### 6.3 Repository with Search and Foreign Key Validation
 
 ```java
 @ApplicationScoped
-public class PersonRepository implements PanacheRepository<Person> {
+public class ItemRepository implements PanacheRepository<Item> {
 
     /**
-     * Find person by unique email (case-insensitive).
+     * Find by unique name (case-insensitive).
      */
-    public Optional<Person> findByEmail(String email) {
-        return find("LOWER(email) = LOWER(?1)", email).firstResultOptional();
+    public Optional<Item> findByName(String name) {
+        return find("LOWER(name) = LOWER(?1)", name).firstResultOptional();
     }
 
     /**
-     * Check if email exists (case-insensitive).
+     * Check if name exists (case-insensitive).
      */
-    public boolean existsByEmail(String email) {
-        return count("LOWER(email) = LOWER(?1)", email) > 0;
+    public boolean existsByName(String name) {
+        return count("LOWER(name) = LOWER(?1)", name) > 0;
     }
 
     /**
-     * Check if email exists for a different person (for update validation).
+     * Check if name exists for a different item (for update validation).
      */
-    public boolean existsByEmailAndIdNot(String email, Long id) {
-        return count("LOWER(email) = LOWER(?1) AND id != ?2", email, id) > 0;
+    public boolean existsByNameAndIdNot(String name, Long id) {
+        return count("LOWER(name) = LOWER(?1) AND id != ?2", name, id) > 0;
     }
 
     /**
-     * Search persons by filter text (firstName, lastName, or email).
+     * Search items by filter text (name or description).
      */
-    public List<Person> search(String filterText, String sortField, String sortDir) {
+    public List<Item> search(String filterText, String sortField, String sortDir) {
         String query = buildSearchQuery(filterText, sortField, sortDir);
         if (filterText == null || filterText.isBlank()) {
             return list(query);
         }
         String pattern = "%" + filterText.toLowerCase() + "%";
-        return list(query, pattern, pattern, pattern);
+        return list(query, pattern, pattern);
     }
 
     private String buildSearchQuery(String filterText, String sortField, String sortDir) {
         StringBuilder query = new StringBuilder();
-        
+
         if (filterText != null && !filterText.isBlank()) {
-            query.append("LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?2 OR LOWER(email) LIKE ?3 ");
+            query.append("LOWER(name) LIKE ?1 OR LOWER(description) LIKE ?2 ");
         }
-        
-        String field = validateSortField(sortField);
+
+        String field = "name".equals(sortField) ? "name" : "id";
         String direction = "desc".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
         query.append("ORDER BY ").append(field).append(" ").append(direction);
-        
-        return query.toString();
-    }
 
-    private String validateSortField(String sortField) {
-        return switch (sortField) {
-            case "lastName" -> "lastName";
-            case "email" -> "email";
-            default -> "firstName";
-        };
+        return query.toString();
     }
 
     /**
      * Validate that a foreign key reference exists.
      */
-    public boolean genderExists(Long genderId) {
+    public boolean categoryExists(Long categoryId) {
         return getEntityManager()
-            .createQuery("SELECT COUNT(g) FROM Gender g WHERE g.id = :id", Long.class)
-            .setParameter("id", genderId)
-            .getSingleResult() > 0;
-    }
-
-    /**
-     * Validate that a foreign key reference exists (optional field).
-     */
-    public boolean titleExists(Long titleId) {
-        if (titleId == null) return true; // Optional field
-        return getEntityManager()
-            .createQuery("SELECT COUNT(t) FROM Title t WHERE t.id = :id", Long.class)
-            .setParameter("id", titleId)
+            .createQuery("SELECT COUNT(c) FROM Category c WHERE c.id = :id", Long.class)
+            .setParameter("id", categoryId)
             .getSingleResult() > 0;
     }
 }
@@ -558,13 +506,13 @@ public class PersonRepository implements PanacheRepository<Person> {
 Services contain business logic and validation. They orchestrate repository calls and enforce constraints before data is persisted.
 
 ```java
-package io.archton.scaffold.service;
+package com.example.app.service;
 
-import io.archton.scaffold.entity.Gender;
-import io.archton.scaffold.repository.GenderRepository;
-import io.archton.scaffold.service.exception.UniqueConstraintException;
-import io.archton.scaffold.service.exception.ReferentialIntegrityException;
-import io.archton.scaffold.service.exception.EntityNotFoundException;
+import com.example.app.entity.Category;
+import com.example.app.repository.CategoryRepository;
+import com.example.app.service.exception.UniqueConstraintException;
+import com.example.app.service.exception.ReferentialIntegrityException;
+import com.example.app.service.exception.EntityNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -572,127 +520,115 @@ import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class GenderService {
+public class CategoryService {
 
     @Inject
-    GenderRepository genderRepository;
+    CategoryRepository categoryRepository;
 
     /**
-     * List all genders ordered by code.
+     * List all categories ordered by code.
      */
-    public List<Gender> listAll() {
-        return genderRepository.listAllOrdered();
+    public List<Category> listAll() {
+        return categoryRepository.listAllOrdered();
     }
 
     /**
-     * Find gender by ID.
+     * Find category by ID.
      */
-    public Optional<Gender> findById(Long id) {
-        return genderRepository.findByIdOptional(id);
+    public Optional<Category> findById(Long id) {
+        return categoryRepository.findByIdOptional(id);
     }
 
     /**
-     * Create a new gender with constraint validation.
-     * 
-     * @throws UniqueConstraintException if code or description already exists
+     * Create a new category with constraint validation.
+     *
+     * @throws UniqueConstraintException if code or name already exists
      */
     @Transactional
-    public Gender create(String code, String description, String createdBy) {
+    public Category create(String code, String name, String createdBy) {
         // Validate unique constraints BEFORE attempting to persist
-        validateUniqueConstraintsForCreate(code, description);
+        validateUniqueConstraintsForCreate(code, name);
 
-        Gender gender = new Gender();
-        gender.setCode(code.toUpperCase().trim());
-        gender.setDescription(description.trim());
-        gender.setCreatedBy(createdBy);
-        gender.setUpdatedBy(createdBy);
+        Category category = new Category();
+        category.code = code.toUpperCase().trim();
+        category.name = name.trim();
+        category.createdBy = createdBy;
+        category.updatedBy = createdBy;
 
-        genderRepository.persist(gender);
-        return gender;
+        categoryRepository.persist(category);
+        return category;
     }
 
     /**
-     * Update an existing gender with constraint validation.
-     * 
-     * @throws EntityNotFoundException if gender not found
-     * @throws UniqueConstraintException if code or description conflicts with another record
+     * Update an existing category with constraint validation.
+     *
+     * @throws EntityNotFoundException if category not found
+     * @throws UniqueConstraintException if code or name conflicts with another record
      */
     @Transactional
-    public Gender update(Long id, String code, String description, String updatedBy) {
-        Gender gender = genderRepository.findByIdOptional(id)
-            .orElseThrow(() -> new EntityNotFoundException("Gender", id));
+    public Category update(Long id, String code, String name, String updatedBy) {
+        Category category = categoryRepository.findByIdOptional(id)
+            .orElseThrow(() -> new EntityNotFoundException("Category", id));
 
         // Validate unique constraints, excluding current entity
-        validateUniqueConstraintsForUpdate(id, code, description);
+        validateUniqueConstraintsForUpdate(id, code, name);
 
-        gender.setCode(code.toUpperCase().trim());
-        gender.setDescription(description.trim());
-        gender.setUpdatedBy(updatedBy);
+        category.code = code.toUpperCase().trim();
+        category.name = name.trim();
+        category.updatedBy = updatedBy;
 
         // No explicit persist needed - entity is managed
-        return gender;
+        return category;
     }
 
     /**
-     * Delete a gender with referential integrity check.
-     * 
-     * @throws EntityNotFoundException if gender not found
-     * @throws ReferentialIntegrityException if gender is referenced by Person records
+     * Delete a category with referential integrity check.
+     *
+     * @throws EntityNotFoundException if category not found
+     * @throws ReferentialIntegrityException if category is referenced by Item records
      */
     @Transactional
     public void delete(Long id) {
-        Gender gender = genderRepository.findByIdOptional(id)
-            .orElseThrow(() -> new EntityNotFoundException("Gender", id));
+        Category category = categoryRepository.findByIdOptional(id)
+            .orElseThrow(() -> new EntityNotFoundException("Category", id));
 
         // Check referential integrity BEFORE attempting to delete
         validateReferentialIntegrityForDelete(id);
 
-        genderRepository.delete(gender);
+        categoryRepository.delete(category);
     }
 
     // ========== Constraint Validation Methods ==========
 
-    /**
-     * Validate unique constraints for CREATE operation.
-     * Checks that neither code nor description exist in the database.
-     */
-    private void validateUniqueConstraintsForCreate(String code, String description) {
-        if (genderRepository.existsByCode(code.toUpperCase().trim())) {
-            throw new UniqueConstraintException("code", code, 
-                "A gender with code '" + code + "' already exists.");
-        }
-
-        if (genderRepository.existsByDescription(description.trim())) {
-            throw new UniqueConstraintException("description", description,
-                "A gender with description '" + description + "' already exists.");
-        }
-    }
-
-    /**
-     * Validate unique constraints for UPDATE operation.
-     * Checks that code/description don't conflict with OTHER records.
-     */
-    private void validateUniqueConstraintsForUpdate(Long id, String code, String description) {
-        if (genderRepository.existsByCodeAndIdNot(code.toUpperCase().trim(), id)) {
+    private void validateUniqueConstraintsForCreate(String code, String name) {
+        if (categoryRepository.existsByCode(code.toUpperCase().trim())) {
             throw new UniqueConstraintException("code", code,
-                "A gender with code '" + code + "' already exists.");
+                "A category with code '" + code + "' already exists.");
         }
 
-        if (genderRepository.existsByDescriptionAndIdNot(description.trim(), id)) {
-            throw new UniqueConstraintException("description", description,
-                "A gender with description '" + description + "' already exists.");
+        if (categoryRepository.existsByName(name.trim())) {
+            throw new UniqueConstraintException("name", name,
+                "A category with name '" + name + "' already exists.");
         }
     }
 
-    /**
-     * Validate referential integrity for DELETE operation.
-     * Checks that no dependent records exist.
-     */
+    private void validateUniqueConstraintsForUpdate(Long id, String code, String name) {
+        if (categoryRepository.existsByCodeAndIdNot(code.toUpperCase().trim(), id)) {
+            throw new UniqueConstraintException("code", code,
+                "A category with code '" + code + "' already exists.");
+        }
+
+        if (categoryRepository.existsByNameAndIdNot(name.trim(), id)) {
+            throw new UniqueConstraintException("name", name,
+                "A category with name '" + name + "' already exists.");
+        }
+    }
+
     private void validateReferentialIntegrityForDelete(Long id) {
-        if (genderRepository.isReferencedByPerson(id)) {
-            long count = genderRepository.countPersonReferences(id);
-            throw new ReferentialIntegrityException("Gender", id, "Person", count,
-                "Cannot delete gender: It is referenced by " + count + " person record(s).");
+        if (categoryRepository.isReferencedByItem(id)) {
+            long count = categoryRepository.countItemReferences(id);
+            throw new ReferentialIntegrityException("Category", id, "Item", count,
+                "Cannot delete category: It is referenced by " + count + " item(s).");
         }
     }
 }
@@ -704,109 +640,85 @@ For services that create/update entities with foreign key relationships:
 
 ```java
 @ApplicationScoped
-public class PersonService {
+public class ItemService {
 
     @Inject
-    PersonRepository personRepository;
+    ItemRepository itemRepository;
 
     @Inject
-    GenderRepository genderRepository;
-
-    @Inject
-    TitleRepository titleRepository;
+    CategoryRepository categoryRepository;
 
     /**
-     * Create a new person with constraint validation.
-     * 
-     * @throws UniqueConstraintException if email already exists
-     * @throws ReferentialIntegrityException if gender or title doesn't exist
+     * Create a new item with constraint validation.
+     *
+     * @throws UniqueConstraintException if name already exists
+     * @throws ReferentialIntegrityException if category doesn't exist
      */
     @Transactional
-    public Person create(PersonCreateRequest request, String createdBy) {
+    public Item create(String name, String description, Long categoryId, String createdBy) {
         // 1. Validate unique constraints
-        validateUniqueConstraintsForCreate(request.getEmail());
+        validateUniqueConstraintsForCreate(name);
 
         // 2. Validate foreign key references exist
-        Gender gender = validateAndFetchGender(request.getGenderId());
-        Title title = validateAndFetchTitle(request.getTitleId()); // May be null
+        Category category = validateAndFetchCategory(categoryId);
 
         // 3. Create entity
-        Person person = new Person();
-        person.setFirstName(request.getFirstName().trim());
-        person.setLastName(request.getLastName().trim());
-        person.setEmail(request.getEmail().toLowerCase().trim());
-        person.setGender(gender);
-        person.setTitle(title);
-        person.setCreatedBy(createdBy);
-        person.setUpdatedBy(createdBy);
+        Item item = new Item();
+        item.name = name.trim();
+        item.description = description;
+        item.category = category;
+        item.createdBy = createdBy;
+        item.updatedBy = createdBy;
 
-        personRepository.persist(person);
-        return person;
+        itemRepository.persist(item);
+        return item;
     }
 
     /**
-     * Update an existing person with constraint validation.
+     * Update an existing item with constraint validation.
      */
     @Transactional
-    public Person update(Long id, PersonUpdateRequest request, String updatedBy) {
-        Person person = personRepository.findByIdOptional(id)
-            .orElseThrow(() -> new EntityNotFoundException("Person", id));
+    public Item update(Long id, String name, String description, Long categoryId, String updatedBy) {
+        Item item = itemRepository.findByIdOptional(id)
+            .orElseThrow(() -> new EntityNotFoundException("Item", id));
 
         // 1. Validate unique constraints (excluding current entity)
-        validateUniqueConstraintsForUpdate(id, request.getEmail());
+        validateUniqueConstraintsForUpdate(id, name);
 
         // 2. Validate foreign key references if changed
-        if (!person.getGender().getId().equals(request.getGenderId())) {
-            person.setGender(validateAndFetchGender(request.getGenderId()));
-        }
-        if (titleChanged(person.getTitle(), request.getTitleId())) {
-            person.setTitle(validateAndFetchTitle(request.getTitleId()));
+        if (!item.category.id.equals(categoryId)) {
+            item.category = validateAndFetchCategory(categoryId);
         }
 
         // 3. Update fields
-        person.setFirstName(request.getFirstName().trim());
-        person.setLastName(request.getLastName().trim());
-        person.setEmail(request.getEmail().toLowerCase().trim());
-        person.setUpdatedBy(updatedBy);
+        item.name = name.trim();
+        item.description = description;
+        item.updatedBy = updatedBy;
 
-        return person;
+        return item;
     }
 
     // ========== Validation Helper Methods ==========
 
-    private void validateUniqueConstraintsForCreate(String email) {
-        if (personRepository.existsByEmail(email)) {
-            throw new UniqueConstraintException("email", email,
-                "A person with email '" + email + "' already exists.");
+    private void validateUniqueConstraintsForCreate(String name) {
+        if (itemRepository.existsByName(name)) {
+            throw new UniqueConstraintException("name", name,
+                "An item with name '" + name + "' already exists.");
         }
     }
 
-    private void validateUniqueConstraintsForUpdate(Long id, String email) {
-        if (personRepository.existsByEmailAndIdNot(email, id)) {
-            throw new UniqueConstraintException("email", email,
-                "A person with email '" + email + "' already exists.");
+    private void validateUniqueConstraintsForUpdate(Long id, String name) {
+        if (itemRepository.existsByNameAndIdNot(name, id)) {
+            throw new UniqueConstraintException("name", name,
+                "An item with name '" + name + "' already exists.");
         }
     }
 
-    private Gender validateAndFetchGender(Long genderId) {
-        return genderRepository.findByIdOptional(genderId)
+    private Category validateAndFetchCategory(Long categoryId) {
+        return categoryRepository.findByIdOptional(categoryId)
             .orElseThrow(() -> new ReferentialIntegrityException(
-                "Person", null, "Gender", genderId,
-                "Invalid gender selection. The selected gender does not exist."));
-    }
-
-    private Title validateAndFetchTitle(Long titleId) {
-        if (titleId == null) return null; // Title is optional
-        return titleRepository.findByIdOptional(titleId)
-            .orElseThrow(() -> new ReferentialIntegrityException(
-                "Person", null, "Title", titleId,
-                "Invalid title selection. The selected title does not exist."));
-    }
-
-    private boolean titleChanged(Title current, Long newTitleId) {
-        if (current == null && newTitleId == null) return false;
-        if (current == null || newTitleId == null) return true;
-        return !current.getId().equals(newTitleId);
+                "Item", null, "Category", categoryId,
+                "Invalid category selection. The selected category does not exist."));
     }
 }
 ```
@@ -814,7 +726,7 @@ public class PersonService {
 ### 7.3 Custom Exception Classes
 
 ```java
-package io.archton.scaffold.service.exception;
+package com.example.app.service.exception;
 
 /**
  * Thrown when a unique constraint would be violated.
@@ -922,47 +834,46 @@ DELETE Operation:
 Resources serve as controllers, handling HTTP requests and delegating to services. They return TemplateInstance for HTML responses.
 
 ```java
-@Path("/genders")
+@Path("/categories")
 @RolesAllowed("admin")
-public class GenderResource {
+public class CategoryResource {
 
     @Inject
-    GenderService genderService;
+    CategoryService categoryService;
 
     @Inject
     SecurityIdentity securityIdentity;
 
     @CheckedTemplate
     public static class Templates {
-        public static native TemplateInstance gender(
-            String title, String currentPage, String userName, List<Gender> genders);
-        public static native TemplateInstance gender$table(List<Gender> genders);
-        public static native TemplateInstance gender$modal_create(Gender gender, String error);
-        public static native TemplateInstance gender$modal_edit(Gender gender, String error);
-        public static native TemplateInstance gender$modal_success(String message, List<Gender> genders);
-        public static native TemplateInstance gender$modal_success_row(String message, Gender gender);
-        public static native TemplateInstance gender$modal_delete(Gender gender, String error);
-        public static native TemplateInstance gender$modal_delete_success(Long deletedId);
+        public static native TemplateInstance category(
+            String title, String currentPage, String userName, List<Category> categories);
+        public static native TemplateInstance category$table(List<Category> categories);
+        public static native TemplateInstance category$modal_create(Category category, String error);
+        public static native TemplateInstance category$modal_edit(Category category, String error);
+        public static native TemplateInstance category$modal_success(String message, List<Category> categories);
+        public static native TemplateInstance category$modal_delete(Category category, String error);
+        public static native TemplateInstance category$modal_delete_success(Long deletedId);
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list(@HeaderParam("HX-Request") String hxRequest) {
-        List<Gender> genders = genderService.listAll();
+        List<Category> categories = categoryService.listAll();
 
         if ("true".equals(hxRequest)) {
-            return Templates.gender$table(genders);
+            return Templates.category$table(categories);
         }
 
         String userName = getCurrentUsername();
-        return Templates.gender("Genders", "gender", userName, genders);
+        return Templates.category("Categories", "category", userName, categories);
     }
 
     @GET
     @Path("/create")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        return Templates.gender$modal_create(new Gender(), null);
+        return Templates.category$modal_create(new Category(), null);
     }
 
     @POST
@@ -970,27 +881,26 @@ public class GenderResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance create(
             @FormParam("code") String code,
-            @FormParam("description") String description) {
-        
-        // Basic input validation
-        String error = validateInput(code, description);
+            @FormParam("name") String name) {
+
+        String error = validateInput(code, name);
         if (error != null) {
-            Gender gender = new Gender();
-            gender.setCode(code);
-            gender.setDescription(description);
-            return Templates.gender$modal_create(gender, error);
+            Category category = new Category();
+            category.code = code;
+            category.name = name;
+            return Templates.category$modal_create(category, error);
         }
 
         try {
-            genderService.create(code, description, getCurrentUsername());
-            List<Gender> genders = genderService.listAll();
-            return Templates.gender$modal_success("Gender created successfully.", genders);
-            
+            categoryService.create(code, name, getCurrentUsername());
+            List<Category> categories = categoryService.listAll();
+            return Templates.category$modal_success("Category created successfully.", categories);
+
         } catch (UniqueConstraintException e) {
-            Gender gender = new Gender();
-            gender.setCode(code);
-            gender.setDescription(description);
-            return Templates.gender$modal_create(gender, e.getMessage());
+            Category category = new Category();
+            category.code = code;
+            category.name = name;
+            return Templates.category$modal_create(category, e.getMessage());
         }
     }
 
@@ -998,9 +908,9 @@ public class GenderResource {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        return genderService.findById(id)
-            .map(gender -> Templates.gender$modal_edit(gender, null))
-            .orElseThrow(() -> new NotFoundException("Gender not found"));
+        return categoryService.findById(id)
+            .map(category -> Templates.category$modal_edit(category, null))
+            .orElseThrow(() -> new NotFoundException("Category not found"));
     }
 
     @PUT
@@ -1010,26 +920,16 @@ public class GenderResource {
     public TemplateInstance update(
             @PathParam("id") Long id,
             @FormParam("code") String code,
-            @FormParam("description") String description) {
-        
-        String error = validateInput(code, description);
-        if (error != null) {
-            Gender gender = genderService.findById(id).orElseThrow();
-            gender.setCode(code);
-            gender.setDescription(description);
-            return Templates.gender$modal_edit(gender, error);
-        }
+            @FormParam("name") String name) {
 
         try {
-            Gender updated = genderService.update(id, code, description, getCurrentUsername());
-            return Templates.gender$modal_success_row("Gender updated successfully.", updated);
-            
+            Category updated = categoryService.update(id, code, name, getCurrentUsername());
+            return Templates.category$modal_success("Category updated.", categoryService.listAll());
+
         } catch (UniqueConstraintException e) {
-            Gender gender = genderService.findById(id).orElseThrow();
-            gender.setCode(code);
-            gender.setDescription(description);
-            return Templates.gender$modal_edit(gender, e.getMessage());
-            
+            Category category = categoryService.findById(id).orElseThrow();
+            return Templates.category$modal_edit(category, e.getMessage());
+
         } catch (EntityNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
@@ -1039,9 +939,9 @@ public class GenderResource {
     @Path("/{id}/delete")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance deleteConfirm(@PathParam("id") Long id) {
-        return genderService.findById(id)
-            .map(gender -> Templates.gender$modal_delete(gender, null))
-            .orElseThrow(() -> new NotFoundException("Gender not found"));
+        return categoryService.findById(id)
+            .map(category -> Templates.category$modal_delete(category, null))
+            .orElseThrow(() -> new NotFoundException("Category not found"));
     }
 
     @DELETE
@@ -1049,33 +949,27 @@ public class GenderResource {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance delete(@PathParam("id") Long id) {
         try {
-            genderService.delete(id);
-            return Templates.gender$modal_delete_success(id);
-            
+            categoryService.delete(id);
+            return Templates.category$modal_delete_success(id);
+
         } catch (ReferentialIntegrityException e) {
-            Gender gender = genderService.findById(id).orElseThrow();
-            return Templates.gender$modal_delete(gender, e.getMessage());
-            
+            Category category = categoryService.findById(id).orElseThrow();
+            return Templates.category$modal_delete(category, e.getMessage());
+
         } catch (EntityNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
     }
 
-    private String validateInput(String code, String description) {
-        if (code == null || code.trim().isEmpty()) {
-            return "Code is required.";
-        }
-        if (description == null || description.trim().isEmpty()) {
-            return "Description is required.";
-        }
-        if (code.trim().length() > 1) {
-            return "Code must be 1 character or less.";
-        }
+    private String validateInput(String code, String name) {
+        if (code == null || code.isBlank()) return "Code is required.";
+        if (name == null || name.isBlank()) return "Name is required.";
+        if (code.length() > 10) return "Code must be 10 characters or less.";
         return null;
     }
 
     private String getCurrentUsername() {
-        return securityIdentity.isAnonymous() ? null 
+        return securityIdentity.isAnonymous() ? null
             : securityIdentity.getPrincipal().getName();
     }
 }
@@ -1136,7 +1030,7 @@ public class ServiceExceptionMapper implements ExceptionMapper<RuntimeException>
 Templates use `{#fragment}` sections for partial responses:
 
 ```html
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
+{@java.util.List<com.example.app.entity.Category> categories}
 {@java.lang.String title}
 {@java.lang.String currentPage}
 {@java.lang.String userName}
@@ -1146,17 +1040,17 @@ Templates use `{#fragment}` sections for partial responses:
 
 {#content}
 <div class="uk-container">
-    <h1>Gender Management</h1>
-    
+    <h1>Category Management</h1>
+
     <button class="uk-button uk-button-primary"
-            hx-get="/genders/create"
+            hx-get="/categories/create"
             hx-target="#modal-content"
             hx-on::after-request="UIkit.modal('#crud-modal').show()">
-        Add Gender
+        Add Category
     </button>
 
     <div id="table-container">
-        {#include gender$table genders=genders /}
+        {#include category$table categories=categories /}
     </div>
 </div>
 
@@ -1174,25 +1068,25 @@ Templates use `{#fragment}` sections for partial responses:
     <thead>
         <tr>
             <th>Code</th>
-            <th>Description</th>
+            <th>Name</th>
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody id="genders-table-body">
-        {#for gender in genders}
-        <tr id="gender-row-{gender.id}">
-            <td>{gender.code}</td>
-            <td>{gender.description}</td>
+    <tbody id="categories-table-body">
+        {#for category in categories}
+        <tr id="category-row-{category.id}">
+            <td>{category.code}</td>
+            <td>{category.name}</td>
             <td>
                 <div class="uk-button-group">
                     <button class="uk-button uk-button-small uk-button-primary"
-                            hx-get="/genders/{gender.id}/edit"
+                            hx-get="/categories/{category.id}/edit"
                             hx-target="#modal-content"
                             hx-on::after-request="UIkit.modal('#crud-modal').show()">
                         Edit
                     </button>
                     <button class="uk-button uk-button-small uk-button-danger"
-                            hx-get="/genders/{gender.id}/delete"
+                            hx-get="/categories/{category.id}/delete"
                             hx-target="#modal-content"
                             hx-on::after-request="UIkit.modal('#crud-modal').show()">
                         Delete
@@ -1206,25 +1100,25 @@ Templates use `{#fragment}` sections for partial responses:
 {/fragment}
 
 {#fragment id=modal_create}
-{@io.archton.scaffold.entity.Gender gender}
+{@com.example.app.entity.Category category}
 {@java.lang.String error}
 <div class="uk-modal-header">
-    <h2 class="uk-modal-title">Create Gender</h2>
+    <h2 class="uk-modal-title">Create Category</h2>
 </div>
 <div class="uk-modal-body">
     {#if error}
     <div class="uk-alert uk-alert-danger">{error}</div>
     {/if}
-    <form hx-post="/genders" hx-target="#modal-content">
+    <form hx-post="/categories" hx-target="#modal-content">
         <div class="uk-margin">
             <label class="uk-form-label">Code</label>
-            <input class="uk-input" type="text" name="code" 
-                   value="{gender.code ?: ''}" maxlength="1" required>
+            <input class="uk-input" type="text" name="code"
+                   value="{category.code ?: ''}" maxlength="10" required>
         </div>
         <div class="uk-margin">
-            <label class="uk-form-label">Description</label>
-            <input class="uk-input" type="text" name="description"
-                   value="{gender.description ?: ''}" maxlength="255" required>
+            <label class="uk-form-label">Name</label>
+            <input class="uk-input" type="text" name="name"
+                   value="{category.name ?: ''}" maxlength="255" required>
         </div>
         <div class="uk-margin">
             <button class="uk-button uk-button-primary" type="submit">Save</button>
@@ -1236,30 +1130,30 @@ Templates use `{#fragment}` sections for partial responses:
 
 {#fragment id=modal_success}
 {@java.lang.String message}
-{@java.util.List<io.archton.scaffold.entity.Gender> genders}
+{@java.util.List<com.example.app.entity.Category> categories}
 <div class="uk-modal-body" hx-on::load="UIkit.modal('#crud-modal').hide()">
     <div class="uk-alert uk-alert-success">{message}</div>
 </div>
 <!-- OOB update for table -->
 <div id="table-container" hx-swap-oob="innerHTML">
-    {#include gender$table genders=genders /}
+    {#include category$table categories=categories /}
 </div>
 {/fragment}
 
 {#fragment id=modal_delete}
-{@io.archton.scaffold.entity.Gender gender}
+{@com.example.app.entity.Category category}
 {@java.lang.String error}
 <div class="uk-modal-header">
-    <h2 class="uk-modal-title">Delete Gender</h2>
+    <h2 class="uk-modal-title">Delete Category</h2>
 </div>
 <div class="uk-modal-body">
     {#if error}
     <div class="uk-alert uk-alert-danger">{error}</div>
     {/if}
-    <p>Are you sure you want to delete gender "{gender.description}"?</p>
+    <p>Are you sure you want to delete "{category.name}"?</p>
     <div class="uk-margin">
         <button class="uk-button uk-button-danger"
-                hx-delete="/genders/{gender.id}"
+                hx-delete="/categories/{category.id}"
                 hx-target="#modal-content">
             Delete
         </button>
@@ -1271,10 +1165,10 @@ Templates use `{#fragment}` sections for partial responses:
 {#fragment id=modal_delete_success}
 {@java.lang.Long deletedId}
 <div class="uk-modal-body" hx-on::load="UIkit.modal('#crud-modal').hide()">
-    <div class="uk-alert uk-alert-success">Gender deleted successfully.</div>
+    <div class="uk-alert uk-alert-success">Category deleted successfully.</div>
 </div>
 <!-- OOB remove the deleted row -->
-<tr id="gender-row-{deletedId}" hx-swap-oob="delete"></tr>
+<tr id="category-row-{deletedId}" hx-swap-oob="delete"></tr>
 {/fragment}
 ```
 
@@ -1391,34 +1285,34 @@ When creating a new data entity, follow this checklist:
 ```java
 @QuarkusTest
 @TestTransaction
-class GenderRepositoryTest {
+class CategoryRepositoryTest {
 
     @Inject
-    GenderRepository genderRepository;
+    CategoryRepository categoryRepository;
 
     @Test
     void shouldFindByCode() {
-        Gender gender = createTestGender("M", "Male");
-        genderRepository.persist(gender);
+        Category category = createTestCategory("ELEC", "Electronics");
+        categoryRepository.persist(category);
 
-        Optional<Gender> found = genderRepository.findByCode("M");
-        
+        Optional<Category> found = categoryRepository.findByCode("ELEC");
+
         assertThat(found).isPresent();
-        assertThat(found.get().getDescription()).isEqualTo("Male");
+        assertThat(found.get().name).isEqualTo("Electronics");
     }
 
     @Test
     void shouldCheckExistsByCodeAndIdNot() {
-        Gender gender1 = createTestGender("M", "Male");
-        Gender gender2 = createTestGender("F", "Female");
-        genderRepository.persist(gender1);
-        genderRepository.persist(gender2);
+        Category cat1 = createTestCategory("ELEC", "Electronics");
+        Category cat2 = createTestCategory("BOOK", "Books");
+        categoryRepository.persist(cat1);
+        categoryRepository.persist(cat2);
 
         // Should return true when code exists for different ID
-        assertThat(genderRepository.existsByCodeAndIdNot("M", gender2.getId())).isTrue();
-        
+        assertThat(categoryRepository.existsByCodeAndIdNot("ELEC", cat2.id)).isTrue();
+
         // Should return false when checking same ID
-        assertThat(genderRepository.existsByCodeAndIdNot("M", gender1.getId())).isFalse();
+        assertThat(categoryRepository.existsByCodeAndIdNot("ELEC", cat1.id)).isFalse();
     }
 }
 ```
@@ -1427,30 +1321,30 @@ class GenderRepositoryTest {
 
 ```java
 @QuarkusTest
-class GenderServiceTest {
+class CategoryServiceTest {
 
     @Inject
-    GenderService genderService;
+    CategoryService categoryService;
 
     @Test
     @TestTransaction
     void shouldThrowUniqueConstraintExceptionOnDuplicateCode() {
-        genderService.create("M", "Male", "test");
+        categoryService.create("ELEC", "Electronics", "test");
 
-        assertThatThrownBy(() -> genderService.create("M", "Another", "test"))
+        assertThatThrownBy(() -> categoryService.create("ELEC", "Another", "test"))
             .isInstanceOf(UniqueConstraintException.class)
             .hasMessageContaining("code")
-            .hasMessageContaining("M");
+            .hasMessageContaining("ELEC");
     }
 
     @Test
     @TestTransaction
     void shouldThrowReferentialIntegrityExceptionWhenInUse() {
-        // Setup: Create gender and person using it
-        Gender gender = genderService.create("M", "Male", "test");
-        // ... create person with this gender ...
+        // Setup: Create category and item using it
+        Category category = categoryService.create("ELEC", "Electronics", "test");
+        // ... create item with this category ...
 
-        assertThatThrownBy(() -> genderService.delete(gender.getId()))
+        assertThatThrownBy(() -> categoryService.delete(category.id))
             .isInstanceOf(ReferentialIntegrityException.class)
             .hasMessageContaining("referenced");
     }
@@ -1466,9 +1360,9 @@ class GenderServiceTest {
 ```properties
 # PostgreSQL connection
 quarkus.datasource.db-kind=postgresql
-quarkus.datasource.username=${DB_USER:scaffold}
-quarkus.datasource.password=${DB_PASS:scaffold}
-quarkus.datasource.jdbc.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:scaffold}
+quarkus.datasource.username=${DB_USER:app}
+quarkus.datasource.password=${DB_PASS:app}
+quarkus.datasource.jdbc.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appdb}
 
 # Hibernate settings
 quarkus.hibernate-orm.database.generation=none
@@ -1488,10 +1382,10 @@ quarkus.http.auth.form.login-page=/login
 quarkus.http.auth.form.landing-page=/
 quarkus.http.auth.form.error-page=/login?error=true
 
-# Route permissions
-quarkus.http.auth.permission.admin.paths=/genders,/genders/*,/titles,/titles/*
+# Route permissions (example)
+quarkus.http.auth.permission.admin.paths=/categories,/categories/*
 quarkus.http.auth.permission.admin.policy=admin
-quarkus.http.auth.permission.authenticated.paths=/persons,/persons/*
+quarkus.http.auth.permission.authenticated.paths=/items,/items/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
 ```
 
