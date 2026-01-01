@@ -4,12 +4,13 @@ import io.archton.scaffold.entity.Person;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class PersonRepository implements PanacheRepository<Person> {
 
-    public Person findByEmail(String email) {
-        return find("LOWER(email)", email.toLowerCase().trim()).firstResult();
+    public Optional<Person> findByEmail(String email) {
+        return find("LOWER(email)", email.toLowerCase().trim()).firstResultOptional();
     }
 
     public List<Person> listAllOrdered() {

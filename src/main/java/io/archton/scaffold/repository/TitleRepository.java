@@ -4,16 +4,17 @@ import io.archton.scaffold.entity.Title;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class TitleRepository implements PanacheRepository<Title> {
 
-    public Title findByCode(String code) {
-        return find("code", code).firstResult();
+    public Optional<Title> findByCode(String code) {
+        return find("code", code).firstResultOptional();
     }
 
-    public Title findByDescription(String description) {
-        return find("description", description).firstResult();
+    public Optional<Title> findByDescription(String description) {
+        return find("description", description).firstResultOptional();
     }
 
     public List<Title> listAllOrdered() {

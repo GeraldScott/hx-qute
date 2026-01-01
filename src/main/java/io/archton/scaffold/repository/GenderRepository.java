@@ -4,16 +4,17 @@ import io.archton.scaffold.entity.Gender;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class GenderRepository implements PanacheRepository<Gender> {
 
-    public Gender findByCode(String code) {
-        return find("code", code).firstResult();
+    public Optional<Gender> findByCode(String code) {
+        return find("code", code).firstResultOptional();
     }
 
-    public Gender findByDescription(String description) {
-        return find("description", description).firstResult();
+    public Optional<Gender> findByDescription(String description) {
+        return find("description", description).firstResultOptional();
     }
 
     public List<Gender> listAllOrdered() {

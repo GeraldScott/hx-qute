@@ -4,16 +4,17 @@ import io.archton.scaffold.entity.Relationship;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class RelationshipRepository implements PanacheRepository<Relationship> {
 
-    public Relationship findByCode(String code) {
-        return find("code", code).firstResult();
+    public Optional<Relationship> findByCode(String code) {
+        return find("code", code).firstResultOptional();
     }
 
-    public Relationship findByDescription(String description) {
-        return find("description", description).firstResult();
+    public Optional<Relationship> findByDescription(String description) {
+        return find("description", description).firstResultOptional();
     }
 
     public List<Relationship> listAllOrdered() {
