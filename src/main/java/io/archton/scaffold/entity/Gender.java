@@ -2,7 +2,7 @@ package io.archton.scaffold.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "gender", uniqueConstraints = {
@@ -22,10 +22,10 @@ public class Gender extends PanacheEntityBase {
     public String description;
 
     @Column(name = "created_at")
-    public OffsetDateTime createdAt;
+    public Instant createdAt;
 
     @Column(name = "updated_at")
-    public OffsetDateTime updatedAt;
+    public Instant updatedAt;
 
     @Column(name = "created_by")
     public String createdBy;
@@ -44,12 +44,12 @@ public class Gender extends PanacheEntityBase {
     // Lifecycle callbacks
     @PrePersist
     public void prePersist() {
-        createdAt = OffsetDateTime.now();
-        updatedAt = OffsetDateTime.now();
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-        updatedAt = OffsetDateTime.now();
+        updatedAt = Instant.now();
     }
 }
