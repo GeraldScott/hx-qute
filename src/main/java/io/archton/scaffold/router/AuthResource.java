@@ -1,11 +1,10 @@
 package io.archton.scaffold.router;
 
-import io.archton.scaffold.entity.UserLogin;
 import io.archton.scaffold.service.PasswordValidator;
+import io.archton.scaffold.service.UserLoginService;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
@@ -25,6 +24,9 @@ public class AuthResource {
 
     @Inject
     PasswordValidator passwordValidator;
+
+    @Inject
+    UserLoginService userLoginService;
 
     @Inject
     RoutingContext routingContext;
@@ -84,7 +86,6 @@ public class AuthResource {
     @POST
     @Path("/signup")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Transactional
     public Response signup(
             @FormParam("email") String email,
             @FormParam("password") String password) {
@@ -120,16 +121,15 @@ public class AuthResource {
         }
 
         // Check for duplicate email (case-insensitive)
-        if (UserLogin.emailExists(trimmedEmail)) {
+        if (userLoginService.emailExists(trimmedEmail)) {
             return Response.seeOther(URI.create("/signup?error=email_exists")).build();
         }
 
         // Create user with default 'user' role
-        UserLogin user = UserLogin.create(trimmedEmail, password, "user");
-        user.persist();
+        userLoginService.create(trimmedEmail, password, "user");
 
         // Redirect to login page on success
-        return Response.seeOther(URI.create("/login")).build();
+        return Response.seeOther(URI.create("/?login=true")).build();
     }
 
     private String mapSignupError(String errorCode) {

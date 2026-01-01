@@ -1,7 +1,5 @@
 package io.archton.scaffold.entity;
 
-import io.quarkus.elytron.security.common.BcryptUtil;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.PasswordType;
 import io.quarkus.security.jpa.Roles;
@@ -14,7 +12,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "user_login")
 @UserDefinition
-public class UserLogin extends PanacheEntityBase {
+public class UserLogin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,30 +68,6 @@ public class UserLogin extends PanacheEntityBase {
         if (email != null) {
             email = email.toLowerCase().trim();
         }
-    }
-
-    // --- Factory Methods ---
-
-    /**
-     * Create a new user with hashed password.
-     * Password is hashed using BCrypt with cost factor 12.
-     */
-    public static UserLogin create(String email, String plainPassword, String role) {
-        UserLogin user = new UserLogin();
-        user.email = email.toLowerCase().trim();
-        user.password = BcryptUtil.bcryptHash(plainPassword, 12);
-        user.role = role;
-        return user;
-    }
-
-    // --- Finder Methods ---
-
-    public static UserLogin findByEmail(String email) {
-        return find("email", email.toLowerCase().trim()).firstResult();
-    }
-
-    public static boolean emailExists(String email) {
-        return count("email", email.toLowerCase().trim()) > 0;
     }
 
     // --- Display Methods ---

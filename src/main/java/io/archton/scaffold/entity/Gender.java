@@ -1,6 +1,5 @@
 package io.archton.scaffold.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -9,7 +8,7 @@ import java.time.Instant;
     @UniqueConstraint(columnNames = "code"),
     @UniqueConstraint(columnNames = "description")
 })
-public class Gender extends PanacheEntityBase {
+public class Gender {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

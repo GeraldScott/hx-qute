@@ -41,10 +41,10 @@ HX Qute is a reference implementation demonstrating modern server-side web devel
 ### Architectural Layers
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────┐
 │                        Resource Layer (REST)                        │
 │            Handles HTTP requests, returns TemplateInstance          │
-└─────────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────┘
                                   │
                                   ▼
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -209,9 +209,17 @@ ALTER TABLE person
 
 ## 5. Entity Layer
 
-### 5.1 Entity Pattern (Plain JPA)
+### 5.1 Entity Pattern (Panache Public Fields)
 
-Entities are plain POJOs with JPA annotations. They contain NO business logic or data access methods. This follows the Repository pattern where entities are simple data containers.
+Entities use **public fields** following the Quarkus Panache recommendation. Panache automatically generates getters and setters at bytecode level during build time, providing proper encapsulation at runtime without boilerplate code.
+
+**Why public fields are safe in Quarkus:**
+- Quarkus builds in a "closed world" where all code is known at compile time
+- Hibernate needs getter/setter interception for lazy loading and dirty tracking
+- Panache generates these accessors automatically—when code reads `entity.field`, it actually calls `getField()`
+- You only write explicit accessors when you need custom logic (e.g., transformations)
+
+Entities contain NO business logic or data access methods. This follows the Repository pattern where entities are simple data containers.
 
 ```java
 package io.archton.scaffold.entity;
@@ -228,50 +236,29 @@ public class Gender {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @Column(name = "code", nullable = false, unique = true, length = 1)
-    private String code;
+    public String code;
 
     @Column(name = "description", nullable = false, unique = true, length = 255)
-    private String description;
+    public String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    public Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    public Instant updatedAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    public String createdBy;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    public String updatedBy;
 
-    // Default constructor required by JPA
-    public Gender() {}
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-
-    public String getCreatedBy() { return createdBy; }
-    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
-
-    public String getUpdatedBy() { return updatedBy; }
-    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+    // Panache generates getters/setters at bytecode level
+    // Only write explicit accessors for custom logic, e.g.:
+    // public String getCode() { return code.toUpperCase(); }
 
     // Lifecycle callbacks for audit timestamps
     @PrePersist
@@ -296,28 +283,28 @@ public class Person {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @Column(name = "first_name", nullable = false, length = 100)
-    private String firstName;
+    public String firstName;
 
     @Column(name = "last_name", nullable = false, length = 100)
-    private String lastName;
+    public String lastName;
 
     @Column(name = "email", nullable = false, unique = true, length = 255)
-    private String email;
+    public String email;
 
     // Many-to-One: Person has one Gender
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gender_id", nullable = false,
         foreignKey = @ForeignKey(name = "fk_person_gender"))
-    private Gender gender;
+    public Gender gender;
 
     // Many-to-One: Person has one Title
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "title_id",
         foreignKey = @ForeignKey(name = "fk_person_title"))
-    private Title title;
+    public Title title;
 
     // Audit fields and lifecycle callbacks...
 }
@@ -333,21 +320,21 @@ public class UserLogin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @Username
     @Column(nullable = false, unique = true)
-    private String email;
+    public String email;
 
     @Password(value = PasswordType.MCF)
     @Column(nullable = false)
-    private String password;
+    public String password;
 
     @Roles
     @Column(nullable = false)
-    private String role;
+    public String role;
 
-    // Getters and setters...
+    // Panache generates accessors at bytecode level
 }
 ```
 
@@ -1343,11 +1330,12 @@ When creating a new data entity, follow this checklist:
 
 - [ ] Create entity class in `entity/` package
 - [ ] Add JPA annotations (@Entity, @Table, @Column)
+- [ ] Use **public fields** (Panache generates accessors at bytecode level)
 - [ ] Define @Id with GenerationType.IDENTITY
 - [ ] Add @UniqueConstraint annotations to @Table
 - [ ] Define relationships with @ManyToOne, @OneToMany
 - [ ] Add @PrePersist and @PreUpdate for audit timestamps
-- [ ] Create getters and setters for all fields
+- [ ] Only add explicit getters/setters for custom logic (e.g., transformations)
 
 ### 11.3 Repository Layer
 
