@@ -10,6 +10,7 @@ CREATE TABLE person (
     date_of_birth DATE,
     title_id BIGINT REFERENCES title(id),
     gender_id BIGINT REFERENCES gender(id),
+    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(255),

@@ -38,6 +38,9 @@ public class Person {
     @JoinColumn(name = "gender_id", foreignKey = @ForeignKey(name = "fk_person_gender"))
     public Gender gender;
 
+    @Column(name = "notes", columnDefinition = "TEXT")
+    public String notes;
+
     @Column(name = "created_at")
     public Instant createdAt;
 

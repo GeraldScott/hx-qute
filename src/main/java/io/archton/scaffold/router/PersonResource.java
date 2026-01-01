@@ -165,13 +165,15 @@ public class PersonResource {
             @FormParam("email") String email,
             @FormParam("phone") String phone,
             @FormParam("dateOfBirth") String dateOfBirth,
-            @FormParam("genderId") Long genderId) {
+            @FormParam("genderId") Long genderId,
+            @FormParam("notes") String notes) {
 
         Person person = new Person();
         person.firstName = firstName;
         person.lastName = lastName;
         person.email = email;
         person.phone = phone;
+        person.notes = notes;
 
         // Parse dateOfBirth if provided
         if (dateOfBirth != null && !dateOfBirth.isBlank()) {
@@ -242,7 +244,8 @@ public class PersonResource {
             @FormParam("email") String email,
             @FormParam("phone") String phone,
             @FormParam("dateOfBirth") String dateOfBirth,
-            @FormParam("genderId") Long genderId) {
+            @FormParam("genderId") Long genderId,
+            @FormParam("notes") String notes) {
 
         Person person = personRepository.findById(id);
         if (person == null) {
@@ -259,6 +262,7 @@ public class PersonResource {
         formPerson.lastName = lastName;
         formPerson.email = email;
         formPerson.phone = phone;
+        formPerson.notes = notes;
         formPerson.createdAt = person.createdAt;
         formPerson.createdBy = person.createdBy;
         formPerson.updatedAt = person.updatedAt;
@@ -310,6 +314,7 @@ public class PersonResource {
         person.lastName = lastName;
         person.email = email;
         person.phone = phone;
+        person.notes = notes;
         person.dateOfBirth = formPerson.dateOfBirth;
         person.title = formPerson.title;
         person.gender = formPerson.gender;

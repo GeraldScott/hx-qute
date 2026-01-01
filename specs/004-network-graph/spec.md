@@ -171,6 +171,8 @@ public List<PersonRelationship> findAllForGraph() {
 
 **File**: `src/main/java/io/archton/scaffold/service/GraphService.java`
 
+The service layer builds graph data by aggregating data from multiple repositories. JSON serialization is handled automatically by JSON-B via the REST endpoint.
+
 ```java
 package io.archton.scaffold.service;
 
@@ -198,6 +200,7 @@ public class GraphService {
 
     /**
      * Build graph data for visualization.
+     * Returns a DTO that JSON-B will automatically serialize.
      */
     public GraphData buildGraphData() {
         // Get relationship counts per person
@@ -217,55 +220,10 @@ public class GraphService {
 
         return new GraphData(nodes, links);
     }
-
-    /**
-     * Convert GraphData to JSON string for embedding in template.
-     */
-    public String toJson(GraphData data) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"nodes\":[");
-
-        for (int i = 0; i < data.nodes().size(); i++) {
-            if (i > 0) sb.append(",");
-            GraphNode n = data.nodes().get(i);
-            sb.append("{");
-            sb.append("\"id\":\"").append(escape(n.id())).append("\",");
-            sb.append("\"name\":\"").append(escape(n.name())).append("\",");
-            sb.append("\"val\":").append(n.val()).append(",");
-            sb.append("\"group\":\"").append(escape(n.group())).append("\",");
-            sb.append("\"email\":\"").append(escape(n.email())).append("\",");
-            sb.append("\"phone\":").append(n.phone() != null ? "\"" + escape(n.phone()) + "\"" : "null").append(",");
-            sb.append("\"dateOfBirth\":").append(n.dateOfBirth() != null ? "\"" + n.dateOfBirth() + "\"" : "null").append(",");
-            sb.append("\"gender\":").append(n.gender() != null ? "\"" + escape(n.gender()) + "\"" : "null");
-            sb.append("}");
-        }
-
-        sb.append("],\"links\":[");
-
-        for (int i = 0; i < data.links().size(); i++) {
-            if (i > 0) sb.append(",");
-            GraphLink l = data.links().get(i);
-            sb.append("{");
-            sb.append("\"source\":\"").append(escape(l.source())).append("\",");
-            sb.append("\"target\":\"").append(escape(l.target())).append("\",");
-            sb.append("\"label\":\"").append(escape(l.label())).append("\"");
-            sb.append("}");
-        }
-
-        sb.append("]}");
-        return sb.toString();
-    }
-
-    private String escape(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
 }
 ```
+
+**Note**: No manual JSON serialization is needed. JSON-B (Jakarta JSON Binding) automatically serializes Java records to JSON when returned from a REST endpoint with `@Produces(MediaType.APPLICATION_JSON)`.
 
 ---
 
@@ -274,6 +232,10 @@ public class GraphService {
 ### 5.1 GraphResource
 
 **File**: `src/main/java/io/archton/scaffold/router/GraphResource.java`
+
+The resource provides two endpoints:
+1. `GET /graph` - Returns the HTML page (Qute template)
+2. `GET /graph/data` - Returns graph data as JSON (for JavaScript fetch)
 
 ```java
 package io.archton.scaffold.router;
@@ -305,23 +267,13 @@ public class GraphResource {
         public static native TemplateInstance graph(
             String title,
             String currentPage,
-            String userName,
-            String graphDataJson
-        );
-
-        // Modal fragment for person details
-        public static native TemplateInstance graph$modal_person(
-            String personId,
-            String personName,
-            String email,
-            String phone,
-            String dateOfBirth,
-            String gender
+            String userName
         );
     }
 
     /**
      * Display the network graph page.
+     * Graph data is loaded asynchronously via /graph/data endpoint.
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -330,15 +282,22 @@ public class GraphResource {
             ? null
             : securityIdentity.getPrincipal().getName();
 
-        GraphData graphData = graphService.buildGraphData();
-        String graphDataJson = graphService.toJson(graphData);
-
         return Templates.graph(
             "Relationship Graph",
             "graph",
-            userName,
-            graphDataJson
+            userName
         );
+    }
+
+    /**
+     * Return graph data as JSON.
+     * JSON-B automatically serializes the GraphData record.
+     */
+    @GET
+    @Path("/data")
+    @Produces(MediaType.APPLICATION_JSON)
+    public GraphData getGraphData() {
+        return graphService.buildGraphData();
     }
 }
 ```
@@ -347,7 +306,36 @@ public class GraphResource {
 
 | Method | Path | Handler | Description |
 |--------|------|---------|-------------|
-| GET | `/graph` | `showGraph()` | Display network graph page |
+| GET | `/graph` | `showGraph()` | Display network graph HTML page |
+| GET | `/graph/data` | `getGraphData()` | Return graph data as JSON |
+
+### 5.3 JSON-B Serialization
+
+The `GraphData`, `GraphNode`, and `GraphLink` records are automatically serialized by JSON-B. Example response from `GET /graph/data`:
+
+```json
+{
+  "nodes": [
+    {
+      "id": "1",
+      "name": "John Doe",
+      "val": 3,
+      "group": "M",
+      "email": "john@example.com",
+      "phone": "555-1234",
+      "dateOfBirth": "1980-05-15",
+      "gender": "Male"
+    }
+  ],
+  "links": [
+    {
+      "source": "1",
+      "target": "2",
+      "label": "Spouse"
+    }
+  ]
+}
+```
 
 ---
 
@@ -357,11 +345,15 @@ public class GraphResource {
 
 **File**: `templates/GraphResource/graph.html`
 
+The template fetches graph data asynchronously from `/graph/data` using the Fetch API. This approach:
+- Separates HTML rendering from JSON data
+- Allows the page to show a loading state
+- Uses JSON-B for proper serialization (no manual JSON building)
+
 ```html
 {@String title}
 {@String currentPage}
 {@String userName}
-{@String graphDataJson}
 {#include base}
 
 <h2 class="uk-heading-small">
@@ -373,16 +365,18 @@ public class GraphResource {
     Drag nodes to reposition. Right-click a node to view details. Scroll to zoom.
 </p>
 
-<!-- Graph Container -->
+<!-- Graph Container with Loading State -->
 <div id="graph-container"
      class="uk-background-muted uk-border-rounded"
      style="width: 100%; height: 600px; position: relative;">
+    <!-- Loading indicator shown while fetching data -->
+    <div id="graph-loading" class="uk-flex uk-flex-center uk-flex-middle" style="height: 100%;">
+        <div class="uk-text-center">
+            <div uk-spinner="ratio: 2"></div>
+            <p class="uk-margin-top uk-text-muted">Loading graph data...</p>
+        </div>
+    </div>
 </div>
-
-<!-- Graph Data (embedded JSON for HTMX compatibility) -->
-<script id="graph-data" type="application/json">
-{graphDataJson.raw}
-</script>
 
 <!-- Person Details Modal -->
 <div id="person-modal" uk-modal>
@@ -394,15 +388,15 @@ public class GraphResource {
     </div>
 </div>
 
-<!-- Force-Graph Library (loaded once in base or here) -->
+<!-- Force-Graph Library -->
 <script src="https://cdn.jsdelivr.net/npm/force-graph@1.47.4/dist/force-graph.min.js"></script>
 
 <!-- Graph Initialization Script -->
 <script>
 (function() {
-    // Parse graph data from embedded JSON
-    const graphData = JSON.parse(document.getElementById('graph-data').textContent);
     const container = document.getElementById('graph-container');
+    const loadingEl = document.getElementById('graph-loading');
+    let graph = null;
 
     // Color mapping by gender group
     const colorMap = {
@@ -411,54 +405,93 @@ public class GraphResource {
         'X': '#9E9E9E'   // Gray for Not Specified
     };
 
-    // Initialize force-graph
-    const graph = new ForceGraph(container)
-        .graphData(graphData)
-        .nodeId('id')
-        .nodeLabel('name')
-        .nodeVal('val')
-        .nodeColor(node => colorMap[node.group] || '#9E9E9E')
-        .nodeCanvasObject((node, ctx, globalScale) => {
-            // Draw circle
-            const size = Math.sqrt(node.val) * 4 + 4;
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-            ctx.fillStyle = colorMap[node.group] || '#9E9E9E';
-            ctx.fill();
-
-            // Draw border
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1.5 / globalScale;
-            ctx.stroke();
-
-            // Draw label if zoomed in enough
-            if (globalScale > 0.7) {
-                ctx.font = `${12/globalScale}px Sans-Serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#333';
-                ctx.fillText(node.name, node.x, node.y + size + 10/globalScale);
+    // Fetch graph data from JSON endpoint
+    fetch('/graph/data')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load graph data');
             }
+            return response.json();
         })
-        .nodeCanvasObjectMode(() => 'replace')
-        .linkLabel('label')
-        .linkColor(() => '#aaa')
-        .linkWidth(1.5)
-        .linkDirectionalArrowLength(6)
-        .linkDirectionalArrowRelPos(1)
-        .linkCurvature(0.1)
-        .d3AlphaDecay(0.02)
-        .d3VelocityDecay(0.3)
-        .warmupTicks(50)
-        .cooldownTicks(100)
-        .onNodeClick((node, event) => {
-            // Left click - center on node
-            graph.centerAt(node.x, node.y, 500);
-            graph.zoom(2, 500);
+        .then(graphData => {
+            // Remove loading indicator
+            loadingEl.remove();
+
+            // Handle empty state
+            if (graphData.nodes.length === 0) {
+                container.innerHTML = `
+                    <div class="uk-flex uk-flex-center uk-flex-middle" style="height: 100%;">
+                        <div class="uk-text-center uk-text-muted">
+                            <span uk-icon="icon: warning; ratio: 3"></span>
+                            <p class="uk-margin-top">No people found.
+                               <a href="/persons">Add some people</a> to see the network graph.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Initialize force-graph
+            graph = new ForceGraph(container)
+                .graphData(graphData)
+                .nodeId('id')
+                .nodeLabel('name')
+                .nodeVal('val')
+                .nodeColor(node => colorMap[node.group] || '#9E9E9E')
+                .nodeCanvasObject((node, ctx, globalScale) => {
+                    // Draw circle
+                    const size = Math.sqrt(node.val) * 4 + 4;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+                    ctx.fillStyle = colorMap[node.group] || '#9E9E9E';
+                    ctx.fill();
+
+                    // Draw border
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1.5 / globalScale;
+                    ctx.stroke();
+
+                    // Draw label if zoomed in enough
+                    if (globalScale > 0.7) {
+                        ctx.font = `${12/globalScale}px Sans-Serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#333';
+                        ctx.fillText(node.name, node.x, node.y + size + 10/globalScale);
+                    }
+                })
+                .nodeCanvasObjectMode(() => 'replace')
+                .linkLabel('label')
+                .linkColor(() => '#aaa')
+                .linkWidth(1.5)
+                .linkDirectionalArrowLength(6)
+                .linkDirectionalArrowRelPos(1)
+                .linkCurvature(0.1)
+                .d3AlphaDecay(0.02)
+                .d3VelocityDecay(0.3)
+                .warmupTicks(50)
+                .cooldownTicks(100)
+                .onNodeClick((node, event) => {
+                    // Left click - center on node
+                    graph.centerAt(node.x, node.y, 500);
+                    graph.zoom(2, 500);
+                })
+                .onNodeRightClick((node, event) => {
+                    event.preventDefault();
+                    showPersonModal(node);
+                });
+
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
         })
-        .onNodeRightClick((node, event) => {
-            event.preventDefault();
-            showPersonModal(node);
+        .catch(error => {
+            console.error('Graph loading error:', error);
+            loadingEl.innerHTML = `
+                <div class="uk-text-center uk-text-danger">
+                    <span uk-icon="icon: warning; ratio: 3"></span>
+                    <p class="uk-margin-top">Failed to load graph data. Please try refreshing the page.</p>
+                </div>
+            `;
         });
 
     // Prevent context menu on graph
@@ -496,11 +529,11 @@ public class GraphResource {
 
     // Handle window resize
     function handleResize() {
-        graph.width(container.clientWidth);
-        graph.height(container.clientHeight);
+        if (graph) {
+            graph.width(container.clientWidth);
+            graph.height(container.clientHeight);
+        }
     }
-
-    window.addEventListener('resize', handleResize);
 
     // Cleanup on page unload (for HTMX navigation)
     document.body.addEventListener('htmx:beforeSwap', function(evt) {
@@ -540,32 +573,17 @@ Update `templates/base.html` navigation fragment:
 
 **application.properties** (add):
 ```properties
-quarkus.http.auth.permission.graph.paths=/graph
+quarkus.http.auth.permission.graph.paths=/graph,/graph/*
 quarkus.http.auth.permission.graph.policy=authenticated
 ```
+
+Both the HTML page (`/graph`) and JSON API (`/graph/data`) require authentication.
 
 ---
 
 ## 9. Empty State Handling
 
-When no people or relationships exist:
-
-```javascript
-// In graph initialization
-if (graphData.nodes.length === 0) {
-    container.innerHTML = `
-        <div class="uk-flex uk-flex-center uk-flex-middle" style="height: 100%;">
-            <div class="uk-text-center uk-text-muted">
-                <span uk-icon="icon: warning; ratio: 3"></span>
-                <p class="uk-margin-top">No people found.
-                   <a href="/persons">Add some people</a> to see the network graph.</p>
-            </div>
-        </div>
-    `;
-} else {
-    // Initialize graph...
-}
-```
+Empty state handling is integrated into the template's fetch callback (see Section 6.1). When no people exist, the graph container displays a friendly message with a link to add people.
 
 ---
 
@@ -616,7 +634,7 @@ If you prefer external scripts:
 
 | Use Case | Implementation Component |
 |----------|-------------------------|
-| UC-004-01-01: Display Network Graph | `GraphResource.showGraph()`, `graph.html`, force-graph init |
+| UC-004-01-01: Display Network Graph | `GraphResource.showGraph()`, `GraphResource.getGraphData()`, `graph.html`, force-graph init |
 | UC-004-01-02: View Person Details | `onNodeRightClick()`, `showPersonModal()`, `#person-modal` |
 | UC-004-01-03: Navigate to Relationships | Link in modal: `/persons/{id}/relationships` |
 | UC-004-01-04: Customize Appearance | `colorMap`, `nodeCanvasObject()`, `nodeVal()` |
@@ -627,7 +645,18 @@ If you prefer external scripts:
 
 ### 13.1 Backend Dependencies
 
-Already included in project:
+**New dependency required** (add to `pom.xml`):
+
+```xml
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-rest-jsonb</artifactId>
+</dependency>
+```
+
+This extension enables JSON-B (Jakarta JSON Binding) for automatic JSON serialization of Java objects returned from REST endpoints with `@Produces(MediaType.APPLICATION_JSON)`.
+
+**Already included in project:**
 - `quarkus-hibernate-orm-panache`
 - `quarkus-rest-qute`
 - `quarkus-security-jpa`
@@ -649,5 +678,6 @@ Already included in project:
 
 ---
 
-*Document Version: 1.0*
+*Document Version: 1.1*
 *Last Updated: January 2026*
+*Change: Replaced manual JSON serialization with JSON-B endpoint*

@@ -1,0 +1,197 @@
+{@String title}
+{@String currentPage}
+{@String userName}
+{#include base}
+
+<h2 class="uk-heading-small">
+    <span uk-icon="icon: git-branch; ratio: 1.5"></span>
+    Relationship Network
+</h2>
+
+<p class="uk-text-muted uk-margin-bottom">
+    Drag nodes to reposition. Right-click a node to view details. Scroll to zoom.
+</p>
+
+<!-- Graph Container with Loading State -->
+<div id="graph-container"
+     class="uk-background-muted uk-border-rounded"
+     style="width: 100%; height: 600px; position: relative;">
+    <!-- Loading indicator shown while fetching data -->
+    <div id="graph-loading" class="uk-flex uk-flex-center uk-flex-middle" style="height: 100%;">
+        <div class="uk-text-center">
+            <div uk-spinner="ratio: 2"></div>
+            <p class="uk-margin-top uk-text-muted">Loading graph data...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Person Details Modal -->
+<div id="person-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+        <div id="person-modal-body">
+            <!-- Content populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Force-Graph Library -->
+<script src="https://cdn.jsdelivr.net/npm/force-graph@1.47.4/dist/force-graph.min.js"></script>
+
+<!-- Graph Initialization Script -->
+{|
+<script>
+(function() {
+    const container = document.getElementById('graph-container');
+    const loadingEl = document.getElementById('graph-loading');
+    let graph = null;
+
+    // Color mapping by gender group
+    const colorMap = {
+        'F': '#E91E63',  // Pink for Female
+        'M': '#2196F3',  // Blue for Male
+        'X': '#9E9E9E'   // Gray for Not Specified
+    };
+
+    // Fetch graph data from JSON endpoint
+    fetch('/graph/data')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load graph data');
+            }
+            return response.json();
+        })
+        .then(graphData => {
+            // Remove loading indicator
+            loadingEl.remove();
+
+            // Handle empty state
+            if (graphData.nodes.length === 0) {
+                container.innerHTML = `
+                    <div class="uk-flex uk-flex-center uk-flex-middle" style="height: 100%;">
+                        <div class="uk-text-center uk-text-muted">
+                            <span uk-icon="icon: warning; ratio: 3"></span>
+                            <p class="uk-margin-top">No people found.
+                               <a href="/persons">Add some people</a> to see the network graph.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Initialize force-graph
+            graph = new ForceGraph(container)
+                .graphData(graphData)
+                .nodeId('id')
+                .nodeLabel('name')
+                .nodeVal('val')
+                .nodeColor(node => colorMap[node.group] || '#9E9E9E')
+                .nodeCanvasObject((node, ctx, globalScale) => {
+                    // Draw circle
+                    const size = Math.sqrt(node.val) * 4 + 4;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+                    ctx.fillStyle = colorMap[node.group] || '#9E9E9E';
+                    ctx.fill();
+
+                    // Draw border
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1.5 / globalScale;
+                    ctx.stroke();
+
+                    // Draw label if zoomed in enough
+                    if (globalScale > 0.7) {
+                        ctx.font = `${12/globalScale}px Sans-Serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#333';
+                        ctx.fillText(node.name, node.x, node.y + size + 10/globalScale);
+                    }
+                })
+                .nodeCanvasObjectMode(() => 'replace')
+                .linkLabel('label')
+                .linkColor(() => '#aaa')
+                .linkWidth(1.5)
+                .linkDirectionalArrowLength(6)
+                .linkDirectionalArrowRelPos(1)
+                .linkCurvature(0.1)
+                .d3AlphaDecay(0.02)
+                .d3VelocityDecay(0.3)
+                .warmupTicks(50)
+                .cooldownTicks(100)
+                .onNodeClick((node, event) => {
+                    // Left click - center on node
+                    graph.centerAt(node.x, node.y, 500);
+                    graph.zoom(2, 500);
+                })
+                .onNodeRightClick((node, event) => {
+                    event.preventDefault();
+                    showPersonModal(node);
+                });
+
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
+        })
+        .catch(error => {
+            console.error('Graph loading error:', error);
+            loadingEl.innerHTML = `
+                <div class="uk-text-center uk-text-danger">
+                    <span uk-icon="icon: warning; ratio: 3"></span>
+                    <p class="uk-margin-top">Failed to load graph data. Please try refreshing the page.</p>
+                </div>
+            `;
+        });
+
+    // Prevent context menu on graph
+    container.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Show person details modal
+    function showPersonModal(node) {
+        const modalBody = document.getElementById('person-modal-body');
+        modalBody.innerHTML = `
+            <h2 class="uk-modal-title">${escapeHtml(node.name)}</h2>
+            ${node.notes ? `<p class="uk-text-muted uk-text-italic">${escapeHtml(node.notes)}</p>` : ''}
+            <dl class="uk-description-list uk-description-list-divider uk-margin-top">
+                <dt>Email</dt>
+                <dd><a href="mailto:${escapeHtml(node.email)}">${escapeHtml(node.email)}</a></dd>
+                ${node.phone ? `<dt>Phone</dt><dd>${escapeHtml(node.phone)}</dd>` : ''}
+                ${node.dateOfBirth ? `<dt>Date of Birth</dt><dd>${escapeHtml(node.dateOfBirth)}</dd>` : ''}
+                ${node.gender ? `<dt>Gender</dt><dd>${escapeHtml(node.gender)}</dd>` : ''}
+            </dl>
+            <div class="uk-margin-top">
+                <a href="/persons/${node.id}/relationships"
+                   class="uk-button uk-button-primary uk-modal-close">
+                    <span uk-icon="link"></span> Manage Relationships
+                </a>
+            </div>
+        `;
+        UIkit.modal('#person-modal').show();
+    }
+
+    // HTML escape helper
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Handle window resize
+    function handleResize() {
+        if (graph) {
+            graph.width(container.clientWidth);
+            graph.height(container.clientHeight);
+        }
+    }
+
+    // Cleanup on page unload (for HTMX navigation)
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+        if (evt.detail.target.id === 'main-content') {
+            window.removeEventListener('resize', handleResize);
+        }
+    });
+})();
+</script>
+|}
+
+{/include}

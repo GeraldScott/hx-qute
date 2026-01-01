@@ -183,6 +183,12 @@
             <span class="uk-margin-small-left">People</span>
         </a>
     </li>
+    <li class="{#if currentPage?? == 'graph'}uk-active{/if}">
+        <a href="/graph">
+            <span uk-icon="icon: git-branch; ratio: 1.2"></span>
+            <span class="uk-margin-small-left">Graph</span>
+        </a>
+    </li>
     <li class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title' || currentPage?? == 'relationship'}uk-open{/if}">
         <a href="#">
             <span uk-icon="icon: settings; ratio: 1.2"></span>

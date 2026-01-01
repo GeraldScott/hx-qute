@@ -97,6 +97,7 @@
                 <th>Phone</th>
                 <th>Date of Birth</th>
                 <th>Gender</th>
+                <th>Notes</th>
                 <th class="uk-width-small">Actions</th>
             </tr>
         </thead>
@@ -108,6 +109,7 @@
                 <td>{p.phone ?: ''}</td>
                 <td>{#if p.dateOfBirth}{p.dateOfBirth.format('dd MMM yyyy')}{/if}</td>
                 <td>{#if p.gender??}{p.gender.description}{/if}</td>
+                <td class="uk-text-truncate" style="max-width: 200px;" uk-tooltip="{p.notes ?: ''}">{p.notes ?: ''}</td>
                 <td>
                     <div class="uk-button-group">
                         <a
@@ -199,6 +201,10 @@
             <input class="uk-input" type="date" id="create-dateOfBirth" name="dateOfBirth" value="{person.dateOfBirth ?: ''}" />
         </div>
     </div>
+    <div class="uk-margin">
+        <label class="uk-form-label" for="create-notes">Notes</label>
+        <textarea class="uk-textarea" id="create-notes" name="notes" rows="2" placeholder="Brief biography or notes...">{person.notes ?: ''}</textarea>
+    </div>
     <div class="uk-margin uk-text-right">
         <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
         <button class="uk-button uk-button-primary" type="submit">Save</button>
@@ -260,6 +266,10 @@
             <input class="uk-input" type="date" id="edit-dateOfBirth" name="dateOfBirth" value="{person.dateOfBirth ?: ''}" />
         </div>
     </div>
+    <div class="uk-margin">
+        <label class="uk-form-label" for="edit-notes">Notes</label>
+        <textarea class="uk-textarea" id="edit-notes" name="notes" rows="2" placeholder="Brief biography or notes...">{person.notes ?: ''}</textarea>
+    </div>
     <details class="uk-margin">
         <summary class="uk-text-muted">Audit Information</summary>
         <div class="uk-text-small uk-text-muted uk-margin-small-top">
@@ -295,6 +305,7 @@
     <td>{person.phone ?: ''}</td>
     <td>{#if person.dateOfBirth}{person.dateOfBirth.format('dd MMM yyyy')}{/if}</td>
     <td>{#if person.gender??}{person.gender.description}{/if}</td>
+    <td class="uk-text-truncate" style="max-width: 200px;" uk-tooltip="{person.notes ?: ''}">{person.notes ?: ''}</td>
     <td>
         <div class="uk-button-group">
             <a class="uk-button uk-button-small uk-button-default"
