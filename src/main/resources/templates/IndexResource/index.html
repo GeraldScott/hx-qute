@@ -1,8 +1,18 @@
-{#include base}
-<div class="uk-flex uk-flex-wrap uk-flex-center" style="gap: 30px; margin-top: 40px;">
+{@boolean devMode} {#include base}
+
+<div
+    class="uk-flex uk-flex-wrap uk-flex-center"
+    style="gap: 30px; margin-top: 40px"
+>
     <div class="tech-card uk-card uk-card-default uk-card-body uk-width-medium">
         <h3 class="uk-card-title uk-flex uk-flex-middle">
-            <img src="/img/Quarkus.svg" width="24" height="24" alt="Quarkus" class="uk-margin-small-right" />
+            <img
+                src="/img/Quarkus.svg"
+                width="24"
+                height="24"
+                alt="Quarkus"
+                class="uk-margin-small-right"
+            />
             Supersonic Quarkus
         </h3>
         <p class="uk-text-small uk-margin-small-top">
@@ -12,7 +22,13 @@
     </div>
     <div class="tech-card uk-card uk-card-default uk-card-body uk-width-medium">
         <h3 class="uk-card-title uk-flex uk-flex-middle">
-            <img src="/img/Quarkus_black.svg" width="24" height="24" alt="Qute" class="uk-margin-small-right" />
+            <img
+                src="/img/Quarkus_black.svg"
+                width="24"
+                height="24"
+                alt="Qute"
+                class="uk-margin-small-right"
+            />
             Type-Safe Qute
         </h3>
         <p class="uk-text-small uk-margin-small-top">
@@ -21,7 +37,13 @@
     </div>
     <div class="tech-card uk-card uk-card-default uk-card-body uk-width-medium">
         <h3 class="uk-card-title uk-flex uk-flex-middle">
-            <img src="/img/HTMX.svg" width="35" height="24" alt="HTMX" class="uk-margin-small-right" />
+            <img
+                src="/img/HTMX.svg"
+                width="35"
+                height="24"
+                alt="HTMX"
+                class="uk-margin-small-right"
+            />
             High-powered HTMX
         </h3>
         <p class="uk-text-small uk-margin-small-top">
@@ -30,7 +52,13 @@
     </div>
     <div class="tech-card uk-card uk-card-default uk-card-body uk-width-medium">
         <h3 class="uk-card-title uk-flex uk-flex-middle">
-            <img src="/img/PostgresSQL.svg" width="24" height="24" alt="PostgreSQL" class="uk-margin-small-right" />
+            <img
+                src="/img/PostgresSQL.svg"
+                width="24"
+                height="24"
+                alt="PostgreSQL"
+                class="uk-margin-small-right"
+            />
             Robust PostgreSQL
         </h3>
         <p class="uk-text-small uk-margin-small-top">
@@ -38,4 +66,13 @@
         </p>
     </div>
 </div>
-{/include}
+
+{#if devMode}
+<div uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    <p>
+        <strong>Development Server</strong><br />Default login:
+        <code>admin@example.com</code> / <code>AdminPassword123</code>
+    </p>
+</div>
+{/if} {/include}
