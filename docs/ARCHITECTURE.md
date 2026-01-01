@@ -1,4 +1,4 @@
-# HX Qute Architecture Guide
+**# HX Qute Architecture Guide
 
 A comprehensive technical reference for developing features in this Quarkus + HTMX + Qute application.
 
@@ -131,6 +131,65 @@ src/main/resources/
 │   ├── V002__Create_category_table.sql
 │   └── V003__Create_item_table.sql
 └── application.properties
+```
+
+### 3.1 File Naming Conventions
+
+| Layer | Naming Pattern | Location |
+|-------|----------------|----------|
+| Entity | `{EntityName}.java` | `src/main/java/.../entity/` |
+| Repository | `{EntityName}Repository.java` | `src/main/java/.../repository/` |
+| Service | `{EntityName}Service.java` | `src/main/java/.../service/` |
+| Resource | `{EntityName}Resource.java` | `src/main/java/.../router/` |
+| Template | `{entityname}.html` | `src/main/resources/templates/{EntityName}Resource/` |
+| Migration | `V{NNN}__{description}.sql` | `src/main/resources/db/migration/` |
+
+**Examples for a `Person` entity:**
+
+| Layer | File Name | Full Path |
+|-------|-----------|-----------|
+| Entity | `Person.java` | `src/main/java/.../entity/Person.java` |
+| Repository | `PersonRepository.java` | `src/main/java/.../repository/PersonRepository.java` |
+| Service | `PersonService.java` | `src/main/java/.../service/PersonService.java` |
+| Resource | `PersonResource.java` | `src/main/java/.../router/PersonResource.java` |
+| Template | `person.html` | `src/main/resources/templates/PersonResource/person.html` |
+| Migration | `V004__Create_person_table.sql` | `src/main/resources/db/migration/V004__Create_person_table.sql` |
+
+**Notes:**
+- Entity names use PascalCase (e.g., `UserLogin`, `OrderItem`)
+- Template filenames use lowercase (e.g., `userlogin.html`, `orderitem.html`)
+- Template directories match the Resource class name exactly
+- Migration version numbers are zero-padded to 3 digits for proper ordering
+
+### 3.2 Fragment Naming Conventions
+
+Qute fragments use `{#fragment id=...}` in templates and are accessed via `$` notation in Java:
+
+| Fragment ID | Java Method | Purpose |
+|-------------|-------------|---------|
+| `{#fragment id=table}` | `Templates.entity$table(...)` | Data table partial |
+| `{#fragment id=modal_create}` | `Templates.entity$modal_create(...)` | Create form modal |
+| `{#fragment id=modal_edit}` | `Templates.entity$modal_edit(...)` | Edit form modal |
+| `{#fragment id=modal_delete}` | `Templates.entity$modal_delete(...)` | Delete confirmation modal |
+| `{#fragment id=modal_success}` | `Templates.entity$modal_success(...)` | Success message with OOB update |
+| `{#fragment id=modal_delete_success}` | `Templates.entity$modal_delete_success(...)` | Delete success with OOB row removal |
+
+**Pattern:** `{#fragment id=name}` → `Templates.{templatefile}${fragmentid}(...)`
+
+**Example for `person.html`:**
+
+```java
+// In PersonResource.java
+@CheckedTemplate
+public static class Templates {
+    public static native TemplateInstance person(...);                    // Full page
+    public static native TemplateInstance person$table(...);              // {#fragment id=table}
+    public static native TemplateInstance person$modal_create(...);       // {#fragment id=modal_create}
+    public static native TemplateInstance person$modal_edit(...);         // {#fragment id=modal_edit}
+    public static native TemplateInstance person$modal_delete(...);       // {#fragment id=modal_delete}
+    public static native TemplateInstance person$modal_success(...);      // {#fragment id=modal_success}
+    public static native TemplateInstance person$modal_delete_success(...); // {#fragment id=modal_delete_success}
+}
 ```
 
 ---
@@ -1516,4 +1575,4 @@ public class OrderRepository implements PanacheRepository<Order> {
 
 *Document Version: 2.1*
 *Pattern: PanacheRepository with Service Layer*
-*Last Updated: 2026-01-01*
+*Last Updated: 2026-01-01***
