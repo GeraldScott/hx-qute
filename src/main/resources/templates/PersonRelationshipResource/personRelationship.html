@@ -1,0 +1,291 @@
+{@String title}
+{@String currentPage}
+{@String userName}
+{@io.archton.scaffold.entity.Person sourcePerson}
+{@java.util.List<io.archton.scaffold.entity.PersonRelationship> relationships}
+{@java.util.List<io.archton.scaffold.entity.Person> personChoices}
+{@java.util.List<io.archton.scaffold.entity.Relationship> relationshipChoices}
+{@String filterText}
+{@String sortField}
+{@String sortDir}
+{#include base}
+
+<div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+    <h2 class="uk-heading-small uk-margin-remove">Relationships for {sourcePerson.getDisplayName()}</h2>
+    <a href="/persons" class="uk-button uk-button-default uk-button-small">
+        <span uk-icon="arrow-left"></span> Back to People
+    </a>
+</div>
+
+<!-- Add new relationship -->
+<button
+    class="uk-button uk-button-primary uk-button-small uk-margin-bottom"
+    type="button"
+    hx-get="/persons/{sourcePerson.id}/relationships/create"
+    hx-target="#relationship-modal-body"
+    hx-on::after-request="UIkit.modal('#relationship-modal').show()"
+    uk-tooltip="Add Relationship"
+>
+    <span uk-icon="plus"></span> Add Relationship
+</button>
+
+<!-- Filter bar above the table -->
+<form class="uk-grid-small uk-flex-middle uk-margin-bottom" uk-grid
+      hx-get="/persons/{sourcePerson.id}/relationships"
+      hx-target="#relationship-table-container"
+      hx-push-url="true">
+
+    <!-- Search Input -->
+    <div class="uk-width-expand@s uk-width-1-1">
+        <input class="uk-input" type="search" name="filter"
+               value="{filterText ?: ''}"
+               placeholder="Search name or relationship..."
+               hx-get="/persons/{sourcePerson.id}/relationships"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#relationship-table-container"
+               hx-include="closest form" />
+    </div>
+
+    <!-- Sort Field -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="sortField">
+            <option value="">Sort by...</option>
+            <option value="lastName" {#if sortField == 'lastName'}selected{/if}>Last Name</option>
+            <option value="firstName" {#if sortField == 'firstName'}selected{/if}>First Name</option>
+            <option value="relationship" {#if sortField == 'relationship'}selected{/if}>Relationship</option>
+        </select>
+    </div>
+
+    <!-- Sort Direction -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="sortDir">
+            <option value="asc" {#if sortDir != 'desc'}selected{/if}>Ascending</option>
+            <option value="desc" {#if sortDir == 'desc'}selected{/if}>Descending</option>
+        </select>
+    </div>
+
+    <!-- Buttons -->
+    <div class="uk-width-auto@s">
+        <button type="submit" class="uk-button uk-button-primary">Search</button>
+        <a href="/persons/{sourcePerson.id}/relationships" class="uk-button uk-button-default">Clear</a>
+    </div>
+</form>
+
+<div id="relationship-table-container">{#include $table /}</div>
+
+<!-- Static Modal Shell -->
+<div id="relationship-modal" uk-modal="bg-close: false">
+    <div class="uk-modal-dialog uk-modal-container">
+        <div id="relationship-modal-body" class="uk-modal-body">
+            <!-- Content loaded dynamically via HTMX -->
+        </div>
+    </div>
+</div>
+
+{/include}
+
+{#fragment id='table'}
+{@io.archton.scaffold.entity.Person sourcePerson}
+{@java.util.List<io.archton.scaffold.entity.PersonRelationship> relationships}
+{@String filterText}
+{#if relationships.isEmpty()}
+{#if filterText??}
+<p class="uk-text-muted">No relationships match the filter criteria.</p>
+{#else}
+<p class="uk-text-muted">No relationships found for this person.</p>
+{/if}
+{#else}
+<div class="uk-overflow-auto">
+    <table id="relationship-table" class="uk-table uk-table-hover uk-table-divider uk-table-responsive">
+        <thead>
+            <tr>
+                <th>Related Person</th>
+                <th>Relationship Type</th>
+                <th class="uk-width-small">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="relationship-table-body">
+            {#for r in relationships}
+            <tr id="relationship-row-{r.id}">
+                <td>{r.relatedPerson.getDisplayName()}</td>
+                <td>{r.relationship.description}</td>
+                <td>
+                    <div class="uk-button-group">
+                        <button
+                            class="uk-button uk-button-small uk-button-primary"
+                            hx-get="/persons/{sourcePerson.id}/relationships/{r.id}/edit"
+                            hx-target="#relationship-modal-body"
+                            hx-on::after-request="UIkit.modal('#relationship-modal').show()"
+                            uk-tooltip="Edit Relationship"
+                        >
+                            <span uk-icon="pencil"></span>
+                        </button>
+                        <button
+                            class="uk-button uk-button-small uk-button-danger"
+                            hx-get="/persons/{sourcePerson.id}/relationships/{r.id}/delete"
+                            hx-target="#relationship-modal-body"
+                            hx-on::after-request="UIkit.modal('#relationship-modal').show()"
+                            uk-tooltip="Delete Relationship"
+                        >
+                            <span uk-icon="trash"></span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {/for}
+        </tbody>
+    </table>
+</div>
+{/if}
+{/fragment}
+
+{#fragment id='modal_create' rendered=false}
+{@io.archton.scaffold.entity.Person sourcePerson}
+{@io.archton.scaffold.entity.PersonRelationship personRelationship}
+{@java.util.List<io.archton.scaffold.entity.Person> personChoices}
+{@java.util.List<io.archton.scaffold.entity.Relationship> relationshipChoices}
+{@String error}
+<h2 class="uk-modal-title">Add Relationship</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-post="/persons/{sourcePerson.id}/relationships" hx-target="#relationship-modal-body" class="uk-form-stacked">
+    <div class="uk-margin">
+        <label class="uk-form-label" for="create-relatedPersonId">Related Person *</label>
+        <select class="uk-select" id="create-relatedPersonId" name="relatedPersonId" required>
+            <option value="">Select person...</option>
+            {#for p in personChoices}
+            <option value="{p.id}" {#if personRelationship.relatedPerson?? && personRelationship.relatedPerson.id == p.id}selected{/if}>{p.getDisplayName()}</option>
+            {/for}
+        </select>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label" for="create-relationshipId">Relationship Type *</label>
+        <select class="uk-select" id="create-relationshipId" name="relationshipId" required>
+            <option value="">Select relationship type...</option>
+            {#for rel in relationshipChoices}
+            <option value="{rel.id}" {#if personRelationship.relationship?? && personRelationship.relationship.id == rel.id}selected{/if}>{rel.description}</option>
+            {/for}
+        </select>
+    </div>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
+{/fragment}
+
+{#fragment id='modal_edit' rendered=false}
+{@io.archton.scaffold.entity.Person sourcePerson}
+{@io.archton.scaffold.entity.PersonRelationship personRelationship}
+{@java.util.List<io.archton.scaffold.entity.Person> personChoices}
+{@java.util.List<io.archton.scaffold.entity.Relationship> relationshipChoices}
+{@String error}
+<h2 class="uk-modal-title">Edit Relationship</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{/if}
+<form hx-put="/persons/{sourcePerson.id}/relationships/{personRelationship.id}" hx-target="#relationship-modal-body" class="uk-form-stacked">
+    <div class="uk-margin">
+        <label class="uk-form-label" for="edit-relatedPersonId">Related Person *</label>
+        <select class="uk-select" id="edit-relatedPersonId" name="relatedPersonId" required>
+            <option value="">Select person...</option>
+            {#for p in personChoices}
+            <option value="{p.id}" {#if personRelationship.relatedPerson?? && personRelationship.relatedPerson.id == p.id}selected{/if}>{p.getDisplayName()}</option>
+            {/for}
+        </select>
+    </div>
+    <div class="uk-margin">
+        <label class="uk-form-label" for="edit-relationshipId">Relationship Type *</label>
+        <select class="uk-select" id="edit-relationshipId" name="relationshipId" required>
+            <option value="">Select relationship type...</option>
+            {#for rel in relationshipChoices}
+            <option value="{rel.id}" {#if personRelationship.relationship?? && personRelationship.relationship.id == rel.id}selected{/if}>{rel.description}</option>
+            {/for}
+        </select>
+    </div>
+    <details class="uk-margin">
+        <summary class="uk-text-muted">Audit Information</summary>
+        <div class="uk-text-small uk-text-muted uk-margin-small-top">
+            <div>Created: {personRelationship.createdAt} by {personRelationship.createdBy}</div>
+            <div>Updated: {personRelationship.updatedAt} by {personRelationship.updatedBy}</div>
+        </div>
+    </details>
+    <div class="uk-margin uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+        <button class="uk-button uk-button-primary" type="submit">Save</button>
+    </div>
+</form>
+{/fragment}
+
+{#fragment id='modal_success' rendered=false}
+{@String message}
+{@io.archton.scaffold.entity.Person sourcePerson}
+{@java.util.List<io.archton.scaffold.entity.PersonRelationship> relationships}
+{@String filterText}
+<div hx-on::load="UIkit.modal('#relationship-modal').hide()"></div>
+<div id="relationship-table-container" hx-swap-oob="innerHTML">
+    {#include $table sourcePerson=sourcePerson relationships=relationships filterText=filterText /}
+</div>
+{/fragment}
+
+{#fragment id='modal_success_row' rendered=false}
+{@String message}
+{@io.archton.scaffold.entity.PersonRelationship personRelationship}
+<div hx-on::load="UIkit.modal('#relationship-modal').hide()"></div>
+<template>
+<tr id="relationship-row-{personRelationship.id}" hx-swap-oob="outerHTML">
+    <td>{personRelationship.relatedPerson.getDisplayName()}</td>
+    <td>{personRelationship.relationship.description}</td>
+    <td>
+        <div class="uk-button-group">
+            <button class="uk-button uk-button-small uk-button-primary"
+                    hx-get="/persons/{personRelationship.sourcePerson.id}/relationships/{personRelationship.id}/edit"
+                    hx-target="#relationship-modal-body"
+                    hx-on::after-request="UIkit.modal('#relationship-modal').show()"
+                    uk-tooltip="Edit Relationship">
+                <span uk-icon="pencil"></span>
+            </button>
+            <button class="uk-button uk-button-small uk-button-danger"
+                    hx-get="/persons/{personRelationship.sourcePerson.id}/relationships/{personRelationship.id}/delete"
+                    hx-target="#relationship-modal-body"
+                    hx-on::after-request="UIkit.modal('#relationship-modal').show()"
+                    uk-tooltip="Delete Relationship">
+                <span uk-icon="trash"></span>
+            </button>
+        </div>
+    </td>
+</tr>
+</template>
+{/fragment}
+
+{#fragment id='modal_delete' rendered=false}
+{@io.archton.scaffold.entity.Person sourcePerson}
+{@io.archton.scaffold.entity.PersonRelationship personRelationship}
+{@String error}
+<h2 class="uk-modal-title">Delete Relationship</h2>
+{#if error??}
+<div class="uk-alert uk-alert-danger">{error}</div>
+{#else}
+<div class="uk-alert uk-alert-warning">
+    Are you sure you want to remove the relationship with <strong>{personRelationship.relatedPerson.getDisplayName()}</strong> ({personRelationship.relationship.description})?
+</div>
+<p class="uk-text-muted">This action cannot be undone.</p>
+{/if}
+<div class="uk-margin uk-text-right">
+    <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+    {#if !error??}
+    <button class="uk-button uk-button-danger"
+            hx-delete="/persons/{sourcePerson.id}/relationships/{personRelationship.id}"
+            hx-target="#relationship-modal-body">
+        Delete
+    </button>
+    {/if}
+</div>
+{/fragment}
+
+{#fragment id='modal_delete_success' rendered=false}
+{@Long deletedId}
+<div hx-on::load="UIkit.modal('#relationship-modal').hide()"></div>
+<template><tr id="relationship-row-{deletedId}" hx-swap-oob="delete"></tr></template>
+{/fragment}

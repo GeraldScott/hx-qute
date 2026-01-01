@@ -17,6 +17,18 @@ public class PersonRepository implements PanacheRepository<Person> {
         return list("ORDER BY lastName ASC, firstName ASC");
     }
 
+    /**
+     * List all persons ordered, with title eagerly fetched for display name rendering.
+     */
+    public List<Person> listAllOrderedWithTitle() {
+        return getEntityManager()
+            .createQuery(
+                "SELECT p FROM Person p LEFT JOIN FETCH p.title ORDER BY p.lastName ASC, p.firstName ASC",
+                Person.class
+            )
+            .getResultList();
+    }
+
     public List<Person> findByFilter(String filterText, String sortField, String sortDir) {
         String orderBy = buildOrderBy(sortField, sortDir);
 

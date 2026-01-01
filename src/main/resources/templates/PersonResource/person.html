@@ -110,6 +110,13 @@
                 <td>{#if p.gender??}{p.gender.description}{/if}</td>
                 <td>
                     <div class="uk-button-group">
+                        <a
+                            class="uk-button uk-button-small uk-button-default"
+                            href="/persons/{p.id}/relationships"
+                            uk-tooltip="Manage Relationships"
+                        >
+                            <span uk-icon="link"></span>
+                        </a>
                         <button
                             class="uk-button uk-button-small uk-button-primary"
                             hx-get="/persons/{p.id}/edit"
@@ -290,6 +297,11 @@
     <td>{#if person.gender??}{person.gender.description}{/if}</td>
     <td>
         <div class="uk-button-group">
+            <a class="uk-button uk-button-small uk-button-default"
+                    href="/persons/{person.id}/relationships"
+                    uk-tooltip="Manage Relationships">
+                <span uk-icon="link"></span>
+            </a>
             <button class="uk-button uk-button-small uk-button-primary"
                     hx-get="/persons/{person.id}/edit"
                     hx-target="#person-modal-body"

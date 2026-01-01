@@ -7,7 +7,7 @@
 ## Current Status
 
 **Current Phase:** Feature 003 - Person Relationships (US-003-07)
-**Current Use Case:** UC-003-07-03: Submit Add Relationship Form
+**Current Use Case:** UC-003-07-06: Delete Relationship
 **Blockers:** None
 
 ## Feature Plans
@@ -25,9 +25,9 @@
 | Feature 000 - Foundation | 4 | 4 | 0 |
 | Feature 001 - Identity and Access Management | 6 | 6 | 0 |
 | Feature 002 - Master Data Management | 21 | 21 | 0 |
-| Feature 003 - Person Management | 21 | 13 | 8 |
+| Feature 003 - Person Management | 21 | 16 | 5 |
 | Feature 004 - Network Graph Visualization | 4 | 0 | 4 |
-| **Total** | **56** | **44** | **12** |
+| **Total** | **56** | **47** | **9** |
 
 ---
 

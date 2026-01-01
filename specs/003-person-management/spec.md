@@ -517,5 +517,363 @@ public class PersonResource { ... }
 
 ---
 
-*Document Version: 2.0*
-*Last Updated: December 2025*
+## 11. PersonRelationship Entity (US-003-07)
+
+This section describes the technical implementation for building relationships between people.
+
+### 11.1 Database Schema
+
+**Migration**: `V1.6.0__Create_person_relationship_table.sql`
+
+```sql
+CREATE TABLE person_relationship (
+    id BIGSERIAL PRIMARY KEY,
+    source_person_id BIGINT NOT NULL,
+    related_person_id BIGINT NOT NULL,
+    relationship_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+
+    CONSTRAINT fk_person_rel_source FOREIGN KEY (source_person_id) REFERENCES person(id) ON DELETE CASCADE,
+    CONSTRAINT fk_person_rel_related FOREIGN KEY (related_person_id) REFERENCES person(id) ON DELETE CASCADE,
+    CONSTRAINT fk_person_rel_type FOREIGN KEY (relationship_id) REFERENCES relationship(id),
+    CONSTRAINT uk_person_relationship UNIQUE (source_person_id, related_person_id, relationship_id),
+    CONSTRAINT chk_not_self_relationship CHECK (source_person_id != related_person_id)
+);
+
+CREATE INDEX idx_person_rel_source ON person_relationship(source_person_id);
+CREATE INDEX idx_person_rel_related ON person_relationship(related_person_id);
+CREATE INDEX idx_person_rel_type ON person_relationship(relationship_id);
+```
+
+**Key Constraints:**
+- `source_person_id`: FK to person table, the person whose relationships are being managed
+- `related_person_id`: FK to person table, the person being linked to
+- `relationship_id`: FK to relationship master data table
+- Unique constraint prevents duplicate relationships (same source, related, and type)
+- Check constraint prevents self-referential relationships
+- Cascading delete: if either person is deleted, the relationship is removed
+
+---
+
+### 11.2 PersonRelationship Entity
+
+**File**: `src/main/java/io/archton/scaffold/entity/PersonRelationship.java`
+
+```java
+package io.archton.scaffold.entity;
+
+import jakarta.persistence.*;
+import java.time.Instant;
+
+@Entity
+@Table(name = "person_relationship", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_person_relationship",
+        columnNames = {"source_person_id", "related_person_id", "relationship_id"})
+})
+public class PersonRelationship {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_person_id", nullable = false,
+        foreignKey = @ForeignKey(name = "fk_person_rel_source"))
+    public Person sourcePerson;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_person_id", nullable = false,
+        foreignKey = @ForeignKey(name = "fk_person_rel_related"))
+    public Person relatedPerson;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "relationship_id", nullable = false,
+        foreignKey = @ForeignKey(name = "fk_person_rel_type"))
+    public Relationship relationship;
+
+    @Column(name = "created_at")
+    public Instant createdAt;
+
+    @Column(name = "updated_at")
+    public Instant updatedAt;
+
+    @Column(name = "created_by")
+    public String createdBy;
+
+    @Column(name = "updated_by")
+    public String updatedBy;
+
+    public PersonRelationship() {}
+
+    // Lifecycle callbacks
+    @PrePersist
+    void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
+}
+```
+
+---
+
+### 11.3 PersonRelationshipRepository
+
+**File**: `src/main/java/io/archton/scaffold/repository/PersonRelationshipRepository.java`
+
+```java
+package io.archton.scaffold.repository;
+
+import io.archton.scaffold.entity.PersonRelationship;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import java.util.List;
+import java.util.Optional;
+
+@ApplicationScoped
+public class PersonRelationshipRepository implements PanacheRepository<PersonRelationship> {
+
+    /**
+     * Find all relationships where the given person is the source.
+     */
+    public List<PersonRelationship> findBySourcePersonId(Long sourcePersonId) {
+        return list("sourcePerson.id = ?1 ORDER BY relatedPerson.lastName ASC, relatedPerson.firstName ASC",
+            sourcePersonId);
+    }
+
+    /**
+     * Find relationships with filter and sort for a given source person.
+     */
+    public List<PersonRelationship> findBySourcePersonWithFilter(
+            Long sourcePersonId, String filterText, String sortField, String sortDir) {
+
+        StringBuilder query = new StringBuilder();
+        String orderBy = buildOrderBy(sortField, sortDir);
+
+        if (filterText != null && !filterText.isBlank()) {
+            String pattern = "%" + filterText.toLowerCase().trim() + "%";
+            return list(
+                "sourcePerson.id = ?1 AND (LOWER(relatedPerson.firstName) LIKE ?2 " +
+                "OR LOWER(relatedPerson.lastName) LIKE ?2 " +
+                "OR LOWER(relationship.description) LIKE ?2) " + orderBy,
+                sourcePersonId, pattern
+            );
+        }
+        return list("sourcePerson.id = ?1 " + orderBy, sourcePersonId);
+    }
+
+    private String buildOrderBy(String sortField, String sortDir) {
+        String direction = "desc".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
+        String orderBy = switch (sortField != null ? sortField : "") {
+            case "firstName" -> "relatedPerson.firstName " + direction + ", relatedPerson.lastName ASC";
+            case "lastName" -> "relatedPerson.lastName " + direction + ", relatedPerson.firstName ASC";
+            case "relationship" -> "relationship.description " + direction;
+            default -> "relatedPerson.lastName ASC, relatedPerson.firstName ASC";
+        };
+        return "ORDER BY " + orderBy;
+    }
+
+    /**
+     * Check if relationship already exists (for unique constraint validation).
+     */
+    public boolean exists(Long sourcePersonId, Long relatedPersonId, Long relationshipId) {
+        return count("sourcePerson.id = ?1 AND relatedPerson.id = ?2 AND relationship.id = ?3",
+            sourcePersonId, relatedPersonId, relationshipId) > 0;
+    }
+
+    /**
+     * Check if relationship exists excluding a specific record (for update validation).
+     */
+    public boolean existsExcluding(Long sourcePersonId, Long relatedPersonId, Long relationshipId, Long excludeId) {
+        return count("sourcePerson.id = ?1 AND relatedPerson.id = ?2 AND relationship.id = ?3 AND id != ?4",
+            sourcePersonId, relatedPersonId, relationshipId, excludeId) > 0;
+    }
+
+    /**
+     * Count relationships for a source person.
+     */
+    public long countBySourcePerson(Long sourcePersonId) {
+        return count("sourcePerson.id", sourcePersonId);
+    }
+}
+```
+
+---
+
+### 11.4 PersonRelationshipResource
+
+**File**: `src/main/java/io/archton/scaffold/router/PersonRelationshipResource.java`
+
+**Security**: `@RolesAllowed({"user", "admin"})` - All authenticated users
+
+**Path Pattern**: `/persons/{personId}/relationships`
+
+### 11.5 Endpoints
+
+| Method | Path | Handler | Description |
+|--------|------|---------|-------------|
+| GET | `/persons/{personId}/relationships` | `list()` | List relationships for person (with filter/sort) |
+| GET | `/persons/{personId}/relationships/create` | `createForm()` | Display add relationship modal |
+| POST | `/persons/{personId}/relationships` | `create()` | Submit add relationship form |
+| GET | `/persons/{personId}/relationships/{id}/edit` | `editForm()` | Display edit relationship modal |
+| PUT | `/persons/{personId}/relationships/{id}` | `update()` | Submit edit relationship form |
+| GET | `/persons/{personId}/relationships/{id}/delete` | `deleteConfirm()` | Display delete confirmation modal |
+| DELETE | `/persons/{personId}/relationships/{id}` | `delete()` | Delete relationship |
+
+### 11.6 Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filter` | String | Search text for related person name or relationship type |
+| `sortField` | String | Field to sort by (firstName, lastName, relationship) |
+| `sortDir` | String | Sort direction (asc, desc) |
+
+### 11.7 Template Methods
+
+```java
+@CheckedTemplate
+public static class Templates {
+    // Full page
+    public static native TemplateInstance personRelationship(
+        String title,
+        String currentPage,
+        String userName,
+        Person sourcePerson,
+        List<PersonRelationship> relationships,
+        List<Person> personChoices,
+        List<Relationship> relationshipChoices,
+        String filterText,
+        String sortField,
+        String sortDir
+    );
+
+    // Fragments
+    public static native TemplateInstance personRelationship$table(
+        Person sourcePerson,
+        List<PersonRelationship> relationships,
+        String filterText
+    );
+    public static native TemplateInstance personRelationship$modal_create(
+        Person sourcePerson,
+        PersonRelationship personRelationship,
+        List<Person> personChoices,
+        List<Relationship> relationshipChoices,
+        String error
+    );
+    public static native TemplateInstance personRelationship$modal_edit(
+        Person sourcePerson,
+        PersonRelationship personRelationship,
+        List<Person> personChoices,
+        List<Relationship> relationshipChoices,
+        String error
+    );
+    public static native TemplateInstance personRelationship$modal_delete(
+        Person sourcePerson,
+        PersonRelationship personRelationship,
+        String error
+    );
+    public static native TemplateInstance personRelationship$modal_success(
+        String message,
+        Person sourcePerson,
+        List<PersonRelationship> relationships,
+        String filterText
+    );
+    public static native TemplateInstance personRelationship$modal_success_row(
+        String message,
+        PersonRelationship personRelationship
+    );
+    public static native TemplateInstance personRelationship$modal_delete_success(
+        Long deletedId
+    );
+}
+```
+
+---
+
+### 11.8 Template Structure
+
+**File**: `templates/PersonRelationshipResource/personRelationship.html`
+
+### Page Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Relationships for [Person Name]                    [← Back] │
+├─────────────────────────────────────────────────────────────┤
+│ Filter Bar                                                   │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ [Search Input] [Sort Field ▼] [Sort Dir ▼] [Filter] [Clear] │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                        [+ Add Relationship] │
+├─────────────────────────────────────────────────────────────┤
+│ Table Container (#relationship-table-container)              │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ Related Person | Relationship Type | Actions             │ │
+│ │ Row 1: [Name] | [Type] | [Edit] [Delete]                │ │
+│ │ Row 2: [Name] | [Type] | [Edit] [Delete]                │ │
+│ └─────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│ Static Modal Shell (#relationship-modal)                     │
+│ ← Content loaded dynamically via HTMX                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 11.9 Validation Rules
+
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| relatedPersonId | Required | "Please select a person." |
+| relationshipId | Required | "Please select a relationship type." |
+| combination | Unique (source, related, type) | "This relationship already exists." |
+| source vs related | Must be different | Enforced by DB constraint |
+
+---
+
+### 11.10 Person Table Update
+
+Add "Link" button to person table row actions:
+
+```html
+<button class="uk-button uk-button-small uk-button-default"
+        onclick="window.location.href='/persons/{p.id}/relationships'">
+    <span uk-icon="icon: link"></span> Link
+</button>
+```
+
+---
+
+### 11.11 Traceability
+
+| Use Case | Implementation Component |
+|----------|-------------------------|
+| UC-003-07-01: View Person Relationships | `PersonRelationshipResource.list()`, `personRelationship.html`, `$table` fragment |
+| UC-003-07-02: Display Add Relationship Form | `PersonRelationshipResource.createForm()`, `$modal_create` fragment |
+| UC-003-07-03: Submit Add Relationship Form | `PersonRelationshipResource.create()`, `$modal_success` fragment |
+| UC-003-07-04: Display Edit Relationship Form | `PersonRelationshipResource.editForm()`, `$modal_edit` fragment |
+| UC-003-07-05: Submit Edit Relationship Form | `PersonRelationshipResource.update()`, `$modal_success_row` fragment |
+| UC-003-07-06: Delete Relationship | `PersonRelationshipResource.delete()`, `$modal_delete`, `$modal_delete_success` fragments |
+| UC-003-07-07: Apply Relationship Filter | `PersonRelationshipResource.list()` with `filter` query param |
+| UC-003-07-08: Clear Relationship Filter | Link to `/persons/{id}/relationships` (clears filter param) |
+| UC-003-07-09: Apply Relationship Sort | `PersonRelationshipResource.list()` with `sortField`, `sortDir` query params |
+| UC-003-07-10: Clear Relationship Sort | Link to `/persons/{id}/relationships` (clears sort params) |
+
+---
+
+### 11.12 Dependencies
+
+- `Person` entity (Feature 003) ✅
+- `Relationship` entity (Feature 002) ✅
+
+---
+
+*Document Version: 3.0*
+*Last Updated: January 2026*

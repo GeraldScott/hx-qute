@@ -456,7 +456,9 @@ The user stories are grouped into domain-specific features that deliver business
 
 ---
 
-### US-003-08: Display a network diagram of the relationships between people 
+## Feature 004: Display relationships
+
+### US-004-01: Display a network diagram of the relationships between people 
 **As an** authenticated user
 **I want to** see a visual display of the connections between one person to another
 **So that** I can exaplore the relationships between people
