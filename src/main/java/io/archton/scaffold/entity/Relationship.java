@@ -42,13 +42,13 @@ public class Relationship {
 
     // Lifecycle callbacks
     @PrePersist
-    public void prePersist() {
+    void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
     }
 
     @PreUpdate
-    public void preUpdate() {
+    void onUpdate() {
         updatedAt = Instant.now();
     }
 }

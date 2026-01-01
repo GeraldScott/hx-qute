@@ -64,7 +64,7 @@ public class Person {
 
     // Lifecycle callbacks
     @PrePersist
-    public void prePersist() {
+    void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
         if (email != null) {
@@ -73,7 +73,7 @@ public class Person {
     }
 
     @PreUpdate
-    public void preUpdate() {
+    void onUpdate() {
         updatedAt = Instant.now();
         if (email != null) {
             email = email.toLowerCase().trim();
