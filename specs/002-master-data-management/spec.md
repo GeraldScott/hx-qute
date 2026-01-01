@@ -1025,6 +1025,111 @@ public class TitleResource { ... }
 
 ---
 
-*Document Version: 3.0*
-*Last Updated: December 2025*
-*Changes: Added Title entity specification (US-002-05 through US-002-08). Title code max length is 5 characters.*
+# Relationship Entity Specification
+
+The Relationship entity follows the same patterns as Gender and Title with the following differences:
+
+## R1. Data Model
+
+- `code`: Max 10 characters, unique, uppercase, not null
+- `description`: Max 255 characters, unique, not null
+
+### R1.1 Database Migration
+
+**File**: `V007__Create_relationship_table.sql`
+
+```sql
+CREATE TABLE relationship (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(10) NOT NULL UNIQUE,
+    description VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255) NOT NULL DEFAULT 'system',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(255)
+);
+
+-- Seed data
+INSERT INTO relationship (code, description) VALUES
+    ('SPOUSE', 'Spouse'),
+    ('PARENT', 'Parent'),
+    ('CHILD', 'Child'),
+    ('SIBLING', 'Sibling'),
+    ('COLLEAGUE', 'Colleague'),
+    ('FRIEND', 'Friend');
+```
+
+### R2.1 Relationship Entity
+
+**File**: `src/main/java/io/archton/scaffold/entity/Relationship.java`
+
+```java
+@Entity
+@Table(name = "relationship", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "code"),
+    @UniqueConstraint(columnNames = "description")
+})
+public class Relationship extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
+    @Column(name = "code", nullable = false, unique = true, length = 10)
+    public String code;
+
+    @Column(name = "description", nullable = false, unique = true, length = 255)
+    public String description;
+
+    // Audit fields and lifecycle callbacks same as Gender/Title
+}
+```
+
+## R3. Resource Layer
+
+**File**: `src/main/java/io/archton/scaffold/router/RelationshipResource.java`
+
+### Endpoints
+
+| Method | Path | Handler | Description |
+|--------|------|---------|-------------|
+| GET | `/relationships` | `list()` | List all relationships |
+| GET | `/relationships/create` | `createForm()` | Create form modal |
+| POST | `/relationships` | `create()` | Submit create |
+| GET | `/relationships/{id}/edit` | `editForm()` | Edit form modal |
+| PUT | `/relationships/{id}` | `update()` | Submit edit |
+| GET | `/relationships/{id}/delete` | `deleteConfirm()` | Delete confirmation modal |
+| DELETE | `/relationships/{id}` | `delete()` | Execute delete |
+
+## R4. Validation Rules
+
+### R4.1 Create Validation
+
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| code | Required | "Code is required." |
+| code | Max 10 chars | "Code must be at most 10 characters." |
+| code | Unique | "Code already exists." |
+| description | Required | "Description is required." |
+| description | Unique | "Description already exists." |
+
+### R4.2 Edit Validation
+
+Same as create, but uniqueness checks exclude current record.
+
+## R5. Sample Data
+
+| Code | Description |
+|------|-------------|
+| SPOUSE | Spouse |
+| PARENT | Parent |
+| CHILD | Child |
+| SIBLING | Sibling |
+| COLLEAGUE | Colleague |
+| FRIEND | Friend |
+
+---
+
+*Document Version: 4.0*
+*Last Updated: January 2026*
+*Changes: Added Relationship entity specification (US-002-09 through US-002-12). Relationship code max length is 10 characters. Feature 004 merged into Feature 002.*

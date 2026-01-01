@@ -128,7 +128,7 @@ The user stories are grouped into domain-specific features that deliver business
 - Add button is visible on the list page
 - Form includes: code and description
 - Code and description are unique
-- Maximum code length is 7 characters
+- Maximum code length is 1 character
 - Code is coerced to uppercase
 - Entry has audit fields to record who created the entry and when
 - Successful creation returns user to the list
@@ -233,6 +233,78 @@ The user stories are grouped into domain-specific features that deliver business
 ---
 
 ### US-002-08: Delete Title
+**As an** authenticated system administrator
+**I want to** delete an entry
+**So that** I can remove incorrect or duplicate entries
+
+**Acceptance Criteria:**
+- Delete button is visible for each entry in the list
+- Confirmation dialog appears before deletion
+- Entry is removed from the list upon confirmation
+
+**Priority:** High
+**Story Points:** 2
+
+---
+
+### US-002-09: View Relationship Master Data
+**As an** authenticated system administrator
+**I want to** view a list of all codes and descriptions that describe a relationship between people (Spouse, Parent, Child, Sibling, Colleague, Friend)
+**So that** I can view and update the list
+
+**Acceptance Criteria:**
+- Page is accessible from the navigation bar under the heading Maintenance
+- Entries are displayed in a table format
+- Each row shows: code, description
+- Entries are sorted by code
+- Empty state message displays when no entries exist
+
+**Priority:** High
+**Story Points:** 3
+
+---
+
+### US-002-10: Create New Relationship
+**As an** authenticated system administrator
+**I want to** add a new entry
+**So that** I can add new entries
+
+**Acceptance Criteria:**
+- Add button is visible on the list page
+- Form includes: code and description
+- Code and description are unique
+- Maximum code length is 10 characters
+- Code is coerced to uppercase
+- Entry has audit fields to record who created the entry and when
+- Successful creation returns user to the list
+- New entry appears in the list immediately
+
+**Priority:** High
+**Story Points:** 3
+
+---
+
+### US-002-11: Edit Existing Relationship
+**As an** authenticated system administrator
+**I want to** modify an existing entry
+**So that** I can correct errors or update details
+
+**Acceptance Criteria:**
+- Edit button is visible for each entry in the list
+- Edit form pre-populates with existing data
+- User can modify code and description
+- Audit data fields are displayed but cannot be amended
+- Entry has audit fields to record who updated the entry and when
+- Changes are saved upon form submission
+- User is returned to the list after successful update
+- Updated entry reflects changes immediately
+
+**Priority:** High
+**Story Points:** 2
+
+---
+
+### US-002-12: Delete Relationship
 **As an** authenticated system administrator
 **I want to** delete an entry
 **So that** I can remove incorrect or duplicate entries
@@ -360,77 +432,3 @@ The user stories are grouped into domain-specific features that deliver business
 
 **Priority:** Medium
 **Story Points:** 3
-
----
-
-## Feature 004: Relationship Management
-
-### US-004-01: View Relationship Master Data
-**As an** authenticated system administrator
-**I want to** view a list of all codes and descriptions that describe a relationship between people (Spouse, Parent, Child, Sibling, Colleague, Friend)
-**So that** I can view and update the list
-
-**Acceptance Criteria:**
-- Page is accessible from the navigation bar under the heading Maintenance
-- Entries are displayed in a table format
-- Each row shows: code, description
-- Entries are sorted by code
-- Empty state message displays when no entries exist
-
-**Priority:** High
-**Story Points:** 3
-
----
-
-### US-004-02: Create New Relationship
-**As an** authenticated system administrator
-**I want to** add a new entry
-**So that** I can add new entries
-
-**Acceptance Criteria:**
-- Add button is visible on the list page
-- Form includes: code and description
-- Code and description are unique
-- Maximum code length is 10 characters
-- Code is coerced to uppercase
-- Entry has audit fields to record who created the entry and when
-- Successful creation returns user to the list
-- New entry appears in the list immediately
-
-**Priority:** High
-**Story Points:** 3
-
----
-
-### US-004-03: Edit Existing Relationship
-**As an** authenticated system administrator
-**I want to** modify an existing entry
-**So that** I can correct errors or update details
-
-**Acceptance Criteria:**
-- Edit button is visible for each entry in the list
-- Edit form pre-populates with existing data
-- User can modify code and description
-- Audit data fields are displayed but cannot be amended
-- Entry has audit fields to record who updated the entry and when
-- Changes are saved upon form submission
-- User is returned to the list after successful update
-- Updated entry reflects changes immediately
-
-**Priority:** High
-**Story Points:** 2
-
----
-
-### US-004-04: Delete Relationship
-**As an** authenticated system administrator
-**I want to** delete an entry
-**So that** I can remove incorrect or duplicate entries
-
-**Acceptance Criteria:**
-- Delete button is visible for each entry in the list
-- Confirmation dialog appears before deletion
-- Entry is removed from the list upon confirmation
-
-**Priority:** High
-**Story Points:** 2
