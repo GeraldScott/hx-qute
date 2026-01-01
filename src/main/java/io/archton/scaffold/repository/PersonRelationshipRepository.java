@@ -3,61 +3,55 @@ package io.archton.scaffold.repository;
 import io.archton.scaffold.entity.PersonRelationship;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityGraph;
 import java.util.List;
 
 @ApplicationScoped
 public class PersonRelationshipRepository implements PanacheRepository<PersonRelationship> {
 
+    private static final String FETCH_GRAPH_HINT = "jakarta.persistence.fetchgraph";
+
     /**
      * Find all relationships where the given person is the source.
      */
     public List<PersonRelationship> findBySourcePersonId(Long sourcePersonId) {
-        return list("sourcePerson.id = ?1 ORDER BY relatedPerson.lastName ASC, relatedPerson.firstName ASC",
+        return list("sourcePerson.id = ?1 ORDER BY relatedPerson.lastName, relatedPerson.firstName",
             sourcePersonId);
     }
 
     /**
      * Find relationships with filter and sort for a given source person.
-     * Uses JOIN FETCH to eagerly load related entities for template rendering.
+     * Uses Entity Graph to eagerly load related entities for template rendering.
      */
     public List<PersonRelationship> findBySourcePersonWithFilter(
             Long sourcePersonId, String filterText, String sortField, String sortDir) {
 
+        EntityGraph<?> graph = getEntityManager().getEntityGraph("PersonRelationship.withDetails");
         String orderBy = buildOrderBy(sortField, sortDir);
-
-        StringBuilder jpql = new StringBuilder(
-            "SELECT pr FROM PersonRelationship pr " +
-            "JOIN FETCH pr.relatedPerson rp " +
-            "JOIN FETCH pr.relationship r " +
-            "LEFT JOIN FETCH rp.title " +
-            "WHERE pr.sourcePerson.id = ?1"
-        );
 
         if (filterText != null && !filterText.isBlank()) {
             String pattern = "%" + filterText.toLowerCase().trim() + "%";
-            jpql.append(" AND (LOWER(rp.firstName) LIKE ?2 OR LOWER(rp.lastName) LIKE ?2 OR LOWER(r.description) LIKE ?2)");
-            return getEntityManager()
-                .createQuery(jpql.append(" ").append(orderBy).toString(), PersonRelationship.class)
-                .setParameter(1, sourcePersonId)
-                .setParameter(2, pattern)
-                .getResultList();
+            return find(
+                "sourcePerson.id = ?1 AND (LOWER(relatedPerson.firstName) LIKE ?2 " +
+                "OR LOWER(relatedPerson.lastName) LIKE ?2 OR LOWER(relationship.description) LIKE ?2) " +
+                orderBy,
+                sourcePersonId, pattern
+            ).withHint(FETCH_GRAPH_HINT, graph).list();
         }
 
-        return getEntityManager()
-            .createQuery(jpql.append(" ").append(orderBy).toString(), PersonRelationship.class)
-            .setParameter(1, sourcePersonId)
-            .getResultList();
+        return find("sourcePerson.id = ?1 " + orderBy, sourcePersonId)
+            .withHint(FETCH_GRAPH_HINT, graph)
+            .list();
     }
 
     private String buildOrderBy(String sortField, String sortDir) {
         String direction = "desc".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
-        String orderBy = switch (sortField != null ? sortField : "") {
-            case "firstName" -> "relatedPerson.firstName " + direction + ", relatedPerson.lastName ASC";
-            case "lastName" -> "relatedPerson.lastName " + direction + ", relatedPerson.firstName ASC";
-            case "relationship" -> "relationship.description " + direction;
-            default -> "relatedPerson.lastName ASC, relatedPerson.firstName ASC";
+        return switch (sortField != null ? sortField : "") {
+            case "firstName" -> "ORDER BY relatedPerson.firstName " + direction + ", relatedPerson.lastName";
+            case "lastName" -> "ORDER BY relatedPerson.lastName " + direction + ", relatedPerson.firstName";
+            case "relationship" -> "ORDER BY relationship.description " + direction;
+            default -> "ORDER BY relatedPerson.lastName, relatedPerson.firstName";
         };
-        return "ORDER BY " + orderBy;
     }
 
     /**
@@ -87,14 +81,9 @@ public class PersonRelationshipRepository implements PanacheRepository<PersonRel
      * Find all relationships with eager loading for graph visualization.
      */
     public List<PersonRelationship> findAllForGraph() {
-        return getEntityManager()
-            .createQuery(
-                "SELECT pr FROM PersonRelationship pr " +
-                "JOIN FETCH pr.sourcePerson " +
-                "JOIN FETCH pr.relatedPerson " +
-                "JOIN FETCH pr.relationship",
-                PersonRelationship.class
-            )
-            .getResultList();
+        EntityGraph<?> graph = getEntityManager().getEntityGraph("PersonRelationship.forGraph");
+        return findAll()
+            .withHint(FETCH_GRAPH_HINT, graph)
+            .list();
     }
 }
