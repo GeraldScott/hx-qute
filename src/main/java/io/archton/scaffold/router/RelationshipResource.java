@@ -152,43 +152,49 @@ public class RelationshipResource {
             @FormParam("code") String code,
             @FormParam("description") String description) {
 
-        Relationship relationship = Relationship.findById(id);
-        if (relationship == null) {
-            Relationship emptyRelationship = new Relationship();
-            emptyRelationship.id = id;
-            return Templates.relationship$modal_edit(emptyRelationship, "Relationship not found.");
-        }
+        // Create a transient object for form validation/re-display (don't modify managed entity yet)
+        Relationship formData = new Relationship();
+        formData.id = id;
+        formData.code = code;
+        formData.description = description;
 
-        // Update relationship object with form values for re-display
-        relationship.code = code;
-        relationship.description = description;
-
-        // Validation
+        // Validation - use transient object for error display
         if (code == null || code.isBlank()) {
-            return Templates.relationship$modal_edit(relationship, "Code is required.");
+            return Templates.relationship$modal_edit(formData, "Code is required.");
         }
 
         if (code.length() > 10) {
-            return Templates.relationship$modal_edit(relationship, "Code must be at most 10 characters.");
+            return Templates.relationship$modal_edit(formData, "Code must be at most 10 characters.");
         }
 
         if (description == null || description.isBlank()) {
-            return Templates.relationship$modal_edit(relationship, "Description is required.");
+            return Templates.relationship$modal_edit(formData, "Description is required.");
         }
 
-        // Coerce code to uppercase
-        relationship.code = code.toUpperCase();
+        // Coerce code to uppercase for validation
+        String upperCode = code.toUpperCase();
+        formData.code = upperCode;
 
-        // Check uniqueness (excluding current record)
-        Relationship existingByCode = Relationship.findByCode(relationship.code);
+        // Check uniqueness (excluding current record) - before loading managed entity
+        Relationship existingByCode = Relationship.findByCode(upperCode);
         if (existingByCode != null && !existingByCode.id.equals(id)) {
-            return Templates.relationship$modal_edit(relationship, "Code already exists.");
+            return Templates.relationship$modal_edit(formData, "Code already exists.");
         }
 
         Relationship existingByDescription = Relationship.findByDescription(description);
         if (existingByDescription != null && !existingByDescription.id.equals(id)) {
-            return Templates.relationship$modal_edit(relationship, "Description already exists.");
+            return Templates.relationship$modal_edit(formData, "Description already exists.");
         }
+
+        // Now load the managed entity and update it (all validations passed)
+        Relationship relationship = Relationship.findById(id);
+        if (relationship == null) {
+            return Templates.relationship$modal_edit(formData, "Relationship not found.");
+        }
+
+        // Update managed entity
+        relationship.code = upperCode;
+        relationship.description = description;
 
         // Set audit fields
         String userName = securityIdentity.isAnonymous() ? "system" : securityIdentity.getPrincipal().getName();
