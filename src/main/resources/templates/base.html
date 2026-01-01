@@ -66,96 +66,7 @@
                         </div>
 
                         <!-- Navigation -->
-                        <ul
-                            class="uk-nav uk-nav-default uk-padding-small"
-                            uk-nav
-                        >
-                            <li
-                                class="{#if currentPage?? == 'home'}uk-active{/if}"
-                            >
-                                <a href="/">
-                                    <span
-                                        uk-icon="icon: home; ratio: 1.2"
-                                    ></span>
-                                    <span class="uk-margin-small-left"
-                                        >Home</span
-                                    >
-                                </a>
-                            </li>
-                            <li
-                                class="{#if currentPage?? == 'persons'}uk-active{/if}"
-                            >
-                                <a href="/persons">
-                                    <span
-                                        uk-icon="icon: users; ratio: 1.2"
-                                    ></span>
-                                    <span class="uk-margin-small-left"
-                                        >People</span
-                                    >
-                                </a>
-                            </li>
-                            <li
-                                class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}"
-                            >
-                                <a href="#">
-                                    <span
-                                        uk-icon="icon: settings; ratio: 1.2"
-                                    ></span>
-                                    <span class="uk-margin-small-left"
-                                        >Maintenance</span
-                                    >
-                                </a>
-                                <ul class="uk-nav-sub">
-                                    <li
-                                        class="{#if currentPage?? == 'gender'}uk-active{/if}"
-                                    >
-                                        <a href="/genders">
-                                            <span
-                                                uk-icon="icon: users; ratio: 1"
-                                            ></span>
-                                            <span class="uk-margin-small-left"
-                                                >Gender</span
-                                            >
-                                        </a>
-                                    </li>
-                                    <li
-                                        class="{#if currentPage?? == 'title'}uk-active{/if}"
-                                    >
-                                        <a href="/titles">
-                                            <span
-                                                uk-icon="icon: bookmark; ratio: 1"
-                                            ></span>
-                                            <span class="uk-margin-small-left"
-                                                >Title</span
-                                            >
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            {#if userName}
-                            <li>
-                                <a href="/logout">
-                                    <span
-                                        uk-icon="icon: sign-out; ratio: 1.2"
-                                    ></span>
-                                    <span class="uk-margin-small-left"
-                                        >Logout ({userName})</span
-                                    >
-                                </a>
-                            </li>
-                            {#else}
-                            <li>
-                                <a href="/login">
-                                    <span
-                                        uk-icon="icon: sign-in; ratio: 1.2"
-                                    ></span>
-                                    <span class="uk-margin-small-left"
-                                        >Login</span
-                                    >
-                                </a>
-                            </li>
-                            {/if}
-                        </ul>
+                        {#include $navigation /}
                     </aside>
                 </div>
 
@@ -195,85 +106,61 @@
                     </div>
 
                     <!-- Mobile Navigation -->
-                    <ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
-                        <li class="{#if currentPage?? == 'home'}uk-active{/if}">
-                            <a href="/">
-                                <span uk-icon="icon: home; ratio: 1.2"></span>
-                                <span class="uk-margin-small-left">Home</span>
-                            </a>
-                        </li>
-                        <li
-                            class="{#if currentPage?? == 'persons'}uk-active{/if}"
-                        >
-                            <a href="/persons">
-                                <span uk-icon="icon: users; ratio: 1.2"></span>
-                                <span class="uk-margin-small-left"
-                                    >Persons</span
-                                >
-                            </a>
-                        </li>
-                        <li
-                            class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}"
-                        >
-                            <a href="#">
-                                <span
-                                    uk-icon="icon: settings; ratio: 1.2"
-                                ></span>
-                                <span class="uk-margin-small-left"
-                                    >Maintenance</span
-                                >
-                            </a>
-                            <ul class="uk-nav-sub">
-                                <li
-                                    class="{#if currentPage?? == 'gender'}uk-active{/if}"
-                                >
-                                    <a href="/genders">
-                                        <span
-                                            uk-icon="icon: users; ratio: 1"
-                                        ></span>
-                                        <span class="uk-margin-small-left"
-                                            >Gender</span
-                                        >
-                                    </a>
-                                </li>
-                                <li
-                                    class="{#if currentPage?? == 'title'}uk-active{/if}"
-                                >
-                                    <a href="/titles">
-                                        <span
-                                            uk-icon="icon: bookmark; ratio: 1"
-                                        ></span>
-                                        <span class="uk-margin-small-left"
-                                            >Title</span
-                                        >
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        {#if userName}
-                        <li>
-                            <a href="/logout">
-                                <span
-                                    uk-icon="icon: sign-out; ratio: 1.2"
-                                ></span>
-                                <span class="uk-margin-small-left"
-                                    >Logout ({userName})</span
-                                >
-                            </a>
-                        </li>
-                        {#else}
-                        <li>
-                            <a href="/login">
-                                <span
-                                    uk-icon="icon: sign-in; ratio: 1.2"
-                                ></span>
-                                <span class="uk-margin-small-left">Login</span>
-                            </a>
-                        </li>
-                        {/if}
-                    </ul>
+                    {#include $navigation /}
                 </div>
             </div>
         </div>
     </body>
 </html>
+
+{#fragment id='navigation'}
+<ul class="uk-nav uk-nav-default uk-padding-small" uk-nav>
+    <li class="{#if currentPage?? == 'home'}uk-active{/if}">
+        <a href="/">
+            <span uk-icon="icon: home; ratio: 1.2"></span>
+            <span class="uk-margin-small-left">Home</span>
+        </a>
+    </li>
+    <li class="{#if currentPage?? == 'persons'}uk-active{/if}">
+        <a href="/persons">
+            <span uk-icon="icon: users; ratio: 1.2"></span>
+            <span class="uk-margin-small-left">People</span>
+        </a>
+    </li>
+    <li class="uk-parent {#if currentPage?? == 'gender' || currentPage?? == 'title'}uk-open{/if}">
+        <a href="#">
+            <span uk-icon="icon: settings; ratio: 1.2"></span>
+            <span class="uk-margin-small-left">Maintenance</span>
+        </a>
+        <ul class="uk-nav-sub">
+            <li class="{#if currentPage?? == 'gender'}uk-active{/if}">
+                <a href="/genders">
+                    <span uk-icon="icon: users; ratio: 1"></span>
+                    <span class="uk-margin-small-left">Gender</span>
+                </a>
+            </li>
+            <li class="{#if currentPage?? == 'title'}uk-active{/if}">
+                <a href="/titles">
+                    <span uk-icon="icon: bookmark; ratio: 1"></span>
+                    <span class="uk-margin-small-left">Title</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    {#if userName}
+    <li>
+        <a href="/logout">
+            <span uk-icon="icon: sign-out; ratio: 1.2"></span>
+            <span class="uk-margin-small-left">Logout ({userName})</span>
+        </a>
+    </li>
+    {#else}
+    <li>
+        <a href="/login">
+            <span uk-icon="icon: sign-in; ratio: 1.2"></span>
+            <span class="uk-margin-small-left">Login</span>
+        </a>
+    </li>
+    {/if}
+</ul>
+{/fragment}

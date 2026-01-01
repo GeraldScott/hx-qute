@@ -1,54 +1,51 @@
 {#include base title="Error {status}"}
     <!-- Error Card -->
-    <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto mt-8">
-        <div class="card-body">
-            <div class="flex items-center gap-4 mb-4">
-                <iconify-icon
-                    icon="mdi:alert-circle"
-                    class="text-error text-6xl"
-                ></iconify-icon>
-                <div>
-                    <h1 class="card-title text-3xl">Error {status}</h1>
-                    <p class="text-lg">{statusText}</p>
-                </div>
+    <div class="uk-card uk-card-default uk-card-body uk-width-2-3@m uk-margin-auto uk-margin-top">
+        <div class="uk-grid-small uk-flex-middle uk-margin-bottom" uk-grid>
+            <div class="uk-width-auto">
+                <span uk-icon="icon: warning; ratio: 3" class="uk-text-danger"></span>
+            </div>
+            <div class="uk-width-expand">
+                <h1 class="uk-card-title uk-margin-remove">Error {status}</h1>
+                <p class="uk-text-large uk-margin-remove">{statusText}</p>
+            </div>
+        </div>
+
+        <hr class="uk-divider-icon">
+
+        <div class="uk-margin">
+            <div class="uk-margin">
+                <h3 class="uk-text-muted uk-text-small uk-margin-remove">Message</h3>
+                <p class="uk-margin-small-top">{message}</p>
             </div>
 
-            <div class="divider"></div>
-
-            <div class="space-y-4">
-                <div>
-                    <h3 class="font-semibold text-sm text-base-content/70">Message</h3>
-                    <p class="text-base">{message}</p>
-                </div>
-
-                {#if path}
-                <div>
-                    <h3 class="font-semibold text-sm text-base-content/70">Path</h3>
-                    <code class="text-sm bg-base-200 px-2 py-1 rounded">{path}</code>
-                </div>
-                {/if}
-
-                {#if referenceId}
-                <div>
-                    <h3 class="font-semibold text-sm text-base-content/70">Reference ID</h3>
-                    <code class="text-sm bg-base-200 px-2 py-1 rounded">{referenceId}</code>
-                </div>
-                {/if}
-
-                {#if devMode && stackTrace}
-                <div>
-                    <h3 class="font-semibold text-sm text-base-content/70">Stack Trace (Dev Mode)</h3>
-                    <pre class="text-xs bg-base-200 p-4 rounded overflow-x-auto max-h-96">{stackTrace}</pre>
-                </div>
-                {/if}
+            {#if path}
+            <div class="uk-margin">
+                <h3 class="uk-text-muted uk-text-small uk-margin-remove">Path</h3>
+                <code class="uk-background-muted uk-padding-small uk-display-inline-block uk-margin-small-top">{path}</code>
             </div>
+            {/if}
 
-            <div class="card-actions justify-end mt-6">
-                <a href="/" class="btn btn-primary">
-                    <iconify-icon icon="mdi:home"></iconify-icon>
-                    Back to Home
-                </a>
+            {#if referenceId}
+            <div class="uk-margin">
+                <h3 class="uk-text-muted uk-text-small uk-margin-remove">Reference ID</h3>
+                <code class="uk-background-muted uk-padding-small uk-display-inline-block uk-margin-small-top">{referenceId}</code>
             </div>
+            {/if}
+
+            {#if devMode && stackTrace}
+            <div class="uk-margin">
+                <h3 class="uk-text-muted uk-text-small uk-margin-remove">Stack Trace (Dev Mode)</h3>
+                <pre class="uk-background-muted uk-padding-small uk-margin-small-top uk-overflow-auto" style="max-height: 24rem;">{stackTrace}</pre>
+            </div>
+            {/if}
+        </div>
+
+        <div class="uk-margin-top uk-text-right">
+            <a href="/" class="uk-button uk-button-primary">
+                <span uk-icon="home" class="uk-margin-small-right"></span>
+                Back to Home
+            </a>
         </div>
     </div>
 {/include}

@@ -87,14 +87,14 @@
 {#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
-<form hx-post="/genders" hx-target="#gender-modal-body">
+<form hx-post="/genders" hx-target="#gender-modal-body" class="uk-form-stacked">
     <div class="uk-margin">
-        <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="1" value="{gender.code ?: ''}" required />
+        <label class="uk-form-label" for="create-gender-code">Code *</label>
+        <input class="uk-input" type="text" id="create-gender-code" name="code" maxlength="1" value="{gender.code ?: ''}" required />
     </div>
     <div class="uk-margin">
-        <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description" value="{gender.description ?: ''}" required />
+        <label class="uk-form-label" for="create-gender-description">Description *</label>
+        <input class="uk-input" type="text" id="create-gender-description" name="description" value="{gender.description ?: ''}" required />
     </div>
     <div class="uk-margin uk-text-right">
         <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
@@ -110,14 +110,14 @@
 {#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
-<form hx-put="/genders/{gender.id}" hx-target="#gender-modal-body">
+<form hx-put="/genders/{gender.id}" hx-target="#gender-modal-body" class="uk-form-stacked">
     <div class="uk-margin">
-        <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="1" value="{gender.code ?: ''}" required />
+        <label class="uk-form-label" for="edit-gender-code">Code *</label>
+        <input class="uk-input" type="text" id="edit-gender-code" name="code" maxlength="1" value="{gender.code ?: ''}" required />
     </div>
     <div class="uk-margin">
-        <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description" value="{gender.description ?: ''}" required />
+        <label class="uk-form-label" for="edit-gender-description">Description *</label>
+        <input class="uk-input" type="text" id="edit-gender-description" name="description" value="{gender.description ?: ''}" required />
     </div>
     <details class="uk-margin">
         <summary class="uk-text-muted">Audit Information</summary>

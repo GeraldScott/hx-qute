@@ -87,14 +87,14 @@
 {#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
-<form hx-post="/titles" hx-target="#title-modal-body">
+<form hx-post="/titles" hx-target="#title-modal-body" class="uk-form-stacked">
     <div class="uk-margin">
-        <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="5" value="{title.code ?: ''}" required />
+        <label class="uk-form-label" for="create-title-code">Code *</label>
+        <input class="uk-input" type="text" id="create-title-code" name="code" maxlength="5" value="{title.code ?: ''}" required />
     </div>
     <div class="uk-margin">
-        <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description" value="{title.description ?: ''}" required />
+        <label class="uk-form-label" for="create-title-description">Description *</label>
+        <input class="uk-input" type="text" id="create-title-description" name="description" value="{title.description ?: ''}" required />
     </div>
     <div class="uk-margin uk-text-right">
         <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
@@ -110,14 +110,14 @@
 {#if error??}
 <div class="uk-alert uk-alert-danger">{error}</div>
 {/if}
-<form hx-put="/titles/{title.id}" hx-target="#title-modal-body">
+<form hx-put="/titles/{title.id}" hx-target="#title-modal-body" class="uk-form-stacked">
     <div class="uk-margin">
-        <label class="uk-form-label">Code *</label>
-        <input class="uk-input" type="text" name="code" maxlength="5" value="{title.code ?: ''}" required />
+        <label class="uk-form-label" for="edit-title-code">Code *</label>
+        <input class="uk-input" type="text" id="edit-title-code" name="code" maxlength="5" value="{title.code ?: ''}" required />
     </div>
     <div class="uk-margin">
-        <label class="uk-form-label">Description *</label>
-        <input class="uk-input" type="text" name="description" value="{title.description ?: ''}" required />
+        <label class="uk-form-label" for="edit-title-description">Description *</label>
+        <input class="uk-input" type="text" id="edit-title-description" name="description" value="{title.description ?: ''}" required />
     </div>
     <details class="uk-margin">
         <summary class="uk-text-muted">Audit Information</summary>

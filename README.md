@@ -30,6 +30,13 @@ quarkus dev
 
 > **Note:** Port 9080 is used instead of the default 8080 to avoid conflicts with other local services.
 
+### Default Admin Login
+
+| Field | Value |
+|-------|-------|
+| Email | `admin@example.com` |
+| Password | `AdminPassword123` |
+
 ### Packaging  the application
 #### Layered package
 
