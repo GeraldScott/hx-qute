@@ -281,6 +281,48 @@
 
 ---
 
+### TC-004-03-004: Relationship Edit Duplicate Code Prevention
+**Parent Use Case:** [UC-004-03-02: Submit Edit Form](use-cases.md#uc-004-03-02-submit-edit-form)
+
+**Objective:** Verify duplicate code is rejected when editing (excluding current record).
+
+**Precondition:** Relationship codes `SPOUSE` and `PARENT` exist
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/relationships`
+3. Click Edit button for relationship `PARENT`
+4. Change code to `SPOUSE`
+5. Click Save button
+
+**Expected:**
+- [ ] Error message "Code already exists" displayed in modal
+- [ ] Modal remains open
+- [ ] User can correct and retry
+
+---
+
+### TC-004-03-005: Relationship Edit Duplicate Description Prevention
+**Parent Use Case:** [UC-004-03-02: Submit Edit Form](use-cases.md#uc-004-03-02-submit-edit-form)
+
+**Objective:** Verify duplicate description is rejected when editing (excluding current record).
+
+**Precondition:** Relationship descriptions `Spouse` and `Parent` exist
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/relationships`
+3. Click Edit button for relationship `Parent`
+4. Change description to `Spouse`
+5. Click Save button
+
+**Expected:**
+- [ ] Error message "Description already exists" displayed in modal
+- [ ] Modal remains open
+- [ ] User can correct and retry
+
+---
+
 # US-004-04: Delete Relationship
 
 ### TC-004-04-001: Relationship Delete Confirmation Modal
@@ -358,6 +400,8 @@
 | TC-004-03-001 | Relationship Edit Form Modal | UC-004-03-01 | [ ] | |
 | TC-004-03-002 | Relationship Edit Success | UC-004-03-02 | [ ] | |
 | TC-004-03-003 | Relationship Edit Cancel | UC-004-03-03 | [ ] | |
+| TC-004-03-004 | Relationship Edit Duplicate Code | UC-004-03-02 | [ ] | |
+| TC-004-03-005 | Relationship Edit Duplicate Desc | UC-004-03-02 | [ ] | |
 | TC-004-04-001 | Relationship Delete Confirm Modal | UC-004-04-01 | [ ] | |
 | TC-004-04-002 | Relationship Delete Success | UC-004-04-01 | [ ] | |
 | TC-004-04-003 | Relationship Delete Cancel | UC-004-04-01 | [ ] | |
@@ -370,5 +414,5 @@
 |------------|-----------|------------|
 | US-004-01: View Relationship Master Data | UC-004-01-01 | TC-004-01-001, TC-004-01-002, TC-004-01-003, TC-004-01-004 |
 | US-004-02: Create New Relationship | UC-004-02-01, UC-004-02-02 | TC-004-02-001, TC-004-02-002, TC-004-02-003, TC-004-02-004, TC-004-02-005, TC-004-02-006 |
-| US-004-03: Edit Existing Relationship | UC-004-03-01, UC-004-03-02, UC-004-03-03 | TC-004-03-001, TC-004-03-002, TC-004-03-003 |
+| US-004-03: Edit Existing Relationship | UC-004-03-01, UC-004-03-02, UC-004-03-03 | TC-004-03-001, TC-004-03-002, TC-004-03-003, TC-004-03-004, TC-004-03-005 |
 | US-004-04: Delete Relationship | UC-004-04-01 | TC-004-04-001, TC-004-04-002, TC-004-04-003 |

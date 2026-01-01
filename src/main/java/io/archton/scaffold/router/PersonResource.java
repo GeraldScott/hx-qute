@@ -3,6 +3,9 @@ package io.archton.scaffold.router;
 import io.archton.scaffold.entity.Gender;
 import io.archton.scaffold.entity.Person;
 import io.archton.scaffold.entity.Title;
+import io.archton.scaffold.repository.GenderRepository;
+import io.archton.scaffold.repository.PersonRepository;
+import io.archton.scaffold.repository.TitleRepository;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -29,6 +32,15 @@ public class PersonResource {
 
     @Inject
     SecurityIdentity securityIdentity;
+
+    @Inject
+    PersonRepository personRepository;
+
+    @Inject
+    TitleRepository titleRepository;
+
+    @Inject
+    GenderRepository genderRepository;
 
     @CheckedTemplate
     public static class Templates {
@@ -92,7 +104,7 @@ public class PersonResource {
             @QueryParam("sortField") String sortField,
             @QueryParam("sortDir") String sortDir) {
 
-        List<Person> persons = Person.findByFilter(filter, sortField, sortDir);
+        List<Person> persons = personRepository.findByFilter(filter, sortField, sortDir);
 
         // If HTMX request, return only the table fragment
         if ("true".equals(hxRequest)) {
@@ -101,8 +113,8 @@ public class PersonResource {
 
         // Full page request
         String userName = securityIdentity.isAnonymous() ? null : securityIdentity.getPrincipal().getName();
-        List<Title> titleChoices = Title.listAllOrdered();
-        List<Gender> genderChoices = Gender.listAllOrdered();
+        List<Title> titleChoices = titleRepository.listAllOrdered();
+        List<Gender> genderChoices = genderRepository.listAllOrdered();
 
         return Templates.person(
             "Person Management",
@@ -122,8 +134,8 @@ public class PersonResource {
     @Path("/create")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance createForm() {
-        List<Title> titleChoices = Title.listAllOrdered();
-        List<Gender> genderChoices = Gender.listAllOrdered();
+        List<Title> titleChoices = titleRepository.listAllOrdered();
+        List<Gender> genderChoices = genderRepository.listAllOrdered();
         return Templates.person$modal_create(new Person(), titleChoices, genderChoices, null);
     }
 
@@ -131,12 +143,12 @@ public class PersonResource {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        Person person = Person.findById(id);
+        Person person = personRepository.findById(id);
         if (person == null) {
             return Templates.person$modal_edit(new Person(), List.of(), List.of(), "Person not found.");
         }
-        List<Title> titleChoices = Title.listAllOrdered();
-        List<Gender> genderChoices = Gender.listAllOrdered();
+        List<Title> titleChoices = titleRepository.listAllOrdered();
+        List<Gender> genderChoices = genderRepository.listAllOrdered();
         return Templates.person$modal_edit(person, titleChoices, genderChoices, null);
     }
 
@@ -172,16 +184,16 @@ public class PersonResource {
 
         // Link title if provided
         if (titleId != null) {
-            person.title = Title.findById(titleId);
+            person.title = titleRepository.findById(titleId);
         }
 
         // Link gender if provided
         if (genderId != null) {
-            person.gender = Gender.findById(genderId);
+            person.gender = genderRepository.findById(genderId);
         }
 
-        List<Title> titleChoices = Title.listAllOrdered();
-        List<Gender> genderChoices = Gender.listAllOrdered();
+        List<Title> titleChoices = titleRepository.listAllOrdered();
+        List<Gender> genderChoices = genderRepository.listAllOrdered();
 
         // Validation
         if (firstName == null || firstName.isBlank()) {
@@ -201,7 +213,7 @@ public class PersonResource {
         }
 
         // Check email uniqueness (case-insensitive)
-        Person existingByEmail = Person.findByEmail(email);
+        Person existingByEmail = personRepository.findByEmail(email);
         if (existingByEmail != null) {
             return Templates.person$modal_create(person, titleChoices, genderChoices, "Email already registered.");
         }
@@ -212,10 +224,10 @@ public class PersonResource {
         person.updatedBy = userName;
 
         // Persist
-        person.persist();
+        personRepository.persist(person);
 
         // Return success with OOB table refresh
-        List<Person> persons = Person.findByFilter(null, null, null);
+        List<Person> persons = personRepository.findByFilter(null, null, null);
         return Templates.person$modal_success("Person created successfully.", persons, null);
     }
 
@@ -233,13 +245,13 @@ public class PersonResource {
             @FormParam("dateOfBirth") String dateOfBirth,
             @FormParam("genderId") Long genderId) {
 
-        Person person = Person.findById(id);
+        Person person = personRepository.findById(id);
         if (person == null) {
             return Templates.person$modal_edit(new Person(), List.of(), List.of(), "Person not found.");
         }
 
-        List<Title> titleChoices = Title.listAllOrdered();
-        List<Gender> genderChoices = Gender.listAllOrdered();
+        List<Title> titleChoices = titleRepository.listAllOrdered();
+        List<Gender> genderChoices = genderRepository.listAllOrdered();
 
         // Create a detached copy for form display on validation errors
         Person formPerson = new Person();
@@ -264,12 +276,12 @@ public class PersonResource {
 
         // Link title for form display
         if (titleId != null) {
-            formPerson.title = Title.findById(titleId);
+            formPerson.title = titleRepository.findById(titleId);
         }
 
         // Link gender for form display
         if (genderId != null) {
-            formPerson.gender = Gender.findById(genderId);
+            formPerson.gender = genderRepository.findById(genderId);
         }
 
         // Validation BEFORE modifying the managed entity
@@ -290,7 +302,7 @@ public class PersonResource {
         }
 
         // Check email uniqueness (case-insensitive, excluding current record)
-        Person existingByEmail = Person.findByEmail(email);
+        Person existingByEmail = personRepository.findByEmail(email);
         if (existingByEmail != null && !existingByEmail.id.equals(id)) {
             return Templates.person$modal_edit(formPerson, titleChoices, genderChoices, "Email already registered.");
         }
@@ -321,7 +333,7 @@ public class PersonResource {
     @Path("/{id}/delete")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance deleteForm(@PathParam("id") Long id) {
-        Person person = Person.findById(id);
+        Person person = personRepository.findById(id);
         if (person == null) {
             return Templates.person$modal_delete(new Person(), "Person not found.");
         }
@@ -336,12 +348,12 @@ public class PersonResource {
     @Transactional
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance delete(@PathParam("id") Long id) {
-        Person person = Person.findById(id);
+        Person person = personRepository.findById(id);
         if (person == null) {
             return Templates.person$modal_delete(new Person(), "Person not found.");
         }
 
-        Person.deleteById(id);
+        personRepository.deleteById(id);
         return Templates.person$modal_delete_success(id);
     }
 }

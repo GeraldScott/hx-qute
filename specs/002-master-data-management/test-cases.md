@@ -281,6 +281,48 @@
 
 ---
 
+### TC-002-03-004: Gender Edit Duplicate Code Prevention
+**Parent Use Case:** [UC-002-03-02: Submit Edit Form](use-cases.md#uc-002-03-02-submit-edit-form)
+
+**Objective:** Verify duplicate code is rejected when editing (excluding current record).
+
+**Precondition:** Gender codes `M` (Male) and `F` (Female) exist
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/genders`
+3. Click Edit button for gender `F` (Female)
+4. Change code to `M`
+5. Click Save button
+
+**Expected:**
+- [ ] Error message "Code already exists" displayed in modal
+- [ ] Modal remains open
+- [ ] User can correct and retry
+
+---
+
+### TC-002-03-005: Gender Edit Duplicate Description Prevention
+**Parent Use Case:** [UC-002-03-02: Submit Edit Form](use-cases.md#uc-002-03-02-submit-edit-form)
+
+**Objective:** Verify duplicate description is rejected when editing (excluding current record).
+
+**Precondition:** Gender descriptions `Male` and `Female` exist
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/genders`
+3. Click Edit button for gender `Female`
+4. Change description to `Male`
+5. Click Save button
+
+**Expected:**
+- [ ] Error message "Description already exists" displayed in modal
+- [ ] Modal remains open
+- [ ] User can correct and retry
+
+---
+
 # US-002-04: Delete Gender
 
 ### TC-002-04-001: Gender Delete Confirmation Modal
@@ -608,6 +650,48 @@
 
 ---
 
+### TC-002-07-004: Title Edit Duplicate Code Prevention
+**Parent Use Case:** [UC-002-07-02: Submit Edit Form](use-cases.md#uc-002-07-02-submit-edit-form)
+
+**Objective:** Verify duplicate code is rejected when editing (excluding current record).
+
+**Precondition:** Title codes `MR` (Mister) and `MS` (Miss) exist
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/titles`
+3. Click Edit button for title `MS` (Miss)
+4. Change code to `MR`
+5. Click Save button
+
+**Expected:**
+- [ ] Error message "Code already exists" displayed in modal
+- [ ] Modal remains open
+- [ ] User can correct and retry
+
+---
+
+### TC-002-07-005: Title Edit Duplicate Description Prevention
+**Parent Use Case:** [UC-002-07-02: Submit Edit Form](use-cases.md#uc-002-07-02-submit-edit-form)
+
+**Objective:** Verify duplicate description is rejected when editing (excluding current record).
+
+**Precondition:** Title descriptions `Mister` and `Miss` exist
+
+**Steps:**
+1. Login as `admin@example.com` / `AdminPassword123`
+2. Navigate to `/titles`
+3. Click Edit button for title `Miss`
+4. Change description to `Mister`
+5. Click Save button
+
+**Expected:**
+- [ ] Error message "Description already exists" displayed in modal
+- [ ] Modal remains open
+- [ ] User can correct and retry
+
+---
+
 # US-002-08: Delete Title
 
 ### TC-002-08-001: Title Delete Confirmation Modal
@@ -687,6 +771,8 @@
 | TC-002-03-001 | Gender Edit Form Modal | UC-002-03-01 | [ ] | |
 | TC-002-03-002 | Gender Edit Success | UC-002-03-02 | [ ] | |
 | TC-002-03-003 | Gender Edit Cancel | UC-002-03-03 | [ ] | |
+| TC-002-03-004 | Gender Edit Duplicate Code | UC-002-03-02 | [ ] | |
+| TC-002-03-005 | Gender Edit Duplicate Desc | UC-002-03-02 | [ ] | |
 | TC-002-04-001 | Gender Delete Confirm Modal | UC-002-04-01 | [ ] | |
 | TC-002-04-002 | Gender Delete Success | UC-002-04-01 | [ ] | |
 | TC-002-04-003 | Gender Delete Cancel | UC-002-04-01 | [ ] | |
@@ -708,6 +794,8 @@
 | TC-002-07-001 | Title Edit Form Modal | UC-002-07-01 | [ ] | |
 | TC-002-07-002 | Title Edit Success | UC-002-07-02 | [ ] | |
 | TC-002-07-003 | Title Edit Cancel | UC-002-07-03 | [ ] | |
+| TC-002-07-004 | Title Edit Duplicate Code | UC-002-07-02 | [ ] | |
+| TC-002-07-005 | Title Edit Duplicate Desc | UC-002-07-02 | [ ] | |
 | TC-002-08-001 | Title Delete Confirm Modal | UC-002-08-01 | [ ] | |
 | TC-002-08-002 | Title Delete Success | UC-002-08-01 | [ ] | |
 | TC-002-08-003 | Title Delete Cancel | UC-002-08-01 | [ ] | |
@@ -722,7 +810,7 @@
 |------------|-----------|------------|
 | US-002-01: View Gender Master Data | UC-002-01-01 | TC-002-01-001, TC-002-01-002, TC-002-01-003, TC-002-01-004 |
 | US-002-02: Create New Gender | UC-002-02-01, UC-002-02-02 | TC-002-02-001, TC-002-02-002, TC-002-02-003, TC-002-02-004, TC-002-02-005, TC-002-02-006 |
-| US-002-03: Edit Existing Gender | UC-002-03-01, UC-002-03-02, UC-002-03-03 | TC-002-03-001, TC-002-03-002, TC-002-03-003 |
+| US-002-03: Edit Existing Gender | UC-002-03-01, UC-002-03-02, UC-002-03-03 | TC-002-03-001, TC-002-03-002, TC-002-03-003, TC-002-03-004, TC-002-03-005 |
 | US-002-04: Delete Gender | UC-002-04-01 | TC-002-04-001, TC-002-04-002, TC-002-04-003 |
 
 ### Title
@@ -731,5 +819,5 @@
 |------------|-----------|------------|
 | US-002-05: View Title Master Data | UC-002-05-01 | TC-002-05-001, TC-002-05-002, TC-002-05-003, TC-002-05-004 |
 | US-002-06: Create New Title | UC-002-06-01, UC-002-06-02 | TC-002-06-001, TC-002-06-002, TC-002-06-003, TC-002-06-004, TC-002-06-005, TC-002-06-006 |
-| US-002-07: Edit Existing Title | UC-002-07-01, UC-002-07-02, UC-002-07-03 | TC-002-07-001, TC-002-07-002, TC-002-07-003 |
+| US-002-07: Edit Existing Title | UC-002-07-01, UC-002-07-02, UC-002-07-03 | TC-002-07-001, TC-002-07-002, TC-002-07-003, TC-002-07-004, TC-002-07-005 |
 | US-002-08: Delete Title | UC-002-08-01 | TC-002-08-001, TC-002-08-002, TC-002-08-003 |

@@ -19,17 +19,22 @@ Validate the current feature's spec files before implementation:
 
 4. For each user story (US-FFF-SS) found in step 1:
    - Verify at least one use case (UC-FFF-SS-NN) exists in use-cases.md
-   - Report error if any user story has no corresponding use cases
+   - Confirm that each of the steps in the user story has a corresponding use case
+   - Report an error if any user story has no corresponding use cases
 
 5. For each use case (UC-FFF-SS-NN) in use-cases.md:
    - Verify at least one test case (TC-FFF-SS-NNN) exists in test-cases.md
    - Report error if any use case has no corresponding test cases
 
-6. For each test case (TC-FFF-SS-NNN) in test-cases.md:
+6. For each user story (US-FFF-SS) found in step 1:
+   - Verify at least one test case (TC-FFF-SS-NNN) exists in test-cases.md
+   - Confirm that each of the steps in the user story has corresponding test cases
+   - Confirm that the constraints and business rules in the user story have corresponding test cases to check the implementation of the contraint or business rule
+   - Report error if any user story has no corresponding test cases
+
+7. For each test case (TC-FFF-SS-NNN) in test-cases.md:
    - Verify it links back to a valid UC-FFF-SS-NN in use-cases.md
 
-7. Verify specs/PROJECT-PLAN.md references this feature's tasks.md
-
-8. Compare the technical details in spec.md with docs/ARCHITECTURE.md and report any mismatches between the two.
+8. Verify specs/PROJECT-PLAN.md references this feature's tasks.md
 
 Report any validation errors found, or confirm all checks passed.

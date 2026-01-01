@@ -3,7 +3,6 @@ package io.archton.scaffold.entity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "title", uniqueConstraints = {
@@ -40,19 +39,6 @@ public class Title extends PanacheEntityBase {
     public Title(String code, String description) {
         this.code = code;
         this.description = description;
-    }
-
-    // Static finder methods (Active Record pattern)
-    public static Title findByCode(String code) {
-        return find("code", code).firstResult();
-    }
-
-    public static Title findByDescription(String description) {
-        return find("description", description).firstResult();
-    }
-
-    public static List<Title> listAllOrdered() {
-        return list("ORDER BY code ASC");
     }
 
     // Lifecycle callbacks

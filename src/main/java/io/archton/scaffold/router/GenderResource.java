@@ -1,6 +1,7 @@
 package io.archton.scaffold.router;
 
 import io.archton.scaffold.entity.Gender;
+import io.archton.scaffold.repository.GenderRepository;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -26,6 +27,9 @@ public class GenderResource {
 
     @Inject
     SecurityIdentity securityIdentity;
+
+    @Inject
+    GenderRepository genderRepository;
 
     @CheckedTemplate
     public static class Templates {
@@ -56,7 +60,7 @@ public class GenderResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list(@HeaderParam("HX-Request") String hxRequest) {
-        List<Gender> genders = Gender.listAllOrdered();
+        List<Gender> genders = genderRepository.listAllOrdered();
 
         // If HTMX request, return only the table fragment
         if ("true".equals(hxRequest)) {
@@ -81,7 +85,7 @@ public class GenderResource {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        Gender gender = Gender.findById(id);
+        Gender gender = genderRepository.findById(id);
         if (gender == null) {
             // Return error in modal if gender not found
             Gender emptyGender = new Gender();
@@ -120,12 +124,12 @@ public class GenderResource {
         gender.code = code.toUpperCase();
         
         // Check uniqueness
-        Gender existingByCode = Gender.findByCode(gender.code);
+        Gender existingByCode = genderRepository.findByCode(gender.code);
         if (existingByCode != null) {
             return Templates.gender$modal_create(gender, "Code already exists.");
         }
         
-        Gender existingByDescription = Gender.findByDescription(description);
+        Gender existingByDescription = genderRepository.findByDescription(description);
         if (existingByDescription != null) {
             return Templates.gender$modal_create(gender, "Description already exists.");
         }
@@ -136,10 +140,10 @@ public class GenderResource {
         gender.updatedBy = userName;
         
         // Persist
-        gender.persist();
+        genderRepository.persist(gender);
         
         // Return success with OOB table refresh
-        List<Gender> genders = Gender.listAllOrdered();
+        List<Gender> genders = genderRepository.listAllOrdered();
         return Templates.gender$modal_success("Gender created successfully.", genders);
     }
 
@@ -152,7 +156,7 @@ public class GenderResource {
             @FormParam("code") String code,
             @FormParam("description") String description) {
 
-        Gender gender = Gender.findById(id);
+        Gender gender = genderRepository.findById(id);
         if (gender == null) {
             Gender emptyGender = new Gender();
             emptyGender.id = id;
@@ -184,12 +188,12 @@ public class GenderResource {
         gender.code = code.toUpperCase();
 
         // Check uniqueness (excluding current record)
-        Gender existingByCode = Gender.findByCode(gender.code);
+        Gender existingByCode = genderRepository.findByCode(gender.code);
         if (existingByCode != null && !existingByCode.id.equals(id)) {
             return Templates.gender$modal_edit(gender, "Code already exists.");
         }
 
-        Gender existingByDescription = Gender.findByDescription(description);
+        Gender existingByDescription = genderRepository.findByDescription(description);
         if (existingByDescription != null && !existingByDescription.id.equals(id)) {
             return Templates.gender$modal_edit(gender, "Description already exists.");
         }
@@ -208,7 +212,7 @@ public class GenderResource {
     @Path("/{id}/delete")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance deleteConfirm(@PathParam("id") Long id) {
-        Gender gender = Gender.findById(id);
+        Gender gender = genderRepository.findById(id);
         if (gender == null) {
             Gender emptyGender = new Gender();
             emptyGender.id = id;
@@ -222,7 +226,7 @@ public class GenderResource {
     @Transactional
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance delete(@PathParam("id") Long id) {
-        Gender gender = Gender.findById(id);
+        Gender gender = genderRepository.findById(id);
         if (gender == null) {
             Gender emptyGender = new Gender();
             emptyGender.id = id;
@@ -237,7 +241,7 @@ public class GenderResource {
         //         "Cannot delete: Gender is in use by " + personCount + " person(s).");
         // }
 
-        gender.delete();
+        genderRepository.delete(gender);
 
         // Return success with OOB row removal
         return Templates.gender$modal_delete_success(id);

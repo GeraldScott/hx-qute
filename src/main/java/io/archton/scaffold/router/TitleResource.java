@@ -1,6 +1,7 @@
 package io.archton.scaffold.router;
 
 import io.archton.scaffold.entity.Title;
+import io.archton.scaffold.repository.TitleRepository;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -26,6 +27,9 @@ public class TitleResource {
 
     @Inject
     SecurityIdentity securityIdentity;
+
+    @Inject
+    TitleRepository titleRepository;
 
     @CheckedTemplate
     public static class Templates {
@@ -56,7 +60,7 @@ public class TitleResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list(@HeaderParam("HX-Request") String hxRequest) {
-        List<Title> titles = Title.listAllOrdered();
+        List<Title> titles = titleRepository.listAllOrdered();
 
         // If HTMX request, return only the table fragment
         if ("true".equals(hxRequest)) {
@@ -81,7 +85,7 @@ public class TitleResource {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        Title title = Title.findById(id);
+        Title title = titleRepository.findById(id);
         if (title == null) {
             // Return error in modal if title not found
             Title emptyTitle = new Title();
@@ -120,12 +124,12 @@ public class TitleResource {
         title.code = code.toUpperCase();
 
         // Check uniqueness
-        Title existingByCode = Title.findByCode(title.code);
+        Title existingByCode = titleRepository.findByCode(title.code);
         if (existingByCode != null) {
             return Templates.title$modal_create(title, "Code already exists.");
         }
 
-        Title existingByDescription = Title.findByDescription(description);
+        Title existingByDescription = titleRepository.findByDescription(description);
         if (existingByDescription != null) {
             return Templates.title$modal_create(title, "Description already exists.");
         }
@@ -136,10 +140,10 @@ public class TitleResource {
         title.updatedBy = userName;
 
         // Persist
-        title.persist();
+        titleRepository.persist(title);
 
         // Return success with OOB table refresh
-        List<Title> titles = Title.listAllOrdered();
+        List<Title> titles = titleRepository.listAllOrdered();
         return Templates.title$modal_success("Title created successfully.", titles);
     }
 
@@ -152,7 +156,7 @@ public class TitleResource {
             @FormParam("code") String code,
             @FormParam("description") String description) {
 
-        Title title = Title.findById(id);
+        Title title = titleRepository.findById(id);
         if (title == null) {
             Title emptyTitle = new Title();
             emptyTitle.id = id;
@@ -184,12 +188,12 @@ public class TitleResource {
         title.code = code.toUpperCase();
 
         // Check uniqueness (excluding current record)
-        Title existingByCode = Title.findByCode(title.code);
+        Title existingByCode = titleRepository.findByCode(title.code);
         if (existingByCode != null && !existingByCode.id.equals(id)) {
             return Templates.title$modal_edit(title, "Code already exists.");
         }
 
-        Title existingByDescription = Title.findByDescription(description);
+        Title existingByDescription = titleRepository.findByDescription(description);
         if (existingByDescription != null && !existingByDescription.id.equals(id)) {
             return Templates.title$modal_edit(title, "Description already exists.");
         }
@@ -208,7 +212,7 @@ public class TitleResource {
     @Path("/{id}/delete")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance deleteConfirm(@PathParam("id") Long id) {
-        Title title = Title.findById(id);
+        Title title = titleRepository.findById(id);
         if (title == null) {
             Title emptyTitle = new Title();
             emptyTitle.id = id;
@@ -222,7 +226,7 @@ public class TitleResource {
     @Transactional
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance delete(@PathParam("id") Long id) {
-        Title title = Title.findById(id);
+        Title title = titleRepository.findById(id);
         if (title == null) {
             Title emptyTitle = new Title();
             emptyTitle.id = id;
@@ -237,7 +241,7 @@ public class TitleResource {
         //         "Cannot delete: Title is in use by " + personCount + " person(s).");
         // }
 
-        title.delete();
+        titleRepository.delete(title);
 
         // Return success with OOB row removal
         return Templates.title$modal_delete_success(id);

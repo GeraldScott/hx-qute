@@ -1,6 +1,7 @@
 package io.archton.scaffold.router;
 
 import io.archton.scaffold.entity.Relationship;
+import io.archton.scaffold.repository.RelationshipRepository;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -26,6 +27,9 @@ public class RelationshipResource {
 
     @Inject
     SecurityIdentity securityIdentity;
+
+    @Inject
+    RelationshipRepository relationshipRepository;
 
     @CheckedTemplate
     public static class Templates {
@@ -56,7 +60,7 @@ public class RelationshipResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list(@HeaderParam("HX-Request") String hxRequest) {
-        List<Relationship> relationships = Relationship.listAllOrdered();
+        List<Relationship> relationships = relationshipRepository.listAllOrdered();
 
         // If HTMX request, return only the table fragment
         if ("true".equals(hxRequest)) {
@@ -81,7 +85,7 @@ public class RelationshipResource {
     @Path("/{id}/edit")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance editForm(@PathParam("id") Long id) {
-        Relationship relationship = Relationship.findById(id);
+        Relationship relationship = relationshipRepository.findById(id);
         if (relationship == null) {
             // Return error in modal if relationship not found
             Relationship emptyRelationship = new Relationship();
@@ -120,12 +124,12 @@ public class RelationshipResource {
         relationship.code = code.toUpperCase();
 
         // Check uniqueness
-        Relationship existingByCode = Relationship.findByCode(relationship.code);
+        Relationship existingByCode = relationshipRepository.findByCode(relationship.code);
         if (existingByCode != null) {
             return Templates.relationship$modal_create(relationship, "Code already exists.");
         }
 
-        Relationship existingByDescription = Relationship.findByDescription(description);
+        Relationship existingByDescription = relationshipRepository.findByDescription(description);
         if (existingByDescription != null) {
             return Templates.relationship$modal_create(relationship, "Description already exists.");
         }
@@ -136,10 +140,10 @@ public class RelationshipResource {
         relationship.updatedBy = userName;
 
         // Persist
-        relationship.persist();
+        relationshipRepository.persist(relationship);
 
         // Return success with OOB table refresh
-        List<Relationship> relationships = Relationship.listAllOrdered();
+        List<Relationship> relationships = relationshipRepository.listAllOrdered();
         return Templates.relationship$modal_success("Relationship created successfully.", relationships);
     }
 
@@ -176,18 +180,18 @@ public class RelationshipResource {
         formData.code = upperCode;
 
         // Check uniqueness (excluding current record) - before loading managed entity
-        Relationship existingByCode = Relationship.findByCode(upperCode);
+        Relationship existingByCode = relationshipRepository.findByCode(upperCode);
         if (existingByCode != null && !existingByCode.id.equals(id)) {
             return Templates.relationship$modal_edit(formData, "Code already exists.");
         }
 
-        Relationship existingByDescription = Relationship.findByDescription(description);
+        Relationship existingByDescription = relationshipRepository.findByDescription(description);
         if (existingByDescription != null && !existingByDescription.id.equals(id)) {
             return Templates.relationship$modal_edit(formData, "Description already exists.");
         }
 
         // Now load the managed entity and update it (all validations passed)
-        Relationship relationship = Relationship.findById(id);
+        Relationship relationship = relationshipRepository.findById(id);
         if (relationship == null) {
             return Templates.relationship$modal_edit(formData, "Relationship not found.");
         }
@@ -210,7 +214,7 @@ public class RelationshipResource {
     @Path("/{id}/delete")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance deleteConfirm(@PathParam("id") Long id) {
-        Relationship relationship = Relationship.findById(id);
+        Relationship relationship = relationshipRepository.findById(id);
         if (relationship == null) {
             Relationship emptyRelationship = new Relationship();
             emptyRelationship.id = id;
@@ -224,7 +228,7 @@ public class RelationshipResource {
     @Transactional
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance delete(@PathParam("id") Long id) {
-        Relationship relationship = Relationship.findById(id);
+        Relationship relationship = relationshipRepository.findById(id);
         if (relationship == null) {
             Relationship emptyRelationship = new Relationship();
             emptyRelationship.id = id;
@@ -239,7 +243,7 @@ public class RelationshipResource {
         //         "Cannot delete: Relationship is in use by " + personCount + " person(s).");
         // }
 
-        relationship.delete();
+        relationshipRepository.delete(relationship);
 
         // Return success with OOB row removal
         return Templates.relationship$modal_delete_success(id);
