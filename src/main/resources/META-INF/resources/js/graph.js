@@ -28,6 +28,7 @@
     let zoom;
     let graphData = { nodes: [], links: [] };
     let maxConnections = 1;
+    let contextMenuNode = null; // Currently right-clicked node for context menu
 
     // Initialize graph
     async function init() {
@@ -116,10 +117,8 @@
             .on('mouseover', handleNodeHover)
             .on('mouseout', handleNodeUnhover);
 
-        // Context menu (optional - requires d3-context-menu plugin)
-        if (typeof d3.contextMenu === 'function') {
-            node.on('contextmenu', d3.contextMenu(getContextMenu));
-        }
+        // Custom context menu on right-click
+        node.on('contextmenu', handleContextMenu);
 
         // Node circles (inside groups)
         nodeCircles = node.append('circle')
@@ -203,34 +202,43 @@
         return min + (d.relationshipCount / maxConnections) * (max - min);
     }
 
-    // Context menu definition
-    function getContextMenu(d) {
-        return [
-            {
-                title: 'View Details',
-                action: function(d, event) {
-                    loadPersonModal(d.id);
-                }
-            },
-            { divider: true },
-            {
-                title: 'Manage Relationships',
-                action: function(d, event) {
-                    window.location.href = `/persons/${d.id}/relationships`;
-                }
-            }
-        ];
+    // Handle right-click context menu
+    function handleContextMenu(event, d) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        contextMenuNode = d;
+        const menu = document.getElementById('node-context-menu');
+        menu.style.display = 'block';
+        menu.style.left = event.pageX + 'px';
+        menu.style.top = event.pageY + 'px';
+    }
+
+    // Hide context menu
+    function hideContextMenu() {
+        const menu = document.getElementById('node-context-menu');
+        menu.style.display = 'none';
+        contextMenuNode = null;
     }
 
     // Load person details into modal
     function loadPersonModal(personId) {
-        fetch(`/graph/person/${personId}`, {
-            credentials: 'same-origin'
-        })
-            .then(response => response.text())
+        fetch(`/graph/person/${personId}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.text();
+            })
             .then(html => {
                 document.getElementById('person-modal-content').innerHTML = html;
                 UIkit.modal('#person-modal').show();
+            })
+            .catch(error => {
+                console.error('Failed to load person details:', error);
+                UIkit.notification({
+                    message: 'Failed to load person details',
+                    status: 'danger',
+                    pos: 'top-center'
+                });
             });
     }
 
@@ -272,11 +280,32 @@
 
     // Setup event handlers
     function setupEventHandlers() {
-        // Click on background to reset highlight
+        // Click on background to reset highlight and hide context menu
         svg.on('click', () => {
             node.attr('opacity', 1);
             link.attr('opacity', 0.6);
             labels.attr('opacity', 1);
+            hideContextMenu();
+        });
+
+        // Hide context menu when clicking anywhere on document
+        document.addEventListener('click', hideContextMenu);
+
+        // Context menu item handlers
+        document.getElementById('ctx-view-details').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (contextMenuNode) {
+                loadPersonModal(contextMenuNode.id);
+            }
+            hideContextMenu();
+        });
+
+        document.getElementById('ctx-manage-relationships').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (contextMenuNode) {
+                window.location.href = `/persons/${contextMenuNode.id}/relationships`;
+            }
+            hideContextMenu();
         });
 
         // Search

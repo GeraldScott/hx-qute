@@ -7,7 +7,7 @@
 ## Current Status
 
 **Current Phase:** Feature 004 - Network Graph Visualization
-**Current Use Case:** UC-004-01-03: Access Context Menu Actions
+**Current Use Case:** UC-004-01-04: Search and Filter Graph
 **Blockers:** None
 
 ## Feature Plans
@@ -26,8 +26,8 @@
 | Feature 001 - Identity and Access Management | 6 | 6 | 0 |
 | Feature 002 - Master Data Management | 21 | 21 | 0 |
 | Feature 003 - Person Management | 21 | 21 | 0 |
-| Feature 004 - Network Graph Visualization | 6 | 2 | 4 |
-| **Total** | **58** | **54** | **4** |
+| Feature 004 - Network Graph Visualization | 6 | 3 | 3 |
+| **Total** | **58** | **55** | **3** |
 
 ---
 

@@ -147,9 +147,19 @@ h2 {
     user-select: none;
 }
 
-/* Context menu theme matching UIkit */
-.d3-context-menu-theme {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+/* Custom context menu styling */
+#node-context-menu {
     border-radius: 4px;
-    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}
+
+#node-context-menu .uk-nav-default > li > a {
+    padding: 8px 15px;
+}
+
+#node-context-menu .uk-nav-default > li > a:hover {
+    background-color: #f8f8f8;
+}
+
+#node-context-menu .uk-nav-divider {
+    margin: 5px 0;
 }

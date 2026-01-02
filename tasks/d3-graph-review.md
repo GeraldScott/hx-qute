@@ -9,7 +9,7 @@
 |-------|------------|--------|
 | SVG `<title>` fix (nodes) | UC-004-01-02 | ✅ Done |
 | Cache `maxConnections` | UC-004-01-02 | ✅ Done |
-| Modal error handling | UC-004-01-03 | 🔲 Pending |
+| Modal error handling | UC-004-01-03 | ✅ Done |
 | Email search filter | UC-004-01-04 | 🔲 Pending |
 | SVG `<title>` fix (edges) | UC-004-01-06 | 🔲 Pending |
 | Visibility API, CONFIG cleanup, Low priority | Post UC-004-01-06 | 🔲 Pending |
@@ -34,7 +34,7 @@ Code review conducted against D3.js v7 best practices using Context7 documentati
 
 ### High Priority
 
-- [ ] **Add error handling to modal fetch (Lines 222-230)**
+- [x] **Add error handling to modal fetch (Lines 222-230)** ✅ Fixed in UC-004-01-03
   - `loadPersonModal()` has no `.catch()` handler
   - Failed requests fail silently with no user feedback
   - Add error handling and user notification

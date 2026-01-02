@@ -2,10 +2,8 @@
 {#include base.html}
 {#title}Network Graph{/title}
 
-<!-- D3.js and Context Menu loaded only on this page -->
+<!-- D3.js loaded only on this page -->
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3-context-menu@2.1.0/dist/d3-context-menu.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/d3-context-menu@2.1.0/css/d3-context-menu.min.css">
 
 <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
     <h1 class="uk-heading-small uk-margin-remove">Network Graph</h1>
@@ -62,6 +60,15 @@
             <span class="uk-text-small">Not Specified</span>
         </div>
     </div>
+</div>
+
+<!-- Custom Context Menu (positioned via JS) -->
+<div id="node-context-menu" class="uk-card uk-card-default uk-card-small" style="display: none; position: fixed; z-index: 1000; min-width: 180px; box-shadow: 0 5px 12px rgba(0,0,0,0.15);">
+    <ul class="uk-nav uk-nav-default">
+        <li><a href="#" id="ctx-view-details"><span uk-icon="icon: info; ratio: 0.8"></span> View Details</a></li>
+        <li class="uk-nav-divider"></li>
+        <li><a href="#" id="ctx-manage-relationships"><span uk-icon="icon: link; ratio: 0.8"></span> Manage Relationships</a></li>
+    </ul>
 </div>
 
 <!-- Person Details Modal -->
