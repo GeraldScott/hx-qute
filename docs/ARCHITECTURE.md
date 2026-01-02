@@ -1,4 +1,4 @@
-**# HX Qute Architecture Guide
+# Architecture Guide
 
 Technical reference for developing features in this Quarkus + HTMX + Qute application.
 
@@ -34,7 +34,7 @@ Technical reference for developing features in this Quarkus + HTMX + Qute applic
 
 ## 1. Overview
 
-HX Qute is a reference implementation demonstrating modern server-side web development using the hypermedia-driven application (HDA) pattern. It combines Quarkus's reactive capabilities with HTMX's HTML-over-the-wire approach, eliminating the need for complex JavaScript frameworks while delivering responsive, interactive user experiences.
+This application demonstrates modern server-side web development using the hypermedia-driven application (HDA) pattern. It combines Quarkus's reactive capabilities with HTMX's HTML-over-the-wire approach, eliminating the need for complex JavaScript frameworks while delivering responsive, interactive user experiences.
 
 ### Design Principles
 
