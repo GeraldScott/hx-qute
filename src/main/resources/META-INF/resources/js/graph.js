@@ -24,9 +24,10 @@
 
     // State
     let simulation;
-    let svg, g, link, node, labels;
+    let svg, g, link, node, nodeCircles, labels;
     let zoom;
     let graphData = { nodes: [], links: [] };
+    let maxConnections = 1;
 
     // Initialize graph
     async function init() {
@@ -70,6 +71,9 @@
 
     // Initialize force simulation
     function initSimulation(width, height) {
+        // Cache maxConnections for getNodeRadius performance
+        maxConnections = Math.max(...graphData.nodes.map(n => n.relationshipCount), 1);
+
         simulation = d3.forceSimulation(graphData.nodes)
             .force('link', d3.forceLink(graphData.links)
                 .id(d => d.id)
@@ -101,16 +105,12 @@
         link.append('title')
             .text(d => d.relationshipType);
 
-        // Nodes
+        // Nodes (wrapped in groups for proper tooltip support)
         node = g.append('g')
             .attr('class', 'nodes')
-            .selectAll('circle')
+            .selectAll('g')
             .data(graphData.nodes)
-            .join('circle')
-            .attr('r', d => getNodeRadius(d))
-            .attr('fill', d => getNodeColor(d))
-            .attr('stroke', '#fff')
-            .attr('stroke-width', 2)
+            .join('g')
             .call(drag(simulation))
             .on('click', handleNodeClick)
             .on('mouseover', handleNodeHover)
@@ -121,7 +121,14 @@
             node.on('contextmenu', d3.contextMenu(getContextMenu));
         }
 
-        // Node tooltips
+        // Node circles (inside groups)
+        nodeCircles = node.append('circle')
+            .attr('r', d => getNodeRadius(d))
+            .attr('fill', d => getNodeColor(d))
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 2);
+
+        // Node tooltips (now works because parent is a group, not circle)
         node.append('title')
             .text(d => `${d.firstName} ${d.lastName}\n${d.email}`);
 
@@ -147,9 +154,8 @@
             .attr('x2', d => d.target.x)
             .attr('y2', d => d.target.y);
 
-        node
-            .attr('cx', d => d.x)
-            .attr('cy', d => d.y);
+        // Use transform for node groups (not cx/cy since nodes are now <g> elements)
+        node.attr('transform', d => `translate(${d.x},${d.y})`);
 
         labels
             .attr('x', d => d.x)
@@ -191,10 +197,9 @@
         }
     }
 
-    // Get node radius based on relationship count
+    // Get node radius based on relationship count (uses cached maxConnections)
     function getNodeRadius(d) {
         const { min, max } = CONFIG.nodeRadius;
-        const maxConnections = Math.max(...graphData.nodes.map(n => n.relationshipCount), 1);
         return min + (d.relationshipCount / maxConnections) * (max - min);
     }
 
@@ -252,15 +257,15 @@
         labels.attr('opacity', n => connectedIds.has(n.id) ? 1 : 0.2);
     }
 
-    // Handle node hover
+    // Handle node hover (select circle inside the group)
     function handleNodeHover(event, d) {
-        d3.select(this)
+        d3.select(this).select('circle')
             .attr('stroke-width', 4)
             .attr('stroke', '#333');
     }
 
     function handleNodeUnhover(event, d) {
-        d3.select(this)
+        d3.select(this).select('circle')
             .attr('stroke-width', 2)
             .attr('stroke', '#fff');
     }

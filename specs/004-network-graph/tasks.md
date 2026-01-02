@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-004-01-02: Interact with Graph Nodes
-**Status:** ✅ UC-004-01-01 Complete
+**Current Use Case:** UC-004-01-03: Access Context Menu Actions
+**Status:** ✅ UC-004-01-02 Complete
 **Blockers:** None
 
 ---
@@ -13,7 +13,7 @@
 | Use Case | Status |
 |----------|--------|
 | UC-004-01-01: Display Network Graph Page | ✅ Complete |
-| UC-004-01-02: Interact with Graph Nodes | 🔲 Not Started |
+| UC-004-01-02: Interact with Graph Nodes | ✅ Complete |
 | UC-004-01-03: Access Context Menu Actions | 🔲 Not Started |
 | UC-004-01-04: Search and Filter Graph | 🔲 Not Started |
 | UC-004-01-05: Navigate Graph View | 🔲 Not Started |
@@ -69,29 +69,37 @@
 
 ## UC-004-01-02: Interact with Graph Nodes
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-004-01 - Display a network diagram of the relationships between people
 
 **Description:** Enable drag-and-drop node interaction with spring-back behavior, hover tooltips, and click-to-highlight neighborhood.
 
 **Implementation Tasks:**
-- [ ] Implement `drag()` behavior with D3.js
-- [ ] Set `d.fx`/`d.fy` on drag start (fix position)
-- [ ] Update `d.fx`/`d.fy` during drag
-- [ ] Set `d.fx = null`/`d.fy = null` on drag end (spring back)
-- [ ] Configure simulation `alphaTarget` for smooth drag animation
-- [ ] Add node tooltip with name and email
-- [ ] Implement `handleNodeClick()` for neighborhood highlighting
-- [ ] Highlight selected node and all connected nodes
-- [ ] Dim non-connected nodes and edges
-- [ ] Implement `handleNodeHover()` for visual feedback
-- [ ] Implement `handleNodeUnhover()` to reset style
-- [ ] Add click-on-background to reset highlights
+- [x] Implement `drag()` behavior with D3.js
+- [x] Set `d.fx`/`d.fy` on drag start (fix position)
+- [x] Update `d.fx`/`d.fy` during drag
+- [x] Set `d.fx = null`/`d.fy = null` on drag end (spring back)
+- [x] Configure simulation `alphaTarget` for smooth drag animation
+- [x] Add node tooltip with name and email
+- [x] Implement `handleNodeClick()` for neighborhood highlighting
+- [x] Highlight selected node and all connected nodes
+- [x] Dim non-connected nodes and edges
+- [x] Implement `handleNodeHover()` for visual feedback
+- [x] Implement `handleNodeUnhover()` to reset style
+- [x] Add click-on-background to reset highlights
 
 **Test Results:**
-- Test ID: TC-004-01-003, TC-004-01-004, TC-004-01-005
-- Status: 🔲 Not Tested
-- Notes:
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-004-01-003 | ✅ PASS | Drag works, edges stretch during drag, spring-back on release |
+| TC-004-01-004 | ✅ PASS | Tooltip shows "Name\nemail" format, hover highlight (thick border) |
+| TC-004-01-005 | ✅ PASS | Click highlights neighborhood, dims others, background click resets |
+
+**Implementation Notes:**
+- Fixed SVG structure: wrapped nodes in `<g>` groups so `<title>` tooltips work (per d3-graph-review.md)
+- Cached `maxConnections` in `initSimulation()` for performance (per d3-graph-review.md)
+- Updated `ticked()` to use `transform` instead of `cx`/`cy` for node groups
+- Updated hover handlers to select circle inside group
 
 ---
 
