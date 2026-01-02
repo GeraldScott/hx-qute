@@ -454,3 +454,30 @@ The user stories are grouped into domain-specific features that deliver business
 **Priority:** Medium
 **Story Points:** 3
 
+---
+
+## Feature 004: Network Graph Visualization
+
+### US-004-01: Display a network diagram of the relationships between people
+**As an** authenticated user
+**I want to** see a visual display of the connections between one person to another
+**So that** I can explore the relationships between people
+
+**Acceptance Criteria:**
+- There is a navbar entry labelled "Graph" that opens a screen with an interactive network diagram of people as nodes and the relationships between them as edges
+- The Graph view uses a force-directed graph layout algorithm so that people who are more connected tend to cluster together
+- I can drag nodes to reposition them, and they settle back into position when released
+- Hovering over a node displays a tooltip with the person's name and email
+- I can right-click on a node to open a context menu with options to view details or manage relationships
+- Selecting "View Details" opens a modal that displays the person's full details
+- Selecting "Manage Relationships" navigates directly to the relationship management screen
+- Hovering over an edge displays a tooltip showing the relationship type
+- I can search for a person by name using a search box; matching nodes are highlighted
+- I can filter the graph by relationship type using a dropdown
+- Clicking a node highlights the node and all its connected nodes and edges (neighborhood highlighting)
+- The graph supports standard navigation: scroll to zoom, click-and-drag background to pan
+- Nodes are colored based on gender (Female: pink, Male: blue, Unspecified: gray)
+- Node size reflects the number of relationships (more connections = larger node)
+
+**Priority:** Medium
+**Story Points:** 5
