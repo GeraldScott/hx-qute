@@ -9,6 +9,7 @@ Technical reference for developing features in this Quarkus + HTMX + Qute applic
 1. [Overview](#1-overview)
 2. [Technology Stack](#2-technology-stack)
    - [2.5 Static Assets & CSS Organization](#25-static-assets--css-organization)
+   - [2.5 JavaScript in HTMX Applications](#javascript-in-htmx-applications)
 3. [Database Layer](#3-database-layer)
 4. [Entity Layer](#4-entity-layer)
 5. [Repository Layer](#5-repository-layer)
@@ -194,6 +195,98 @@ html, body { ... }
 | Remove unused CSS | Smaller payload |
 | Use `preload` for critical CSS | Faster first paint |
 | Avoid `@import` in CSS | Prevents render-blocking chains |
+
+#### JavaScript in HTMX Applications
+
+HTMX follows a **hypermedia-first philosophy**: the server returns HTML, and HTMX handles DOM updates. This eliminates most client-side JavaScript needs.
+
+##### When JavaScript is Appropriate
+
+| Use Case | Approach |
+|----------|----------|
+| UI framework integration (UIkit modals, tooltips) | Inline `hx-on::` attributes |
+| Simple DOM manipulation | Inline `hx-on::` attributes |
+| Complex reusable logic | External file in `js/arc-utils.js` |
+| Third-party library initialization | `htmx.onLoad()` callback |
+
+##### Inline Scripts with `hx-on::`
+
+Prefer inline scripts for **Locality of Behavior (LoB)**—keeping behavior next to the element it affects:
+
+```html
+<!-- Good: Behavior co-located with element -->
+<button hx-post="/items"
+        hx-target="#modal-content"
+        hx-on::after-request="UIkit.modal('#crud-modal').show()">
+    Add Item
+</button>
+
+<!-- Good: Closing modal after success -->
+<div hx-on::load="UIkit.modal('#crud-modal').hide()">
+    Success message...
+</div>
+```
+
+##### External JavaScript Files
+
+Use external files only when:
+- Logic exceeds 2-3 statements
+- Function is reused across multiple templates
+- Content Security Policy (CSP) prohibits inline scripts
+
+```
+src/main/resources/META-INF/resources/
+└── js/
+    └── arc-utils.js    # Reusable utility functions
+```
+
+**External file pattern:**
+
+```javascript
+// js/arc-utils.js
+window.Arc = {
+    // Initialize third-party libraries on HTMX content loads
+    initOnLoad: function() {
+        htmx.onLoad(function(content) {
+            // Initialize components in newly loaded content
+        });
+    },
+
+    // Reusable utility called from hx-on::
+    confirmDelete: function(name) {
+        return confirm('Delete ' + name + '?');
+    }
+};
+
+// Auto-initialize on page load
+document.addEventListener('DOMContentLoaded', Arc.initOnLoad);
+```
+
+**Calling from templates:**
+
+```html
+<button hx-delete="/items/{id}"
+        hx-on::before-request="return Arc.confirmDelete('{item.name}')">
+    Delete
+</button>
+```
+
+##### JavaScript Anti-Patterns
+
+| Anti-Pattern | Why It's Wrong | Correct Approach |
+|--------------|----------------|------------------|
+| Fetching JSON and rendering client-side | Defeats HTMX's purpose | Return HTML from server |
+| Heavy client-side state management | Adds complexity; server is source of truth | Use `hx-vals` or hidden inputs |
+| jQuery for DOM manipulation | Unnecessary overhead | Use vanilla JS or `hx-on::` |
+| Inline scripts > 3 statements | Obscures template structure | Extract to external file |
+
+##### Compatible Libraries
+
+| Library | Use Case | Integration |
+|---------|----------|-------------|
+| **UIkit JS** | Modals, dropdowns, notifications | Already included via CDN |
+| **Alpine.js** | Reactive local state (optional) | Lightweight; pairs well with HTMX |
+| **Vanilla JS** | Simple event handling | No dependencies |
 
 ---
 
