@@ -122,3 +122,44 @@ h2 {
 .uk-nav-sub span[uk-icon] {
     vertical-align: middle;
 }
+
+/* Graph Styles */
+#graph-svg {
+    cursor: grab;
+}
+
+#graph-svg:active {
+    cursor: grabbing;
+}
+
+.nodes circle {
+    cursor: pointer;
+    transition: stroke-width 0.2s;
+}
+
+.links line {
+    pointer-events: all;
+}
+
+.labels text {
+    pointer-events: none;
+    fill: #333;
+    user-select: none;
+}
+
+/* Custom context menu styling */
+#node-context-menu {
+    border-radius: 4px;
+}
+
+#node-context-menu .uk-nav-default > li > a {
+    padding: 8px 15px;
+}
+
+#node-context-menu .uk-nav-default > li > a:hover {
+    background-color: #f8f8f8;
+}
+
+#node-context-menu .uk-nav-divider {
+    margin: 5px 0;
+}
