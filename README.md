@@ -18,6 +18,29 @@ This project uses Quarkus with the Qute template engine to demonstrate how to us
 - Jaeger for tracing
 - Prometheus for monitoring
 
+## Creating this project from scratch
+
+Install the Quarkus CLI using SDKMAN:
+
+```bash
+sdk install quarkus
+```
+
+Then generate the project:
+
+```bash
+quarkus create app io.archton.scaffold:hx-qute:1.0.0 \
+  -P io.quarkus.platform:quarkus-bom:3.30.3 \
+  -x rest-qute \
+  -x arc \
+  -x flyway \
+  -x hibernate-orm-panache \
+  -x hibernate-validator \
+  -x jdbc-postgresql \
+  -x smallrye-health \
+  -x security-jpa
+```
+
 ## Packaging and running the application
 ### Running in DEV mode
 
