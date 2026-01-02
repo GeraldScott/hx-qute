@@ -448,18 +448,68 @@ public class UserLogin {
     public Long id;
 
     @Username
+    @NotBlank
+    @Email
+    @Size(max = 255)
     @Column(nullable = false, unique = true)
     public String email;
 
-    @Password(value = PasswordType.MCF)
+    @Password(PasswordType.MCF)
+    @NotBlank
     @Column(nullable = false)
     public String password;
 
     @Roles
     @Column(nullable = false)
-    public String role;
+    public String role = "user";
 
-    // Panache generates accessors at bytecode level
+    // Profile fields
+    @Size(max = 100)
+    @Column(name = "first_name")
+    public String firstName;
+
+    @Size(max = 100)
+    @Column(name = "last_name")
+    public String lastName;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    public Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    public Instant updatedAt;
+
+    @Column(nullable = false)
+    public boolean active = true;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+        normalizeEmail();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+        normalizeEmail();
+    }
+
+    private void normalizeEmail() {
+        if (email != null) {
+            email = email.toLowerCase().trim();
+        }
+    }
+
+    public String getDisplayName() {
+        if (firstName != null && lastName != null) {
+            return firstName + " " + lastName;
+        } else if (firstName != null) {
+            return firstName;
+        } else if (lastName != null) {
+            return lastName;
+        }
+        return email;
+    }
 }
 ```
 
@@ -1623,26 +1673,26 @@ quarkus.flyway.locations=db/migration
 ```properties
 # Form authentication
 quarkus.http.auth.form.enabled=true
-quarkus.http.auth.form.login-page=/login
+quarkus.http.auth.form.login-page=/?login=true
 quarkus.http.auth.form.landing-page=/
-quarkus.http.auth.form.error-page=/login?error=true
+quarkus.http.auth.form.error-page=/?login=true&error=true
 quarkus.http.auth.form.timeout=PT30M
 quarkus.http.auth.form.cookie-name=quarkus-credential
 quarkus.http.auth.form.http-only-cookie=true
 
 # Session security
 quarkus.http.auth.form.new-cookie-interval=PT1M
-quarkus.http.same-site-cookie.quarkus-credential=strict
+quarkus.http.same-site-cookie.quarkus-credential.value=strict
 
 # Route protection
-quarkus.http.auth.permission.authenticated.paths=/dashboard/*,/api/*,/persons/*,/profile/*
+quarkus.http.auth.permission.authenticated.paths=/dashboard/*,/api/*,/persons,/persons/*,/profile/*,/graph,/graph/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
 
-quarkus.http.auth.permission.admin.paths=/admin/*
+quarkus.http.auth.permission.admin.paths=/admin/*,/genders/*,/titles/*,/relationships/*
 quarkus.http.auth.permission.admin.policy=admin
 quarkus.http.auth.policy.admin.roles-allowed=admin
 
-quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*,/img/*,/style.css
 quarkus.http.auth.permission.public.policy=permit
 
 # Password policy (NIST SP 800-63B-4)
