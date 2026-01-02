@@ -76,26 +76,4 @@ public class PersonRelationshipRepository implements PanacheRepository<PersonRel
     public long countBySourcePerson(Long sourcePersonId) {
         return count("sourcePerson.id", sourcePersonId);
     }
-
-    /**
-     * Find all relationships with eager loading for graph visualization.
-     */
-    public List<PersonRelationship> findAllForGraph() {
-        EntityGraph<?> graph = getEntityManager().getEntityGraph("PersonRelationship.forGraph");
-        return findAll()
-            .withHint(FETCH_GRAPH_HINT, graph)
-            .list();
-    }
-
-    /**
-     * Get distinct relationship types for filter dropdown.
-     */
-    public List<String> findDistinctRelationshipTypes() {
-        return getEntityManager()
-            .createQuery(
-                "SELECT DISTINCT r.description FROM Relationship r ORDER BY r.description",
-                String.class
-            )
-            .getResultList();
-    }
 }
