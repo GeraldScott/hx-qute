@@ -8,6 +8,7 @@ Technical reference for developing features in this Quarkus + HTMX + Qute applic
 
 1. [Overview](#1-overview)
 2. [Technology Stack](#2-technology-stack)
+   - [2.5 Static Assets & CSS Organization](#25-static-assets--css-organization)
 3. [Database Layer](#3-database-layer)
 4. [Entity Layer](#4-entity-layer)
 5. [Repository Layer](#5-repository-layer)
@@ -112,6 +113,87 @@ It must not contain:
 | RDBMS | PostgreSQL 17 |
 | Migrations | Flyway |
 | ORM | Hibernate with Panache |
+
+### 2.5 Static Assets & CSS Organization
+
+Quarkus serves static resources from `src/main/resources/META-INF/resources/`. This is the standard location defined by the Servlet spec for resources in JAR files.
+
+#### Directory Structure
+
+```
+src/main/resources/META-INF/resources/
+├── style.css           # Application-specific styles
+├── css/                # Additional stylesheets (if needed)
+│   └── print.css       # Print-specific styles
+├── js/                 # Application JavaScript (if needed)
+└── images/             # Static images
+```
+
+#### CSS Organization Guidelines
+
+| Guideline | Rationale |
+|-----------|-----------|
+| Single `style.css` for simple apps | Reduces HTTP requests; sufficient for HTMX apps |
+| Use CSS custom properties (`:root`) | Centralized theming; easy maintenance |
+| Load CSS before JavaScript | CSS is render-blocking; ensures correct initial paint |
+| Scope styles to components | Prevents specificity conflicts with UIkit |
+| Comment sections clearly | Aids navigation in single-file CSS |
+
+#### CSS File Structure Pattern
+
+```css
+/* ============================================
+   1. CSS Custom Properties (Variables)
+   ============================================ */
+:root {
+    --brand-primary: #2c5530;
+    --brand-secondary: #bfc9c6;
+}
+
+/* ============================================
+   2. Base/Reset Overrides
+   ============================================ */
+html, body { ... }
+
+/* ============================================
+   3. Layout Components
+   ============================================ */
+.sidebar { ... }
+.main-content-area { ... }
+
+/* ============================================
+   4. UIkit Overrides
+   ============================================ */
+.uk-table th { ... }
+.uk-nav-default > li.uk-active > a { ... }
+
+/* ============================================
+   5. Application Components
+   ============================================ */
+.tech-card { ... }
+
+/* ============================================
+   6. Utility Classes
+   ============================================ */
+.visually-hidden { ... }
+```
+
+#### Best Practices
+
+1. **Prefix custom classes**: Prefix custom classes with `arc-` to avoid conflicts with UIkit classes
+2. **Avoid `!important`**: Structure specificity properly instead of forcing overrides
+3. **Use semantic class names**: Name classes by purpose (`.sidebar-nav`), not appearance (`.left-blue-box`)
+4. **Group related styles**: Keep component styles together with clear section comments
+5. **Minimize UIkit overrides**: Only override framework styles when necessary; use UIkit's built-in modifiers first
+
+#### Performance Considerations
+
+| Practice | Benefit |
+|----------|---------|
+| Minify CSS in production | Reduces file size |
+| Remove unused CSS | Smaller payload |
+| Use `preload` for critical CSS | Faster first paint |
+| Avoid `@import` in CSS | Prevents render-blocking chains |
 
 ---
 
