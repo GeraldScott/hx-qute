@@ -15,6 +15,10 @@ Technical reference for developing features in this Quarkus + HTMX + Qute applic
 6. [Service Layer](#6-service-layer)
 7. [Resource Layer](#7-resource-layer)
 8. [Template System](#8-template-system)
+   - [8.1 Fragment Rendering Behavior](#81-fragment-rendering-behavior)
+   - [8.2 Fragment Types and Location](#82-fragment-types-and-location)
+   - [8.3 Fragment Naming Conventions](#83-fragment-naming-conventions)
+   - [8.4 Qute Fragments for HTMX](#84-qute-fragments-for-htmx)
 9. [HTMX Integration](#9-htmx-integration)
 10. [Creating New Entities - Complete Checklist](#10-creating-new-entities---complete-checklist)
 11. [Testing Patterns](#11-testing-patterns)
@@ -928,7 +932,47 @@ public class ServiceExceptionMapper implements ExceptionMapper<RuntimeException>
 
 ## 8. Template System
 
-### 8.1 Fragment Naming Conventions
+### 8.1 Fragment Rendering Behavior
+
+Qute fragments have two rendering behaviors:
+
+1. **In-place rendering**: By default, fragment content renders at its definition location AND is available for `{#include}`
+2. **Include-only rendering**: With `rendered=false`, fragment content only renders when explicitly included
+
+**Critical Rule**: Fragments defined within a page template use `rendered=false` to prevent duplicate content:
+
+```html
+{#fragment id='table' rendered=false}
+<!-- This content only renders when included via {#include $table /} -->
+{/fragment}
+```
+
+Without `rendered=false`, the fragment content appears twice: once where included, and once at the fragment definition location (typically at the end of the document).
+
+### 8.2 Fragment Types and Location
+
+| Fragment Type | Location | Rendering | Example |
+|---------------|----------|-----------|---------|
+| Shared fragments | `templates/fragments/` | Renders only when included (separate file) | `navigation.html` |
+| Page fragments | Same template file | Uses `rendered=false` | `{#fragment id='table' rendered=false}` |
+
+**Shared fragments** (navigation, footer, common components) live in `templates/fragments/` as standalone files:
+
+```
+templates/
+├── fragments/
+│   └── navigation.html      # Shared navigation component
+├── base.html                 # Base layout, includes fragments/navigation
+└── PersonResource/
+    └── person.html           # Page template with inline fragments
+```
+
+Including a shared fragment from a separate file:
+```html
+{#include fragments/navigation /}
+```
+
+### 8.3 Fragment Naming Conventions
 
 Qute fragments use `{#fragment id=...}` in templates and are accessed via `$` notation in Java:
 
@@ -959,9 +1003,9 @@ public static class Templates {
 }
 ```
 
-### 8.2 Qute Fragments for HTMX
+### 8.4 Qute Fragments for HTMX
 
-Templates use `{#fragment}` sections for partial responses:
+Templates use `{#fragment}` sections with `rendered=false` for partial responses:
 
 ```html
 {@java.util.List<com.example.app.entity.Category> categories}
@@ -997,7 +1041,7 @@ Templates use `{#fragment}` sections for partial responses:
 {/content}
 {/include}
 
-{#fragment id=table}
+{#fragment id=table rendered=false}
 <table class="uk-table uk-table-striped">
     <thead>
         <tr>
@@ -1033,7 +1077,7 @@ Templates use `{#fragment}` sections for partial responses:
 </table>
 {/fragment}
 
-{#fragment id=modal_create}
+{#fragment id=modal_create rendered=false}
 {@com.example.app.entity.Category category}
 {@java.lang.String error}
 <div class="uk-modal-header">
@@ -1062,7 +1106,7 @@ Templates use `{#fragment}` sections for partial responses:
 </div>
 {/fragment}
 
-{#fragment id=modal_success}
+{#fragment id=modal_success rendered=false}
 {@java.lang.String message}
 {@java.util.List<com.example.app.entity.Category> categories}
 <div class="uk-modal-body" hx-on::load="UIkit.modal('#crud-modal').hide()">
@@ -1074,7 +1118,7 @@ Templates use `{#fragment}` sections for partial responses:
 </div>
 {/fragment}
 
-{#fragment id=modal_delete}
+{#fragment id=modal_delete rendered=false}
 {@com.example.app.entity.Category category}
 {@java.lang.String error}
 <div class="uk-modal-header">
@@ -1096,7 +1140,7 @@ Templates use `{#fragment}` sections for partial responses:
 </div>
 {/fragment}
 
-{#fragment id=modal_delete_success}
+{#fragment id=modal_delete_success rendered=false}
 {@java.lang.Long deletedId}
 <div class="uk-modal-body" hx-on::load="UIkit.modal('#crud-modal').hide()">
     <div class="uk-alert uk-alert-success">Category deleted successfully.</div>
@@ -1237,12 +1281,13 @@ When creating a new data entity, follow this checklist:
 
 - [ ] Create template file: `templates/EntityResource/entity.html`
 - [ ] Define type declarations for all variables
-- [ ] Create table fragment (`{#fragment id=table}`)
-- [ ] Create modal_create fragment
-- [ ] Create modal_edit fragment
-- [ ] Create modal_success fragment with OOB updates
-- [ ] Create modal_delete fragment
-- [ ] Create modal_delete_success fragment with OOB row removal
+- [ ] Create table fragment with `rendered=false` (`{#fragment id=table rendered=false}`)
+- [ ] Create modal_create fragment with `rendered=false`
+- [ ] Create modal_edit fragment with `rendered=false`
+- [ ] Create modal_success fragment with `rendered=false` and OOB updates
+- [ ] Create modal_delete fragment with `rendered=false`
+- [ ] Create modal_delete_success fragment with `rendered=false` and OOB row removal
+- [ ] All fragments defined in page templates use `rendered=false` to prevent duplicate rendering
 
 ---
 
@@ -1487,7 +1532,47 @@ public class OrderRepository implements PanacheRepository<Order> {
 }
 ```
 
-### 13.4 Avoid Anemic/Pass-Through Services
+### 13.4 Avoid Fragments Without rendered=false
+
+**Anti-Pattern**: Defining fragments in page templates without `rendered=false`, causing duplicate content.
+
+```html
+<!-- ❌ WRONG: Fragment renders both in-place AND when included -->
+{#include base}
+<div id="table-container">{#include $table /}</div>
+{/include}
+
+{#fragment id=table}
+<table>...</table>
+{/fragment}
+```
+
+This causes the table to appear twice: once inside `#table-container` (correct) and once at the end of the document where the fragment is defined (duplicate).
+
+**Correct Pattern**: Page fragments use `rendered=false` to prevent in-place rendering.
+
+```html
+<!-- ✅ CORRECT: Fragment only renders when included -->
+{#include base}
+<div id="table-container">{#include $table /}</div>
+{/include}
+
+{#fragment id=table rendered=false}
+<table>...</table>
+{/fragment}
+```
+
+**For shared components** (navigation, footer), use separate files in `templates/fragments/`:
+
+```html
+<!-- templates/fragments/navigation.html -->
+<nav>...</nav>
+
+<!-- templates/base.html -->
+{#include fragments/navigation /}
+```
+
+### 13.5 Avoid Anemic/Pass-Through Services
 
 **Anti-Pattern**: Creating service classes that merely proxy repository methods without adding business value.
 
@@ -1563,6 +1648,6 @@ public class GenderResource {
 
 ---
 
-*Document Version: 2.4*
+*Document Version: 2.5*
 *Pattern: PanacheRepository with Optional Service Layer*
-*Last Updated: 2026-01-01*
+*Last Updated: 2026-01-02*
