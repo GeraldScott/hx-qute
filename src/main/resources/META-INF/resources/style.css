@@ -122,3 +122,34 @@ h2 {
 .uk-nav-sub span[uk-icon] {
     vertical-align: middle;
 }
+
+/* Graph Styles */
+#graph-svg {
+    cursor: grab;
+}
+
+#graph-svg:active {
+    cursor: grabbing;
+}
+
+.nodes circle {
+    cursor: pointer;
+    transition: stroke-width 0.2s;
+}
+
+.links line {
+    pointer-events: all;
+}
+
+.labels text {
+    pointer-events: none;
+    fill: #333;
+    user-select: none;
+}
+
+/* Context menu theme matching UIkit */
+.d3-context-menu-theme {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    border-radius: 4px;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}

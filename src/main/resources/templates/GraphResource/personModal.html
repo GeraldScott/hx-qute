@@ -1,0 +1,23 @@
+{@io.archton.scaffold.entity.Person person}
+<dl class="uk-description-list">
+    <dt>Name</dt>
+    <dd>{person.getDisplayName()}</dd>
+
+    <dt>Email</dt>
+    <dd>{person.email}</dd>
+
+    {#if person.phone}
+    <dt>Phone</dt>
+    <dd>{person.phone}</dd>
+    {/if}
+
+    {#if person.dateOfBirth}
+    <dt>Date of Birth</dt>
+    <dd>{person.dateOfBirth}</dd>
+    {/if}
+
+    {#if person.gender}
+    <dt>Gender</dt>
+    <dd>{person.gender.description}</dd>
+    {/if}
+</dl>

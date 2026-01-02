@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-004-01-01: Display Network Graph Page
-**Status:** 🔲 Not Started
+**Current Use Case:** UC-004-01-02: Interact with Graph Nodes
+**Status:** ✅ UC-004-01-01 Complete
 **Blockers:** None
 
 ---
@@ -12,7 +12,7 @@
 
 | Use Case | Status |
 |----------|--------|
-| UC-004-01-01: Display Network Graph Page | 🔲 Not Started |
+| UC-004-01-01: Display Network Graph Page | ✅ Complete |
 | UC-004-01-02: Interact with Graph Nodes | 🔲 Not Started |
 | UC-004-01-03: Access Context Menu Actions | 🔲 Not Started |
 | UC-004-01-04: Search and Filter Graph | 🔲 Not Started |
@@ -23,28 +23,28 @@
 
 ## UC-004-01-01: Display Network Graph Page
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-004-01 - Display a network diagram of the relationships between people
 
 **Description:** Create the graph page with D3.js force-directed visualization showing people as nodes and relationships as edges.
 
 **Implementation Tasks:**
-- [ ] Add Graph entry to navigation bar (`fragments/navigation.html`)
-- [ ] Create `GraphResource.java` with `@Path("/graph")`
-- [ ] Create inner DTO classes: `GraphData`, `GraphNode`, `GraphLink`
-- [ ] Implement `showGraph()` endpoint returning graph.html template
-- [ ] Implement `getGraphData()` endpoint returning JSON graph data
-- [ ] Create `templates/GraphResource/` folder
-- [ ] Create `graph.html` template with D3.js CDN includes
-- [ ] Create `js/graph.js` with D3.js force simulation initialization
-- [ ] Implement `initSimulation()` with forces (link, charge, center, collide)
-- [ ] Implement `renderGraph()` for nodes, edges, and labels
-- [ ] Implement `ticked()` function for position updates
-- [ ] Add node coloring based on gender (pink/blue/gray)
-- [ ] Add node sizing based on relationship count
-- [ ] Add graph legend for gender colors
-- [ ] Add route protection in `application.properties`
-- [ ] Handle empty state (no people/relationships)
+- [x] Add Graph entry to navigation bar (`fragments/navigation.html`)
+- [x] Create `GraphResource.java` with `@Path("/graph")`
+- [x] Create inner DTO classes: `GraphData`, `GraphNode`, `GraphLink`
+- [x] Implement `showGraph()` endpoint returning graph.html template
+- [x] Implement `getGraphData()` endpoint returning JSON graph data
+- [x] Create `templates/GraphResource/` folder
+- [x] Create `graph.html` template with D3.js CDN includes
+- [x] Create `js/graph.js` with D3.js force simulation initialization
+- [x] Implement `initSimulation()` with forces (link, charge, center, collide)
+- [x] Implement `renderGraph()` for nodes, edges, and labels
+- [x] Implement `ticked()` function for position updates
+- [x] Add node coloring based on gender (pink/blue/gray)
+- [x] Add node sizing based on relationship count
+- [x] Add graph legend for gender colors
+- [x] Add route protection in `application.properties`
+- [x] Handle empty state (no people/relationships)
 
 **Endpoints:**
 | Method | Path | Description |
@@ -53,9 +53,17 @@
 | GET | `/graph/data` | Return JSON graph data |
 
 **Test Results:**
-- Test ID: TC-004-01-001, TC-004-01-002
-- Status: 🔲 Not Tested
-- Notes:
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-004-01-001 | ✅ PASS | Graph page loads, navigation entry exists after "People", page title "Network Graph" correct |
+| TC-004-01-002 | ✅ PASS | 62 nodes, 86 edges, 62 labels render correctly. Colors: 53 blue (Male), 9 pink (Female). Legend present. Node sizes vary (12 unique radii). |
+
+**Implementation Notes:**
+- Added `quarkus-rest-jsonb` dependency to pom.xml for JSON serialization
+- Added `credentials: 'same-origin'` to fetch calls in graph.js for auth
+- Adjusted force parameters for large dataset (62 nodes): charge=-150, linkDistance=60
+- Fixed labels not rendering: added guard in `ticked()` function to handle async initialization
+- Made d3-context-menu optional (CDN blocked by ORB) - will implement in UC-004-01-03
 
 ---
 

@@ -7,7 +7,7 @@
 ## Current Status
 
 **Current Phase:** Feature 004 - Network Graph Visualization
-**Current Use Case:** UC-004-01-01: Display Network Graph Page
+**Current Use Case:** UC-004-01-02: Interact with Graph Nodes
 **Blockers:** None
 
 ## Feature Plans
@@ -26,8 +26,8 @@
 | Feature 001 - Identity and Access Management | 6 | 6 | 0 |
 | Feature 002 - Master Data Management | 21 | 21 | 0 |
 | Feature 003 - Person Management | 21 | 21 | 0 |
-| Feature 004 - Network Graph Visualization | 6 | 0 | 6 |
-| **Total** | **58** | **52** | **6** |
+| Feature 004 - Network Graph Visualization | 6 | 1 | 5 |
+| **Total** | **58** | **53** | **5** |
 
 ---
 
@@ -39,6 +39,6 @@
 | 001 | Identity and Access Management | ✅ Complete | 000 |
 | 002 | Master Data Management | ✅ Complete | 001 |
 | 003 | Person Management | ✅ Complete | 002 |
-| 004 | Network Graph Visualization | 🔲 Not Started | 003 |
+| 004 | Network Graph Visualization | 🔄 In Progress | 003 |
 
 ---
