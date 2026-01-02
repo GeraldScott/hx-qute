@@ -2,8 +2,8 @@
 
 ## Current Status
 
-**Current Use Case:** UC-004-01-04: Search and Filter Graph
-**Status:** ✅ UC-004-01-03 Complete
+**Current Use Case:** UC-004-01-05: Navigate Graph View
+**Status:** ✅ UC-004-01-04 Complete
 **Blockers:** None
 
 ---
@@ -15,7 +15,7 @@
 | UC-004-01-01: Display Network Graph Page | ✅ Complete |
 | UC-004-01-02: Interact with Graph Nodes | ✅ Complete |
 | UC-004-01-03: Access Context Menu Actions | ✅ Complete |
-| UC-004-01-04: Search and Filter Graph | 🔲 Not Started |
+| UC-004-01-04: Search and Filter Graph | ✅ Complete |
 | UC-004-01-05: Navigate Graph View | 🔲 Not Started |
 | UC-004-01-06: View Edge Tooltip | 🔲 Not Started |
 
@@ -140,26 +140,33 @@
 
 ## UC-004-01-04: Search and Filter Graph
 
-**Status:** 🔲 Not Started
+**Status:** ✅ Complete
 **Parent Story:** US-004-01 - Display a network diagram of the relationships between people
 
 **Description:** Add search-by-name and filter-by-relationship-type functionality.
 
 **Implementation Tasks:**
-- [ ] Add search input field to graph page
-- [ ] Add relationship type dropdown (populated from Relationship table)
-- [ ] Implement debounced `filterBySearch()` function
-- [ ] Highlight matching nodes, dim non-matching
-- [ ] Implement `filterByRelationship()` function
-- [ ] Filter edges by relationship code
-- [ ] Dim nodes without matching relationships
-- [ ] Add "Reset View" button functionality
-- [ ] Clear search and filter inputs on reset
+- [x] Add search input field to graph page
+- [x] Add relationship type dropdown (populated from Relationship table)
+- [x] Implement debounced `filterBySearch()` function
+- [x] Highlight matching nodes, dim non-matching
+- [x] Implement `filterByRelationship()` function
+- [x] Filter edges by relationship code
+- [x] Dim nodes without matching relationships
+- [x] Add "Reset View" button functionality
+- [x] Clear search and filter inputs on reset
 
 **Test Results:**
-- Test ID: TC-004-01-008, TC-004-01-009, TC-004-01-010
-- Status: 🔲 Not Tested
-- Notes:
+| Test ID | Status | Notes |
+|---------|--------|-------|
+| TC-004-01-008 | ✅ PASS | Search "Marx" highlights 2 nodes (Karl Marx, Eleanor Marx), dims 60 others. Case-insensitive search works. |
+| TC-004-01-009 | ✅ PASS | Filter "Spouse" highlights 2 nodes (Jean-Paul Sartre, Simone de Beauvoir) and 1 edge, dims 60 nodes and 85 edges. |
+| TC-004-01-010 | ✅ PASS | Reset clears search input, resets dropdown to "All Relationships", restores all 62 nodes and 86 edges to normal opacity. |
+
+**Implementation Notes:**
+- Search and filter functionality was implemented as part of UC-004-01-01 (included in initial spec.md template)
+- Debounced search with 300ms delay prevents excessive filtering during typing
+- Relationship dropdown populated from server-side Relationship table via Qute template
 
 ---
 
