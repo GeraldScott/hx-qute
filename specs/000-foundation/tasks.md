@@ -141,3 +141,146 @@ This phase establishes the database schema, entity classes, repository, and serv
 | TC-000-01-012 | Application Startup | UC-000-01-01 | ✅ |
 
 ---
+
+# US-000-02: Create Application Shell and Landing Page
+
+## UC-000-02-01: Create Base Layout Template
+
+**Status:** ✅ Complete
+**Parent Story:** US-000-02 - Create Application Shell and Landing Page
+
+**Description:** Create the base.html template with responsive layout, CDN includes, and login modal.
+
+**Implementation Tasks:**
+- [x] Create `templates/base.html` with Qute template parameters
+- [x] Add CDN links for UIkit CSS/JS (3.25.4)
+- [x] Add CDN link for HTMX (2.0.8)
+- [x] Create responsive two-column layout (sidebar + main content)
+- [x] Add logo with "HX-Qute" text in sidebar header
+- [x] Include navigation fragment: `{#include fragments/navigation /}`
+- [x] Add copyright footer in sidebar
+- [x] Create mobile offcanvas sidebar (`#mobile-sidebar`)
+- [x] Add mobile header with hamburger toggle
+- [x] Create login modal (`#login-modal`) with form
+- [x] Add JavaScript to open modal on `?login=true`
+- [x] Add JavaScript to show error on `?error=true`
+
+**Files Created:**
+- `src/main/resources/templates/base.html`
+
+**Test Results:**
+- Test ID: TC-000-02-001, TC-000-02-002
+- Status: ✅ Passed
+
+---
+
+## UC-000-02-02: Create Navigation Fragment
+
+**Status:** ✅ Complete
+**Parent Story:** US-000-02 - Create Application Shell and Landing Page
+
+**Description:** Create the navigation.html fragment with menu items and active state.
+
+**Implementation Tasks:**
+- [x] Create `templates/fragments/navigation.html`
+- [x] Add navigation menu as `<ul class="uk-nav uk-nav-default">`
+- [x] Add menu items with UIkit icons: Home, People, Graph
+- [x] Add Maintenance dropdown with submenu: Gender, Title, Relationship
+- [x] Implement active state using `currentPage` template variable
+- [x] Add conditional Login link (when `!userName`)
+- [x] Add conditional Logout link showing username (when `userName`)
+
+**Files Created:**
+- `src/main/resources/templates/fragments/navigation.html`
+
+**Test Results:**
+- Test ID: TC-000-02-003, TC-000-02-004
+- Status: ✅ Passed
+
+---
+
+## UC-000-02-03: Create Landing Page
+
+**Status:** ✅ Complete
+**Parent Story:** US-000-02 - Create Application Shell and Landing Page
+
+**Description:** Create the IndexResource endpoint and landing page template.
+
+**Implementation Tasks:**
+- [x] Create `router/IndexResource.java` with `@Path("/")`
+- [x] Inject `SecurityIdentity` for authentication state
+- [x] Inject `LaunchMode` for development mode detection
+- [x] Create `@CheckedTemplate` class with `index()` method
+- [x] Implement `GET /` endpoint returning template instance
+- [x] Create `templates/IndexResource/index.html`
+- [x] Add four technology showcase cards (Quarkus, Qute, HTMX, PostgreSQL)
+- [x] Add development mode alert with default credentials
+- [x] Add tech card images to `META-INF/resources/img/`
+
+**Files Created:**
+- `src/main/java/io/archton/scaffold/router/IndexResource.java`
+- `src/main/resources/templates/IndexResource/index.html`
+
+**Test Results:**
+- Test ID: TC-000-02-005, TC-000-02-006
+- Status: ✅ Passed
+
+---
+
+## UC-000-02-04: Create Custom Stylesheet
+
+**Status:** ✅ Complete
+**Parent Story:** US-000-02 - Create Application Shell and Landing Page
+
+**Description:** Create style.css with brand colors and component styles.
+
+**Implementation Tasks:**
+- [x] Create `META-INF/resources/style.css`
+- [x] Define CSS variables for brand colors
+- [x] Style sidebar (320px width, light gray background)
+- [x] Style main content area (dirty-sage background)
+- [x] Style tech cards (white bg, blue border, hover effect)
+- [x] Style navigation active state
+- [x] Override UIkit table header styling (rose color, normal case)
+- [x] Style logo link (no underline, hover opacity)
+- [x] Style mobile offcanvas
+
+**Files Created:**
+- `src/main/resources/META-INF/resources/style.css`
+
+**Test Results:**
+- Test ID: TC-000-02-007
+- Status: ✅ Passed
+
+---
+
+## Implementation Summary (US-000-02)
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/main/java/io/archton/scaffold/router/IndexResource.java` | Landing page endpoint |
+| `src/main/resources/templates/base.html` | Base layout template |
+| `src/main/resources/templates/fragments/navigation.html` | Sidebar navigation |
+| `src/main/resources/templates/IndexResource/index.html` | Landing page content |
+| `src/main/resources/META-INF/resources/style.css` | Custom CSS styles |
+| `src/main/resources/META-INF/resources/img/logo-scaffold.png` | Application logo |
+| `src/main/resources/META-INF/resources/img/Quarkus.svg` | Tech card icon |
+| `src/main/resources/META-INF/resources/img/Quarkus_black.svg` | Tech card icon (Qute) |
+| `src/main/resources/META-INF/resources/img/HTMX.svg` | Tech card icon |
+| `src/main/resources/META-INF/resources/img/PostgresSQL.svg` | Tech card icon |
+
+### Test Cases Reference (US-000-02)
+
+| Test ID | Description | Use Case | Status |
+|---------|-------------|----------|--------|
+| TC-000-02-001 | Base Layout Structure | UC-000-02-01 | ✅ |
+| TC-000-02-002 | CDN Resources Loaded | UC-000-02-01 | ✅ |
+| TC-000-02-003 | Navigation Menu Items | UC-000-02-02 | ✅ |
+| TC-000-02-004 | Navigation Active State | UC-000-02-02 | ✅ |
+| TC-000-02-005 | Landing Page Content | UC-000-02-03 | ✅ |
+| TC-000-02-006 | Development Mode Alert | UC-000-02-03 | ✅ |
+| TC-000-02-007 | Mobile Offcanvas Navigation | UC-000-02-04 | ✅ |
+
+---

@@ -46,6 +46,59 @@ The user stories are grouped into domain-specific features that deliver business
 
 ---
 
+### US-000-02: Create Application Shell and Landing Page
+**As a** senior developer
+**I want to** establish the base layout, navigation, and landing page
+**So that** the user interface can be implemented on a consistent foundation
+
+**Acceptance Criteria:**
+
+**Base Layout (base.html)**
+- HTML5 document with proper meta tags (charset UTF-8, responsive viewport)
+- UIkit CSS framework loaded from CDN for styling components
+- HTMX library loaded from CDN for dynamic interactions
+- Custom stylesheet (style.css) with brand colors and component styles
+- Responsive two-column layout: fixed sidebar (320px) and fluid main content area
+- Sidebar collapses to offcanvas menu on mobile devices (below large breakpoint)
+- Application logo with text "HX-Qute" in sidebar header links to homepage
+- Copyright footer in sidebar links to archton.io
+
+**Navigation (fragments/navigation.html)**
+- Navigation menu rendered as vertical list in sidebar
+- Menu items with UIkit icons: Home, People, Graph
+- Maintenance dropdown menu containing: Gender, Title, Relationship
+- Active page highlighting based on `currentPage` template variable
+- Placeholder for authentication state (Login link or Logout with username)
+
+**Authentication Infrastructure (embedded in base.html)**
+- Login modal markup with form targeting `/j_security_check`
+- JavaScript to open modal via `?login=true` query parameter
+- Error message container for authentication failures
+- Note: User-facing login/logout behavior defined in Feature 001
+
+**Landing Page (index.html)**
+- Extends base template with `currentPage` set to "home"
+- Four technology showcase cards in responsive flex layout:
+  - Supersonic Quarkus (with Quarkus logo)
+  - Type-Safe Qute (with Qute logo)
+  - High-powered HTMX (with HTMX logo)
+  - Robust PostgreSQL (with PostgreSQL logo)
+- Cards have hover animation effect (lift and shadow)
+- Development mode alert displays default credentials when `devMode` is true
+
+**Styling (style.css)**
+- Brand color variables: green (#2c5530), dirty-sage (#bfc9c6), rose (#af5f89)
+- Sidebar background: light gray (#f0f0f0)
+- Main content area background: dirty-sage
+- Tech cards: white background, blue left border, hover transform effect
+- Navigation active state: dirty-sage background with bold text
+- Table headers: rose color, normal case (UIkit override)
+
+**Priority:** High
+**Story Points:** 5
+
+---
+
 ## Feature 001: Identity and Access Management
 
 ### US-001-01: User Registration
@@ -73,11 +126,15 @@ The user stories are grouped into domain-specific features that deliver business
 **So that** I can access protected features
 
 **Acceptance Criteria:**
-- Login modal is accessible from the navigation bar via Login link
-- User can enter email and password in the modal form
-- Invalid credentials display an error message in the modal
+- Login modal is accessible from the navigation bar via "Login" link
+- Login modal can also be triggered by navigating to `/?login=true`
+- Modal form contains email and password fields with required validation
+- Email is normalized to lowercase and trimmed on submission
+- Form submits to Quarkus form authentication endpoint (`/j_security_check`)
+- Invalid credentials display "Invalid email or password" error in the modal
 - Successful login redirects to the homepage
 - Navigation updates to show "Logout ({username})" indicating the authenticated user
+- Modal includes link to signup page for users without an account
 
 **Priority:** High
 **Story Points:** 2

@@ -300,3 +300,164 @@ curl http://127.0.0.1:9080/q/health
 | TC-000-01-012 | UC-000-01-01 | Smoke Test | ✅ Passed |
 
 ---
+
+# US-000-02: Create Application Shell and Landing Page
+
+### TC-000-02-001: Base Layout Structure
+**Parent Use Case:** [UC-000-02-01: Display Base Layout](use-cases.md#uc-000-02-01-display-base-layout)
+
+**Objective:** Verify base layout renders with all required components.
+
+**Type:** Browser-based
+
+**Steps:**
+1. Navigate to homepage `/`
+2. Take a snapshot of the page
+
+**Expected:**
+- [ ] Sidebar is visible on left (320px width on desktop)
+- [ ] Logo "HX-Qute" is visible in sidebar header
+- [ ] Navigation menu is visible in sidebar
+- [ ] Main content area is visible on right
+- [ ] Copyright footer is visible at bottom of sidebar
+
+---
+
+### TC-000-02-002: CDN Resources Loaded
+**Parent Use Case:** [UC-000-02-01: Display Base Layout](use-cases.md#uc-000-02-01-display-base-layout)
+
+**Objective:** Verify external CDN resources load successfully.
+
+**Type:** Browser-based (network inspection)
+
+**Steps:**
+1. Navigate to homepage `/`
+2. Check network requests for CDN resources
+
+**Expected:**
+- [ ] UIkit CSS loaded from cdn.jsdelivr.net (status 200)
+- [ ] UIkit JS loaded from cdn.jsdelivr.net (status 200)
+- [ ] UIkit Icons loaded from cdn.jsdelivr.net (status 200)
+- [ ] HTMX loaded from cdn.jsdelivr.net (status 200)
+- [ ] Custom style.css loaded (status 200)
+
+---
+
+### TC-000-02-003: Navigation Menu Items
+**Parent Use Case:** [UC-000-02-02: Navigate Using Sidebar Menu](use-cases.md#uc-000-02-02-navigate-using-sidebar-menu)
+
+**Objective:** Verify all navigation items are present and functional.
+
+**Type:** Browser-based
+
+**Steps:**
+1. Navigate to homepage `/`
+2. Inspect navigation menu
+
+**Expected:**
+- [ ] "Home" link present with home icon, points to `/`
+- [ ] "People" link present with users icon, points to `/persons`
+- [ ] "Graph" link present with git-fork icon, points to `/graph`
+- [ ] "Maintenance" dropdown present with settings icon
+- [ ] Maintenance submenu contains: Gender (`/genders`), Title (`/titles`), Relationship (`/relationships`)
+- [ ] "Login" link present when not authenticated
+
+---
+
+### TC-000-02-004: Navigation Active State
+**Parent Use Case:** [UC-000-02-02: Navigate Using Sidebar Menu](use-cases.md#uc-000-02-02-navigate-using-sidebar-menu)
+
+**Objective:** Verify correct navigation item is highlighted based on current page.
+
+**Type:** Browser-based
+
+**Steps:**
+1. Navigate to homepage `/`
+2. Verify "Home" is highlighted
+3. Login as admin
+4. Navigate to `/persons`
+5. Verify "People" is highlighted
+
+**Expected:**
+- [ ] Home page: "Home" nav item has `uk-active` class
+- [ ] Persons page: "People" nav item has `uk-active` class
+- [ ] Only one nav item is active at a time
+
+---
+
+### TC-000-02-005: Landing Page Content
+**Parent Use Case:** [UC-000-02-03: Display Landing Page](use-cases.md#uc-000-02-03-display-landing-page)
+
+**Objective:** Verify landing page displays technology showcase cards.
+
+**Type:** Browser-based
+
+**Steps:**
+1. Navigate to homepage `/`
+2. Inspect main content area
+
+**Expected:**
+- [ ] Four technology cards are displayed
+- [ ] "Supersonic Quarkus" card with Quarkus logo
+- [ ] "Type-Safe Qute" card with Qute logo
+- [ ] "High-powered HTMX" card with HTMX logo
+- [ ] "Robust PostgreSQL" card with PostgreSQL logo
+- [ ] Cards have hover effect (lift and shadow)
+
+---
+
+### TC-000-02-006: Development Mode Alert
+**Parent Use Case:** [UC-000-02-03: Display Landing Page](use-cases.md#uc-000-02-03-display-landing-page)
+
+**Objective:** Verify development mode alert displays default credentials.
+
+**Type:** Browser-based (dev mode)
+
+**Steps:**
+1. Start application in dev mode (`./mvnw quarkus:dev`)
+2. Navigate to homepage `/`
+
+**Expected:**
+- [ ] Alert box is visible below technology cards
+- [ ] Alert shows "Development Server" heading
+- [ ] Alert displays default email: `admin@example.com`
+- [ ] Alert displays default password: `AdminPassword123`
+
+---
+
+### TC-000-02-007: Mobile Offcanvas Navigation
+**Parent Use Case:** [UC-000-02-04: Display Mobile Navigation](use-cases.md#uc-000-02-04-display-mobile-navigation)
+
+**Objective:** Verify mobile navigation works correctly on small screens.
+
+**Type:** Browser-based (mobile viewport)
+
+**Steps:**
+1. Set viewport width to 768px (mobile)
+2. Navigate to homepage `/`
+3. Verify sidebar is hidden
+4. Click hamburger menu icon
+5. Verify offcanvas opens
+
+**Expected:**
+- [ ] Desktop sidebar is hidden on mobile viewport
+- [ ] Hamburger menu icon visible in mobile header
+- [ ] Clicking hamburger opens offcanvas sidebar
+- [ ] Offcanvas contains same navigation as desktop
+- [ ] Clicking nav item closes offcanvas and navigates
+
+---
+
+## Test Summary (US-000-02)
+
+| Test ID | Use Case | Type | Status |
+|---------|----------|------|--------|
+| TC-000-02-001 | UC-000-02-01 | Browser | ✅ Passed |
+| TC-000-02-002 | UC-000-02-01 | Browser | ✅ Passed |
+| TC-000-02-003 | UC-000-02-02 | Browser | ✅ Passed |
+| TC-000-02-004 | UC-000-02-02 | Browser | ✅ Passed |
+| TC-000-02-005 | UC-000-02-03 | Browser | ✅ Passed |
+| TC-000-02-006 | UC-000-02-03 | Browser | ✅ Passed |
+| TC-000-02-007 | UC-000-02-04 | Browser | ✅ Passed |
+
+---

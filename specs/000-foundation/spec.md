@@ -246,3 +246,158 @@ The authentication infrastructure uses a layered architecture pattern:
 | `src/main/resources/db/migration/V1.2.1__Insert_admin_user.sql` | Flyway migration for admin user seed |
 
 ---
+
+# US-000-02: Application Shell and Landing Page
+
+This section describes the technical implementation details for the base layout, navigation, and landing page.
+
+---
+
+## Template Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         base.html                                │
+│         (layout shell, login modal, CDN includes)                │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+              ▼               ▼               ▼
+┌─────────────────────┐ ┌─────────────────┐ ┌───────────────────────┐
+│ fragments/          │ │ IndexResource/  │ │ {Feature}Resource/    │
+│ navigation.html     │ │ index.html      │ │ *.html                │
+└─────────────────────┘ └─────────────────┘ └───────────────────────┘
+```
+
+---
+
+## Base Layout (base.html)
+
+### Template Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| title | String | Page title for browser tab |
+| currentPage | String | Active page identifier for nav highlighting |
+| userName | String | Authenticated user's display name (null if anonymous) |
+
+### CDN Dependencies
+
+| Library | Version | CDN URL |
+|---------|---------|---------|
+| UIkit CSS | 3.25.4 | `https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/css/uikit.min.css` |
+| UIkit JS | 3.25.4 | `https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit.min.js` |
+| UIkit Icons | 3.25.4 | `https://cdn.jsdelivr.net/npm/uikit@3.25.4/dist/js/uikit-icons.min.js` |
+| HTMX | 2.0.8 | `https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js` |
+
+### Layout Structure
+
+- **Sidebar** (320px fixed width on large screens)
+  - Logo: `/img/logo-scaffold.png` with text "HX-Qute"
+  - Navigation: `{#include fragments/navigation /}`
+  - Copyright: `© Archton.io {year}`
+
+- **Main Content Area** (fluid width)
+  - Container: `#main-content`
+  - Content slot: `{#insert}Default content{/}`
+
+- **Mobile Offcanvas** (`#mobile-sidebar`)
+  - Trigger: hamburger icon in mobile header
+  - Same navigation as desktop sidebar
+
+- **Login Modal** (`#login-modal`)
+  - Form: `action="/j_security_check" method="POST"`
+  - Fields: `j_username` (email), `j_password`
+  - Error container: `#login-error`
+  - JavaScript: Opens on `?login=true`, shows error on `?error=true`
+
+---
+
+## Navigation (fragments/navigation.html)
+
+### Menu Structure
+
+| Item | Icon | Path | Visibility |
+|------|------|------|------------|
+| Home | `home` | `/` | Always |
+| People | `users` | `/persons` | Always |
+| Graph | `git-fork` | `/graph` | Always |
+| Maintenance (dropdown) | `settings` | - | Always |
+| → Gender | `users` | `/genders` | Maintenance submenu |
+| → Title | `bookmark` | `/titles` | Maintenance submenu |
+| → Relationship | `link` | `/relationships` | Maintenance submenu |
+| Login | `sign-in` | `#login-modal` | When `!userName` |
+| Logout ({userName}) | `sign-out` | `/logout` | When `userName` |
+
+### Active State
+
+- Active page determined by `currentPage` template variable
+- Values: `home`, `persons`, `graph`, `gender`, `title`, `relationship`
+- CSS class: `uk-active` applied to matching `<li>`
+
+---
+
+## Landing Page (IndexResource)
+
+### Endpoint
+
+| Method | Path | Produces |
+|--------|------|----------|
+| GET | `/` | `text/html` |
+
+### Template: `IndexResource/index.html`
+
+**Parameters:**
+
+| Parameter | Type | Source |
+|-----------|------|--------|
+| title | String | `"HX-Qute Home"` |
+| currentPage | String | `"home"` |
+| userName | String | `securityIdentity.getPrincipal().getName()` or null |
+| devMode | boolean | `launchMode == LaunchMode.DEVELOPMENT` |
+
+**Content:**
+- Four technology showcase cards (Quarkus, Qute, HTMX, PostgreSQL)
+- Development mode alert with default credentials (visible when `devMode=true`)
+
+---
+
+## Styling (style.css)
+
+### Brand Colors
+
+| Variable | Value | Usage |
+|----------|-------|-------|
+| `--brand-green` | `#2c5530` | Logo, headings |
+| `--brand-dirty-sage` | `#bfc9c6` | Main content background, active nav |
+| `--brand-rose` | `#af5f89` | Table headers |
+| `--sidebar-bg` | `#f0f0f0` | Sidebar background |
+
+### Component Styles
+
+| Component | Key Styles |
+|-----------|------------|
+| `.sidebar-container` | Width: 320px |
+| `.main-content-area` | Background: dirty-sage, min-height: 100vh |
+| `.tech-card` | White background, blue left border, hover lift effect |
+| `.uk-table th` | Rose color, normal case (UIkit override) |
+| `.logo-link` | No underline, opacity hover effect |
+
+---
+
+## File Inventory (US-000-02)
+
+| File | Purpose |
+|------|---------|
+| `src/main/java/io/archton/scaffold/router/IndexResource.java` | Landing page endpoint |
+| `src/main/resources/templates/base.html` | Base layout template with login modal |
+| `src/main/resources/templates/fragments/navigation.html` | Sidebar navigation |
+| `src/main/resources/templates/IndexResource/index.html` | Landing page content |
+| `src/main/resources/META-INF/resources/style.css` | Custom CSS styles |
+| `src/main/resources/META-INF/resources/img/logo-scaffold.png` | Application logo |
+| `src/main/resources/META-INF/resources/img/Quarkus.svg` | Tech card icon |
+| `src/main/resources/META-INF/resources/img/HTMX.svg` | Tech card icon |
+| `src/main/resources/META-INF/resources/img/PostgresSQL.svg` | Tech card icon |
+
+---

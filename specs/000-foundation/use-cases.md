@@ -127,3 +127,109 @@ This feature establishes the authentication infrastructure required for Identity
 **Related Test Cases:** TC-000-01-010, TC-000-01-011
 
 ---
+
+# US-000-02: Create Application Shell and Landing Page
+
+## UC-000-02-01: Display Base Layout
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | System |
+| Precondition | Application is running |
+| Trigger | User navigates to any page |
+
+**Main Flow:**
+1. System loads base.html template
+2. System includes CDN resources (UIkit CSS/JS, HTMX)
+3. System renders sidebar with logo and navigation
+4. System renders main content area with page-specific content
+5. System includes login modal markup (hidden by default)
+
+**Responsive Behavior:**
+- Large screens (≥960px): Fixed 320px sidebar visible
+- Small screens (<960px): Sidebar hidden, hamburger menu in header
+
+**Postcondition:** Page displays with consistent layout shell
+
+**Related Test Cases:** TC-000-02-001, TC-000-02-002
+
+---
+
+## UC-000-02-02: Navigate Using Sidebar Menu
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Guest, User, Administrator |
+| Precondition | Page is loaded with base layout |
+| Trigger | User clicks navigation link |
+
+**Main Flow:**
+1. User views navigation menu in sidebar
+2. User clicks a menu item (Home, People, Graph, or Maintenance submenu)
+3. System navigates to the selected page
+4. System highlights the active navigation item
+
+**Maintenance Dropdown:**
+1. User clicks "Maintenance" to expand dropdown
+2. System shows submenu: Gender, Title, Relationship
+3. User clicks submenu item
+4. System navigates to selected maintenance page
+
+**Postcondition:** User is on the selected page with correct navigation highlighting
+
+**Related Test Cases:** TC-000-02-003, TC-000-02-004
+
+---
+
+## UC-000-02-03: Display Landing Page
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Guest, User, Administrator |
+| Precondition | Application is running |
+| Trigger | User navigates to homepage `/` |
+
+**Main Flow:**
+1. System loads IndexResource endpoint
+2. System determines authentication state via SecurityIdentity
+3. System determines development mode via LaunchMode
+4. System renders landing page with technology showcase cards
+5. If in development mode, system displays credentials alert
+
+**Technology Cards Displayed:**
+- Supersonic Quarkus
+- Type-Safe Qute
+- High-powered HTMX
+- Robust PostgreSQL
+
+**Development Mode Alert:**
+- Visible when `devMode=true`
+- Shows default credentials: `admin@example.com` / `AdminPassword123`
+
+**Postcondition:** Landing page is displayed with appropriate content
+
+**Related Test Cases:** TC-000-02-005, TC-000-02-006
+
+---
+
+## UC-000-02-04: Display Mobile Navigation
+
+| Attribute | Value |
+|-----------|-------|
+| Actor | Guest, User, Administrator |
+| Precondition | Page is loaded on mobile device (viewport < 960px) |
+| Trigger | User taps hamburger menu icon |
+
+**Main Flow:**
+1. User sees hamburger menu icon in mobile header
+2. User taps the hamburger icon
+3. System opens offcanvas sidebar from left
+4. User views same navigation as desktop sidebar
+5. User taps a navigation item
+6. System closes offcanvas and navigates to selected page
+
+**Postcondition:** User navigates successfully on mobile device
+
+**Related Test Cases:** TC-000-02-007
+
+---

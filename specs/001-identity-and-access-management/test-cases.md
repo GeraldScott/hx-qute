@@ -1,4 +1,4 @@
-# Test Cases for Identity and Access Management
+# Test Cases for Feature 001: Identity and Access Management
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@
 - [ ] Email input field exists (id: `email`)
 - [ ] Password input field exists (id: `password`)
 - [ ] Submit button with text "Sign Up" exists
-- [ ] Link to login page exists with text "Login"
+- [ ] Link to open login modal exists with text "Login"
 
 ---
 
@@ -50,7 +50,8 @@
 4. Wait for navigation
 
 **Expected:**
-- [ ] Redirected to `/login` page
+- [ ] Redirected to `/?login=true` (homepage with login modal trigger)
+- [ ] Login modal opens automatically
 - [ ] No error message displayed
 
 ---
@@ -65,9 +66,10 @@
 2. Fill form:
    - email: (leave empty)
    - password: `TestPassword12345`
-3. Click "Sign Up" button
+3. Attempt to submit form
 
 **Expected:**
+- [ ] HTML5 validation prevents submission OR
 - [ ] Error message "Email is required." displayed
 - [ ] User remains on signup page
 
@@ -138,54 +140,36 @@
    - email: `  TEST2@EXAMPLE.COM  ` (spaces and uppercase)
    - password: `TestPassword12345`
 3. Click "Sign Up" button
-4. Then login with:
-   - j_username: `test2@example.com` (no spaces, lowercase)
-   - j_password: `TestPassword12345`
+4. After redirect, login with:
+   - email: `test2@example.com` (no spaces, lowercase)
+   - password: `TestPassword12345`
 
 **Expected:**
 - [ ] Registration succeeds
 - [ ] Email stored as lowercase, trimmed
-- [ ] Login works with normalized values
-
----
-
-### TC-001-01-008: Signup Email Client-Side Normalization
-**Parent Use Case:** [UC-001-01-02: Register New User](use-cases.md#uc-001-01-02-register-new-user)
-
-**Objective:** Verify signup form normalizes email (lowercase + trim) before submission via onsubmit handler.
-
-**Steps:**
-1. Navigate to `/signup`
-2. Take a snapshot to verify form has onsubmit handler
-3. Fill form:
-   - email: `  TESTCLIENT@EXAMPLE.COM  ` (spaces and uppercase)
-   - password: `TestPassword12345`
-4. Use evaluate_script to check email field value before and after form validation triggers
-5. Click "Sign Up" button
-
-**Expected:**
-- [ ] Form element has onsubmit attribute with normalization logic
-- [ ] Email value is transformed to `testclient@example.com` (lowercase, trimmed) on submit
-- [ ] Registration succeeds with normalized email
+- [ ] Login works with normalized email
 
 ---
 
 # US-001-02: User Login
 
-### TC-001-02-001: Login Page UI Elements
-**Parent Use Case:** [UC-001-02-01: Display Login Page](use-cases.md#uc-001-02-01-display-login-page)
+### TC-001-02-001: Login Modal UI Elements
+**Parent Use Case:** [UC-001-02-01: Open Login Modal](use-cases.md#uc-001-02-01-open-login-modal)
 
-**Objective:** Verify login page renders correctly with all required elements.
+**Objective:** Verify login modal contains all required elements.
 
 **Steps:**
-1. Navigate to `/login`
-2. Take a snapshot of the page
+1. Navigate to homepage `/`
+2. Click "Login" link in navigation
+3. Wait for modal to open
+4. Take a snapshot
 
 **Expected:**
-- [ ] Page title contains "Login"
-- [ ] Email input field exists (id: `j_username`, label: "Email")
-- [ ] Password input field exists (id: `j_password`)
+- [ ] Modal title is "Login"
+- [ ] Email input field exists (id: `j_username`, name: `j_username`)
+- [ ] Password input field exists (id: `j_password`, name: `j_password`)
 - [ ] Submit button with text "Login" exists
+- [ ] Form action is `/j_security_check`
 - [ ] Link to signup page exists with text "Sign up"
 
 ---
@@ -196,16 +180,16 @@
 **Objective:** Verify valid credentials allow login.
 
 **Steps:**
-1. Navigate to `/login`
-2. Fill form:
+1. Navigate to `/?login=true` (opens login modal)
+2. Fill modal form:
    - j_username: `admin@example.com`
    - j_password: `AdminPassword123`
 3. Click "Login" button
 4. Wait for navigation
 
 **Expected:**
-- [ ] Redirected to home page
-- [ ] User is authenticated (navigation shows logged-in state)
+- [ ] Redirected to homepage `/`
+- [ ] Navigation shows "Logout (Admin User)" or similar
 - [ ] No error message displayed
 
 ---
@@ -216,14 +200,15 @@
 **Objective:** Verify invalid password is rejected with generic error.
 
 **Steps:**
-1. Navigate to `/login`
-2. Fill form:
+1. Navigate to `/?login=true`
+2. Fill modal form:
    - j_username: `admin@example.com`
    - j_password: `WrongPassword123`
 3. Click "Login" button
 
 **Expected:**
-- [ ] Error message "Invalid email or password." displayed
+- [ ] Redirected to `/?login=true&error=true`
+- [ ] Login modal opens with error message "Invalid email or password."
 - [ ] Error does NOT reveal whether email exists
 
 ---
@@ -234,14 +219,15 @@
 **Objective:** Verify invalid email is rejected with generic error.
 
 **Steps:**
-1. Navigate to `/login`
-2. Fill form:
+1. Navigate to `/?login=true`
+2. Fill modal form:
    - j_username: `nonexistent@example.com`
    - j_password: `SomePassword123`
 3. Click "Login" button
 
 **Expected:**
-- [ ] Error message "Invalid email or password." displayed
+- [ ] Redirected to `/?login=true&error=true`
+- [ ] Login modal opens with error message "Invalid email or password."
 - [ ] Error does NOT reveal whether email exists
 
 ---
@@ -252,14 +238,14 @@
 **Objective:** Verify login works regardless of email case.
 
 **Steps:**
-1. Navigate to `/login`
-2. Fill form:
+1. Navigate to `/?login=true`
+2. Fill modal form:
    - j_username: `ADMIN@EXAMPLE.COM` (uppercase)
    - j_password: `AdminPassword123`
 3. Click "Login" button
 
 **Expected:**
-- [ ] Login successful
+- [ ] Login successful (client-side normalization to lowercase)
 - [ ] Email matching is case-insensitive
 
 ---
@@ -270,13 +256,12 @@
 **Objective:** Verify empty form submission is handled.
 
 **Steps:**
-1. Navigate to `/login`
+1. Navigate to `/?login=true`
 2. Leave form empty
 3. Attempt to click "Login" button
 
 **Expected:**
-- [ ] Browser validation prevents submission (required fields)
-- [ ] OR server returns appropriate error
+- [ ] HTML5 validation prevents submission (required fields)
 
 ---
 
@@ -309,7 +294,8 @@
 2. Navigate to `/persons`
 
 **Expected:**
-- [ ] Redirected to `/login` page
+- [ ] Redirected to `/?login=true` (homepage with login modal)
+- [ ] Login modal opens automatically
 - [ ] Cannot access protected content without authentication
 
 ---
@@ -329,21 +315,21 @@
 
 ---
 
-### TC-001-02-010: Navigation Between Auth Pages
-**Parent Use Case:** [UC-001-02-01: Display Login Page](use-cases.md#uc-001-02-01-display-login-page)
+### TC-001-02-010: Navigation Between Auth Components
+**Parent Use Case:** [UC-001-02-01: Open Login Modal](use-cases.md#uc-001-02-01-open-login-modal)
 
 **Objective:** Verify navigation links work correctly.
 
 **Steps:**
-1. Navigate to `/login`
-2. Click "Sign up" link
-3. Verify on signup page
-4. Click "Login" link
-5. Verify on login page
+1. Navigate to `/signup`
+2. Click "Login" link (should open modal)
+3. Close modal
+4. Open login modal from navigation
+5. Click "Sign up" link in modal
 
 **Expected:**
-- [ ] "Sign up" link navigates from login to signup page
-- [ ] "Login" link navigates from signup to login page
+- [ ] "Login" link on signup page opens login modal
+- [ ] "Sign up" link in login modal navigates to `/signup`
 
 ---
 
@@ -356,10 +342,40 @@
 
 **Steps:**
 1. Login as `admin@example.com` / `AdminPassword123`
-2. Navigate to `/logout`
-3. Take a snapshot of the page
+2. Click "Logout (Admin User)" in navigation
+3. Wait for logout page
+4. Take a snapshot
 
 **Expected:**
-- [ ] Logout page is displayed
-- [ ] User session is terminated
-- [ ] Accessing protected routes redirects to login
+- [ ] Logout page displays title "Logged Out"
+- [ ] Success message: "You have been successfully logged out."
+- [ ] "Go to Home" link exists pointing to `/`
+- [ ] "Login Again" link exists (opens login modal)
+- [ ] Session is terminated (accessing `/persons` redirects to login)
+
+---
+
+## Test Summary
+
+| Test ID | Description | Use Case | Status |
+|---------|-------------|----------|--------|
+| TC-001-01-001 | Signup Page UI Elements | UC-001-01-01 | ✅ Passed |
+| TC-001-01-002 | Signup Successful Registration | UC-001-01-02 | ✅ Passed |
+| TC-001-01-003 | Signup Email Required | UC-001-01-02 | ✅ Passed |
+| TC-001-01-004 | Signup Password Minimum Length | UC-001-01-02 | ✅ Passed |
+| TC-001-01-005 | Signup Duplicate Email Prevention | UC-001-01-02 | ✅ Passed |
+| TC-001-01-006 | Signup Email Case Insensitivity | UC-001-01-02 | ✅ Passed |
+| TC-001-01-007 | Form Input Sanitization | UC-001-01-02 | ✅ Passed |
+| TC-001-02-001 | Login Modal UI Elements | UC-001-02-01 | ✅ Passed |
+| TC-001-02-002 | Login Successful Authentication | UC-001-02-02 | ✅ Passed |
+| TC-001-02-003 | Login Invalid Password | UC-001-02-02 | ✅ Passed |
+| TC-001-02-004 | Login Invalid Email | UC-001-02-02 | ✅ Passed |
+| TC-001-02-005 | Login Email Case Insensitivity | UC-001-02-02 | ✅ Passed |
+| TC-001-02-006 | Login Empty Credentials | UC-001-02-02 | ✅ Passed |
+| TC-001-02-007 | User Enumeration Prevention | UC-001-02-02 | ✅ Passed |
+| TC-001-02-008 | Protected Route Unauthenticated | UC-001-02-03 | ✅ Passed |
+| TC-001-02-009 | Protected Route Authenticated | UC-001-02-02 | ✅ Passed |
+| TC-001-02-010 | Navigation Between Auth Components | UC-001-02-01 | ✅ Passed |
+| TC-001-03-001 | Logout Flow | UC-001-03-01 | ✅ Passed |
+
+---

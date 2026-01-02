@@ -1,4 +1,8 @@
-# Actors
+# Use Cases for Feature 001: Identity and Access Management
+
+This feature provides user registration, authentication via modal, and logout functionality.
+
+## Actors
 
 | Actor | Description |
 |-------|-------------|
@@ -19,10 +23,12 @@
 | Trigger | User navigates to `/signup` |
 
 **Main Flow:**
-1. System displays signup form with fields: email, password
-2. System displays link to login page
+1. System displays signup page with form fields: email, password
+2. System displays link to open login modal
 
 **Postcondition:** Signup form is displayed
+
+**Related Test Cases:** TC-001-01-001
 
 ---
 
@@ -39,10 +45,9 @@
 2. User enters password (minimum 15 characters per NIST SP 800-63B-4)
 3. User submits form
 4. System validates all fields
-5. System normalizes email to lowercase
-6. System hashes password using BCrypt (cost factor 12)
-7. System creates UserLogin record with email as username
-8. System redirects to login page
+5. System normalizes email to lowercase and trims whitespace
+6. System creates user via `UserLoginService.create()` which hashes password using BCrypt (cost 12)
+7. System redirects to `/?login=true` (homepage with login modal open)
 
 **Alternative Flows:**
 
@@ -55,25 +60,33 @@
 | 2c | Password > 128 chars | Display "Password must be 128 characters or less." error |
 | 5a | Email exists (case-insensitive) | Display "Email already registered." error |
 
-**Postcondition:** User account created; user redirected to login page
+**Postcondition:** User account created; user redirected to homepage with login modal open
+
+**Related Test Cases:** TC-001-01-002, TC-001-01-003, TC-001-01-004, TC-001-01-005, TC-001-01-006, TC-001-01-007
 
 ---
 
 # US-001-02: User Login
 
-## UC-001-02-01: Display Login Page
+## UC-001-02-01: Open Login Modal
 
 | Attribute | Value |
 |-----------|-------|
 | Actor | Guest |
 | Precondition | User is not authenticated |
-| Trigger | User navigates to `/login` |
+| Trigger | User clicks "Login" link in navigation |
 
 **Main Flow:**
-1. System displays login form with fields: email, password
-2. System displays link to signup page
+1. User clicks "Login" link in navigation bar
+2. Login modal (`#login-modal`) opens via UIkit toggle
+3. System displays login form with fields: email, password
+4. System displays link to signup page
 
-**Postcondition:** Login form is displayed
+**Note:** There is no separate `/login` page. Login is handled via a modal embedded in `base.html`.
+
+**Postcondition:** Login modal is displayed
+
+**Related Test Cases:** TC-001-02-001
 
 ---
 
@@ -82,27 +95,31 @@
 | Attribute | Value |
 |-----------|-------|
 | Actor | Guest |
-| Precondition | User is on login page |
+| Precondition | Login modal is open |
 | Trigger | User submits login form |
 
 **Main Flow:**
 1. User enters email
 2. User enters password
-3. User submits form to `/j_security_check`
-4. System normalizes email to lowercase
-5. System looks up UserLogin by email (email is the @Username)
-6. System verifies password against stored BCrypt hash
-7. System creates authenticated session
-8. System redirects to home page with personalized greeting
+3. Client-side JavaScript normalizes email (lowercase, trim)
+4. User submits form to `/j_security_check`
+5. Quarkus Security looks up `UserLogin` by email (`@Username`)
+6. Quarkus Security verifies password against stored BCrypt hash (`@Password`)
+7. System creates authenticated session with cookie
+8. System redirects to homepage with personalized greeting
 
 **Alternative Flows:**
 
 | ID | Condition | Action |
 |----|-----------|--------|
-| 5a | Email not found | Display "Invalid email or password" (generic) |
-| 6a | Password incorrect | Display "Invalid email or password" (generic) |
+| 5a | Email not found | Redirect to `/?login=true&error=true`, display "Invalid email or password." |
+| 6a | Password incorrect | Redirect to `/?login=true&error=true`, display "Invalid email or password." |
 
-**Postcondition:** User authenticated; session created; redirected to home page
+**Security Note:** Same error message for both cases to prevent user enumeration.
+
+**Postcondition:** User authenticated; session created; redirected to homepage
+
+**Related Test Cases:** TC-001-02-002, TC-001-02-003, TC-001-02-004, TC-001-02-005, TC-001-02-006, TC-001-02-007
 
 ---
 
@@ -112,13 +129,23 @@
 |-----------|-------|
 | Actor | Guest |
 | Precondition | User is not authenticated |
-| Trigger | User navigates to protected route (e.g., `/persons`, `/gender`) |
+| Trigger | User navigates to protected route (e.g., `/persons`, `/graph`) |
 
 **Main Flow:**
 1. System detects unauthenticated request to protected resource
-2. System redirects to `/login` page
+2. System redirects to `/?login=true` (homepage with login modal open)
 
-**Postcondition:** User redirected to login page
+**Protected Routes:**
+- `/dashboard/*`, `/api/*` - requires authentication
+- `/persons`, `/persons/*` - requires authentication
+- `/profile/*` - requires authentication
+- `/graph`, `/graph/*` - requires authentication
+- `/admin/*` - requires admin role
+- `/genders/*`, `/titles/*`, `/relationships/*` - requires admin role
+
+**Postcondition:** User redirected to homepage with login modal open
+
+**Related Test Cases:** TC-001-02-008
 
 ---
 
@@ -130,12 +157,18 @@
 |-----------|-------|
 | Actor | User, Administrator |
 | Precondition | User is authenticated |
-| Trigger | User clicks logout link or navigates to `/logout` |
+| Trigger | User clicks "Logout ({userName})" link in navigation |
 
 **Main Flow:**
-1. System invalidates user session
-2. System clears authentication cookie
-3. System displays logout confirmation page
-4. Navigation updates to show unauthenticated options
+1. User clicks "Logout ({userName})" link in navigation
+2. Browser navigates to `/logout`
+3. System destroys user session via `RoutingContext.session().destroy()`
+4. System clears authentication cookie (`quarkus-credential`)
+5. System displays logout confirmation page with message: "You have been successfully logged out."
+6. Page shows "Go to Home" link and "Login Again" link (opens login modal)
 
-**Postcondition:** Session terminated; user is unauthenticated
+**Postcondition:** Session terminated; user is unauthenticated; confirmation page displayed
+
+**Related Test Cases:** TC-001-03-001
+
+---
