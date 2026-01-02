@@ -55,6 +55,24 @@ flowchart TB
     Resource --> Service --> Repository --> Entity --> Database
 ```
 
+### Maintaining this Architecture document
+
+This document guides the application's architecture, including its design principles, layers, and technology stack. It serves as a reference for developers to understand and maintain the application's structure and components.
+
+It must only contain information relevant to the application's architecture and design.
+
+Code snippets should be generic examples that can be easily adapted to the application's needs.
+
+If the document must be updated, the update must be in situ and stated as a clear guideline. Do not include details of why the change was made. Just make the change. This is an architecture document that describes the technical details and the structure of the applications as a matter of fact.
+
+Do not give choices. 
+
+It must not contain:
+
+1. sensitive or confidential information
+2. code snippets that are specific to the application's detailed implementation
+3. details or instructions that are specific to the IDE 
+
 ## 2. Technology Stack
 
 ### 2.1 Core Framework
@@ -1003,6 +1021,42 @@ public static class Templates {
 }
 ```
 
+**Template-Side Fragment Includes:**
+
+Within templates, use the `$` prefix to include fragments:
+
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| `{#include $fragmentId /}` | Include fragment from **same** template | `{#include $table /}` |
+| `{#include templateName$fragmentId /}` | Include fragment from **another** template | `{#include item$item_aliases /}` |
+| `{#include templateName /}` | Include entire template (not a fragment) | `{#include base /}` |
+
+**Same-Template Fragment Example:**
+
+```html
+<!-- In gender.html: include the 'table' fragment defined later in this file -->
+<div id="gender-table-container">{#include $table /}</div>
+
+<!-- Fragment definition (at end of file) -->
+{#fragment id='table' rendered=false}
+<table>...</table>
+{/fragment}
+```
+
+**Cross-Template Fragment Example:**
+
+```html
+<!-- In user.html: include 'item_aliases' fragment from item.html -->
+{#include item$item_aliases aliases=user.aliases /}
+```
+
+**Passing Parameters to Fragments:**
+
+```html
+<!-- Pass the 'genders' variable to the fragment -->
+{#include $table genders=genders /}
+```
+
 ### 8.4 Qute Fragments for HTMX
 
 Templates use `{#fragment}` sections with `rendered=false` for partial responses:
@@ -1449,7 +1503,7 @@ public long countByStatus(String status) {
 
 **Why Panache is preferred**:
 - Less boilerplate code
-- Compile-time safety for field names (with proper IDE support)
+- Compile-time safety for field names
 - Consistent with the rest of the codebase
 - Automatic parameter binding
 - No need to manage `EntityManager` lifecycle
