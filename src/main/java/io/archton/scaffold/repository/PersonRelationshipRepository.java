@@ -86,4 +86,16 @@ public class PersonRelationshipRepository implements PanacheRepository<PersonRel
             .withHint(FETCH_GRAPH_HINT, graph)
             .list();
     }
+
+    /**
+     * Get distinct relationship types for filter dropdown.
+     */
+    public List<String> findDistinctRelationshipTypes() {
+        return getEntityManager()
+            .createQuery(
+                "SELECT DISTINCT r.description FROM Relationship r ORDER BY r.description",
+                String.class
+            )
+            .getResultList();
+    }
 }

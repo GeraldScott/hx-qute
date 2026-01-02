@@ -1,7 +1,9 @@
 package io.archton.scaffold.service;
 
 import io.archton.scaffold.dto.GraphData;
-import io.archton.scaffold.dto.GraphLink;
+import io.archton.scaffold.dto.GraphData.CyEdge;
+import io.archton.scaffold.dto.GraphData.CyNode;
+import io.archton.scaffold.dto.GraphEdge;
 import io.archton.scaffold.dto.GraphNode;
 import io.archton.scaffold.entity.Person;
 import io.archton.scaffold.entity.PersonRelationship;
@@ -23,25 +25,29 @@ public class GraphService {
     PersonRelationshipRepository personRelationshipRepository;
 
     /**
-     * Build graph data for visualization.
-     * Returns a DTO that JSON-B will automatically serialize.
+     * Build Cytoscape.js compatible graph data.
      */
     public GraphData buildGraphData() {
-        // Get relationship counts per person
+        // Get relationship counts per person for node sizing
         Map<Long, Integer> relationshipCounts = personRepository.countRelationshipsByPerson();
 
         // Build nodes from all persons
         List<Person> persons = personRepository.listAll();
-        List<GraphNode> nodes = persons.stream()
+        List<CyNode> nodes = persons.stream()
             .map(p -> GraphNode.from(p, relationshipCounts.getOrDefault(p.id, 0)))
+            .map(CyNode::from)
             .toList();
 
-        // Build links from all relationships
+        // Build edges from all relationships
         List<PersonRelationship> relationships = personRelationshipRepository.findAllForGraph();
-        List<GraphLink> links = relationships.stream()
-            .map(GraphLink::from)
+        List<CyEdge> edges = relationships.stream()
+            .map(GraphEdge::from)
+            .map(CyEdge::from)
             .toList();
 
-        return new GraphData(nodes, links);
+        // Get relationship types for filter dropdown
+        List<String> relationshipTypes = personRelationshipRepository.findDistinctRelationshipTypes();
+
+        return new GraphData(nodes, edges, relationshipTypes);
     }
 }
