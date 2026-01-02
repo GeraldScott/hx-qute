@@ -7,9 +7,11 @@ This project uses Quarkus with the Qute template engine to demonstrate how to us
 - Quarkus Java framework
 - HTMX for SPA-like client-side interactions 
 - Qute template engine
-- TailwindCSS and DaisyUI for styling
+- UIkit 3.25 for styling
 - JUnit 5 for testing
-- Hibernate ORM for database access
+- Hibernate ORM with Panache for database access
+- Hibernate Validator for input validation
+- Quarkus Security JPA for authentication
 - PostgreSQL for database
 - Flyway for database migrations
 - Docker for containerization
