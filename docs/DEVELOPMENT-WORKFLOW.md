@@ -86,6 +86,28 @@ Before starting implementation, confirm that the custom command `validate-featur
 
 ---
 
+## Pre-Implementation Reasoning
+
+Before coding each use case, take time to understand the full context. This deliberate pause prevents wasted effort and ensures alignment with project patterns.
+
+### Before Coding Begins
+
+1. **Re-read the use case** in `use-cases.md` - understand the user's goal
+2. **Review relevant sections** of `spec.md` - note entities, endpoints, and templates involved
+3. **Consider edge cases** - validation rules, error states, empty data scenarios
+4. **Check dependencies** - does this UC depend on prior work? Are those complete?
+5. **Confirm approach** aligns with `docs/ARCHITECTURE.md` patterns
+
+### Questions to Answer
+
+- What entities and repositories are involved?
+- What new endpoints or templates are needed?
+- Are there security considerations (roles, permissions)?
+- How does this integrate with existing functionality?
+- What could go wrong? How should errors be handled?
+
+---
+
 ## E2E Test Runner Subagent
 
 The project includes an `e2e-test-runner` subagent (`.claude/agents/e2e-test-runner.md`) that automates browser-based testing using chrome-devtools MCP.
@@ -175,3 +197,34 @@ When starting a use case:
 Always update `Current Status Section` in @specs/PROJECT-PLAN.md to reflect current position after updating the feature task list.
 
 Update counts in `Progress Summary Table` after completing each use case.
+
+---
+
+## Guidelines Maintenance
+
+Project documentation should evolve alongside the codebase. After completing a feature, review and update living documents to capture new patterns and decisions.
+
+### After Feature Completion
+
+Review and update as needed:
+
+| Document | Update When... |
+|----------|----------------|
+| `CLAUDE.md` | New patterns, commands, or conventions were established |
+| `docs/ARCHITECTURE.md` | Architectural decisions were made or patterns refined |
+| `docs/SECURITY.md` | Security policies or implementations changed |
+| `specs/TEMPLATE/` | Template files need improvements based on lessons learned |
+
+### What to Capture
+
+- **New patterns**: If you solved a problem in a reusable way, document it
+- **Gotchas**: Edge cases or pitfalls that future work should avoid
+- **Decisions**: Why a particular approach was chosen over alternatives
+- **Dependencies**: New libraries or integrations added
+
+### Review Prompt
+
+After marking a feature complete, ask:
+> "Did this feature introduce anything that future features should know about?"
+
+If yes, update the relevant documentation before moving on.
