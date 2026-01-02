@@ -3,9 +3,7 @@ package io.archton.scaffold.repository;
 import io.archton.scaffold.entity.Person;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -62,23 +60,5 @@ public class PersonRepository implements PanacheRepository<Person> {
 
     public boolean existsByEmailAndIdNot(String email, Long id) {
         return count("LOWER(email) = LOWER(?1) AND id != ?2", email.trim(), id) > 0;
-    }
-
-    /**
-     * Count relationships where person is the source.
-     */
-    public Map<Long, Integer> countRelationshipsByPerson() {
-        List<Object[]> results = getEntityManager()
-            .createQuery(
-                "SELECT pr.sourcePerson.id, COUNT(pr) FROM PersonRelationship pr GROUP BY pr.sourcePerson.id",
-                Object[].class
-            )
-            .getResultList();
-
-        Map<Long, Integer> counts = new HashMap<>();
-        for (Object[] row : results) {
-            counts.put((Long) row[0], ((Long) row[1]).intValue());
-        }
-        return counts;
     }
 }
