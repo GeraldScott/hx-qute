@@ -25,6 +25,9 @@ Technical reference for developing features in this Quarkus + HTMX + Qute applic
 10. [Creating New Entities - Complete Checklist](#10-creating-new-entities---complete-checklist)
 11. [Testing Patterns](#11-testing-patterns)
 12. [Configuration Reference](#12-configuration-reference)
+    - [12.3 Authentication Endpoints](#123-authentication-endpoints)
+    - [12.4 Password Validation](#124-password-validation)
+    - [12.5 Security Requirements](#125-security-requirements)
 13. [Anti-Patterns](#13-anti-patterns)
 
 ---
@@ -1623,13 +1626,95 @@ quarkus.http.auth.form.enabled=true
 quarkus.http.auth.form.login-page=/login
 quarkus.http.auth.form.landing-page=/
 quarkus.http.auth.form.error-page=/login?error=true
+quarkus.http.auth.form.timeout=PT30M
+quarkus.http.auth.form.cookie-name=quarkus-credential
+quarkus.http.auth.form.http-only-cookie=true
 
-# Route permissions (example)
-quarkus.http.auth.permission.admin.paths=/categories,/categories/*
-quarkus.http.auth.permission.admin.policy=admin
-quarkus.http.auth.permission.authenticated.paths=/items,/items/*
+# Session security
+quarkus.http.auth.form.new-cookie-interval=PT1M
+quarkus.http.same-site-cookie.quarkus-credential=strict
+
+# Route protection
+quarkus.http.auth.permission.authenticated.paths=/dashboard/*,/api/*,/persons/*,/profile/*
 quarkus.http.auth.permission.authenticated.policy=authenticated
+
+quarkus.http.auth.permission.admin.paths=/admin/*
+quarkus.http.auth.permission.admin.policy=admin
+quarkus.http.auth.policy.admin.roles-allowed=admin
+
+quarkus.http.auth.permission.public.paths=/,/login,/signup,/logout,/css/*,/js/*,/images/*,/webjars/*
+quarkus.http.auth.permission.public.policy=permit
+
+# Password policy (NIST SP 800-63B-4)
+app.security.password.min-length=15
+app.security.password.max-length=128
 ```
+
+### 12.3 Authentication Endpoints
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/signup` | GET | Display registration form | No |
+| `/signup` | POST | Create new account | No |
+| `/login` | GET | Display login form | No |
+| `/j_security_check` | POST | Authenticate (Quarkus form auth) | No |
+| `/logout` | GET | Terminate session, show confirmation | Yes |
+
+### 12.4 Password Validation
+
+Password validation follows NIST SP 800-63B-4 requirements:
+
+```java
+@ApplicationScoped
+public class PasswordValidator {
+
+    @ConfigProperty(name = "app.security.password.min-length", defaultValue = "15")
+    int minLength;
+
+    @ConfigProperty(name = "app.security.password.max-length", defaultValue = "128")
+    int maxLength;
+
+    public List<String> validate(String password) {
+        List<String> errors = new ArrayList<>();
+
+        if (password == null || password.isEmpty()) {
+            errors.add("Password is required");
+            return errors;
+        }
+
+        // NIST 800-63B-4: Minimum 15 characters when password-only auth
+        if (password.length() < minLength) {
+            errors.add("Password must be at least " + minLength + " characters");
+        }
+
+        // NIST 800-63B-4: Accept at least 64 characters (we allow 128)
+        if (password.length() > maxLength) {
+            errors.add("Password must be " + maxLength + " characters or less");
+        }
+
+        // NIST 800-63B-4: No composition rules required
+        // (Intentionally NOT checking for special chars, uppercase, etc.)
+
+        return errors;
+    }
+
+    public boolean isValid(String password) {
+        return validate(password).isEmpty();
+    }
+}
+```
+
+### 12.5 Security Requirements
+
+| Requirement | NIST 800-63B-4 | Implementation |
+|-------------|----------------|----------------|
+| Minimum password length | 15 chars (password-only) | Configurable, default 15 |
+| Maximum password length | Accept 64+ chars | 128 chars |
+| Password truncation | Prohibited | Full password stored |
+| Composition rules | Not required | None enforced |
+| Password hashing | Approved algorithm | BCrypt, cost 12 |
+| Session timeout | Risk-based | 30 min idle |
+| Secure cookies | HttpOnly, SameSite | Configured |
 
 ---
 
