@@ -31,7 +31,7 @@
 
 {/include}
 
-{#fragment id='table'}
+{#fragment id='table' rendered=false}
 {@java.util.List<io.archton.scaffold.entity.Relationship> relationships}
 {#if relationships.isEmpty()}
 <p class="uk-text-muted">No relationships found.</p>
