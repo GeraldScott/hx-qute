@@ -1,6 +1,6 @@
-# HX Qute - User Stories
+# User Stories
 
-**Product:** HX Qute Reference Application
+**Product:** Reference Application
 **Company:** [Archton](https://www.archton.io/)
 **Document Version:** 1.0
 
@@ -54,13 +54,13 @@ The user stories are grouped into domain-specific features that deliver business
 **So that** I can securely access and manage my data
 
 **Acceptance Criteria:**
-- User can access the signup page from the homepage
+- User can access the signup page at `/signup`
 - User registers with their email address
 - Email field requires valid email format
-- Password field requires minimum 15 characters (NIST SP 800-63B-4)
+- Password field requires minimum 15 characters, maximum 128 (NIST SP 800-63B-4)
 - System prevents duplicate email addresses
 - User receives clear error messages for validation failures
-- Successful registration redirects user to login page
+- Successful registration redirects user to homepage with login modal open
 
 **Priority:** High
 **Story Points:** 3
@@ -70,14 +70,14 @@ The user stories are grouped into domain-specific features that deliver business
 ### US-001-02: User Login
 **As a** registered user
 **I want to** log in with my email and password
-**So that** I can access my dashboard
+**So that** I can access protected features
 
 **Acceptance Criteria:**
-- Login page is accessible from the homepage navigation
-- User can enter email and password
-- Invalid credentials display an error message
-- Successful login redirects to the home page with personalized greeting
-- Navigation updates to show authenticated user options
+- Login modal is accessible from the navigation bar via Login link
+- User can enter email and password in the modal form
+- Invalid credentials display an error message in the modal
+- Successful login redirects to the homepage
+- Navigation updates to show "Logout ({username})" indicating the authenticated user
 
 **Priority:** High
 **Story Points:** 2
@@ -90,10 +90,11 @@ The user stories are grouped into domain-specific features that deliver business
 **So that** I can secure my data when I'm done using the application
 
 **Acceptance Criteria:**
-- Logout option is visible in the navigation bar when authenticated
-- Clicking logout terminates the user session
-- User is redirected to the homepage after logout
-- Navigation updates to show unauthenticated user options
+- Logout option showing "Logout ({username})" is visible in the navigation bar when authenticated
+- Clicking logout terminates the user session and clears the authentication cookie
+- User sees a logout confirmation page with success message
+- Confirmation page offers links to "Go to Home" or "Login Again"
+- Navigation updates to show Login link for unauthenticated state
 
 **Priority:** High
 **Story Points:** 1
