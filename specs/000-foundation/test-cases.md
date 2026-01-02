@@ -17,7 +17,7 @@
 # US-000-01: Establish Authentication Infrastructure
 
 ### TC-000-01-001: UserLogin Table Schema Verification
-**Parent Use Case:** [UC-000-01-01: Create UserLogin Database Table](use-cases.md#uc-000-01-01-create-userlogin-database-table)
+**Parent Use Case:** [UC-000-01-01: Initialize User Account Storage](use-cases.md#uc-000-01-01-initialize-user-account-storage)
 
 **Objective:** Verify the user_login table is created with correct schema.
 
@@ -49,7 +49,7 @@ ORDER BY ordinal_position;
 ---
 
 ### TC-000-01-002: UserLogin Table Constraints Verification
-**Parent Use Case:** [UC-000-01-01: Create UserLogin Database Table](use-cases.md#uc-000-01-01-create-userlogin-database-table)
+**Parent Use Case:** [UC-000-01-01: Initialize User Account Storage](use-cases.md#uc-000-01-01-initialize-user-account-storage)
 
 **Objective:** Verify the user_login table has correct constraints and indexes.
 
@@ -78,7 +78,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-003: UserLogin Entity Annotations Verification
-**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+**Parent Use Case:** [UC-000-01-02: Verify Secure Password Storage](use-cases.md#uc-000-01-02-verify-secure-password-storage)
 
 **Objective:** Verify the UserLogin entity has correct security annotations.
 
@@ -98,16 +98,16 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-004: UserLogin Email Normalization
-**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+**Parent Use Case:** [UC-000-01-02: Verify Secure Password Storage](use-cases.md#uc-000-01-02-verify-secure-password-storage)
 
 **Objective:** Verify email addresses are normalized to lowercase and trimmed.
 
-**Type:** Unit test
+**Type:** Integration test
 
 **Steps:**
-1. Create UserLogin with uppercase email: `"  TEST@EXAMPLE.COM  "`
-2. Persist the entity
-3. Retrieve and verify email is normalized
+1. Use UserLoginService to create a user with uppercase email: `"  TEST@EXAMPLE.COM  "`
+2. Query the database for the persisted user
+3. Verify email is normalized
 
 **Expected:**
 - [ ] Email is stored as `"test@example.com"` (lowercase, trimmed)
@@ -115,15 +115,16 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-005: UserLogin BCrypt Password Hashing
-**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+**Parent Use Case:** [UC-000-01-02: Verify Secure Password Storage](use-cases.md#uc-000-01-02-verify-secure-password-storage)
 
 **Objective:** Verify passwords are hashed using BCrypt with cost factor 12.
 
-**Type:** Unit test
+**Type:** Integration test
 
 **Steps:**
-1. Create UserLogin using `UserLogin.create("test@example.com", "TestPassword12345", "user")`
-2. Inspect the password field
+1. Inject UserLoginService
+2. Call `userLoginService.create("test@example.com", "TestPassword12345", "user")`
+3. Inspect the password field of the returned entity
 
 **Expected:**
 - [ ] Password starts with `$2a$12$` (BCrypt, cost 12)
@@ -132,17 +133,18 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 
 ---
 
-### TC-000-01-006: UserLogin Finder Methods
-**Parent Use Case:** [UC-000-01-02: Create UserLogin Entity](use-cases.md#uc-000-01-02-create-userlogin-entity)
+### TC-000-01-006: UserLoginRepository Finder Methods
+**Parent Use Case:** [UC-000-01-02: Verify Secure Password Storage](use-cases.md#uc-000-01-02-verify-secure-password-storage)
 
-**Objective:** Verify finder methods work correctly with case-insensitive email lookup.
+**Objective:** Verify repository finder methods work correctly with case-insensitive email lookup.
 
 **Type:** Integration test
 
 **Steps:**
 1. Ensure admin user exists
-2. Call `UserLogin.findByEmail("ADMIN@EXAMPLE.COM")` (uppercase)
-3. Call `UserLogin.emailExists("admin@example.com")`
+2. Inject UserLoginRepository
+3. Call `userLoginRepository.findByEmail("ADMIN@EXAMPLE.COM")` (uppercase)
+4. Call `userLoginRepository.emailExists("admin@example.com")`
 
 **Expected:**
 - [ ] `findByEmail()` returns the admin user despite case difference
@@ -152,7 +154,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-007: PasswordValidator Minimum Length
-**Parent Use Case:** [UC-000-01-03: Create PasswordValidator Service](use-cases.md#uc-000-01-03-create-passwordvalidator-service)
+**Parent Use Case:** [UC-000-01-03: Enforce Password Policy](use-cases.md#uc-000-01-03-enforce-password-policy)
 
 **Objective:** Verify password minimum length validation (NIST SP 800-63B-4).
 
@@ -172,7 +174,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-008: PasswordValidator Maximum Length
-**Parent Use Case:** [UC-000-01-03: Create PasswordValidator Service](use-cases.md#uc-000-01-03-create-passwordvalidator-service)
+**Parent Use Case:** [UC-000-01-03: Enforce Password Policy](use-cases.md#uc-000-01-03-enforce-password-policy)
 
 **Objective:** Verify password maximum length validation.
 
@@ -190,7 +192,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-009: PasswordValidator No Composition Rules
-**Parent Use Case:** [UC-000-01-03: Create PasswordValidator Service](use-cases.md#uc-000-01-03-create-passwordvalidator-service)
+**Parent Use Case:** [UC-000-01-03: Enforce Password Policy](use-cases.md#uc-000-01-03-enforce-password-policy)
 
 **Objective:** Verify NIST compliance - no composition rules enforced.
 
@@ -209,7 +211,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'user_login';
 ---
 
 ### TC-000-01-010: Admin User Seed Verification
-**Parent Use Case:** [UC-000-01-04: Seed Admin User](use-cases.md#uc-000-01-04-seed-admin-user)
+**Parent Use Case:** [UC-000-01-04: Access System with Default Administrator](use-cases.md#uc-000-01-04-access-system-with-default-administrator)
 
 **Objective:** Verify admin user is seeded correctly.
 
@@ -236,27 +238,28 @@ WHERE email = 'admin@example.com';
 ---
 
 ### TC-000-01-011: Admin User Authentication
-**Parent Use Case:** [UC-000-01-04: Seed Admin User](use-cases.md#uc-000-01-04-seed-admin-user)
+**Parent Use Case:** [UC-000-01-04: Access System with Default Administrator](use-cases.md#uc-000-01-04-access-system-with-default-administrator)
 
 **Objective:** Verify admin user can authenticate with seeded credentials.
 
 **Type:** Integration test (browser-based)
 
 **Steps:**
-1. Navigate to `/login`
-2. Enter email: `admin@example.com`
-3. Enter password: `AdminPassword123`
-4. Click Login button
+1. Navigate to homepage
+2. Click Login link to open modal
+3. Enter email: `admin@example.com`
+4. Enter password: `AdminPassword123`
+5. Click Login button
 
 **Expected:**
 - [ ] Login is successful
 - [ ] User is redirected to home page
-- [ ] Navigation shows authenticated state
+- [ ] Navigation shows authenticated state with "Logout (Admin User)"
 
 ---
 
 ### TC-000-01-012: Application Startup Verification
-**Parent Use Case:** [UC-000-01-01: Create UserLogin Database Table](use-cases.md#uc-000-01-01-create-userlogin-database-table)
+**Parent Use Case:** [UC-000-01-01: Initialize User Account Storage](use-cases.md#uc-000-01-01-initialize-user-account-storage)
 
 **Objective:** Verify application starts successfully with all migrations applied.
 
@@ -286,8 +289,8 @@ curl http://127.0.0.1:9080/q/health
 | TC-000-01-001 | UC-000-01-01 | Database | ✅ Passed |
 | TC-000-01-002 | UC-000-01-01 | Database | ✅ Passed |
 | TC-000-01-003 | UC-000-01-02 | Code Inspection | ✅ Passed |
-| TC-000-01-004 | UC-000-01-02 | Unit Test | ✅ Passed |
-| TC-000-01-005 | UC-000-01-02 | Unit Test | ✅ Passed |
+| TC-000-01-004 | UC-000-01-02 | Integration | ✅ Passed |
+| TC-000-01-005 | UC-000-01-02 | Integration | ✅ Passed |
 | TC-000-01-006 | UC-000-01-02 | Integration | ✅ Passed |
 | TC-000-01-007 | UC-000-01-03 | Unit Test | ✅ Passed |
 | TC-000-01-008 | UC-000-01-03 | Unit Test | ✅ Passed |

@@ -23,10 +23,13 @@ This feature establishes the authentication infrastructure required for Identity
 
 **Main Flow:**
 1. System Administrator starts the application
-2. System automatically creates the user account storage
-3. System confirms storage is ready for user registrations
+2. System executes Flyway migrations to create the `user_login` table
+3. System creates unique constraint and index on email column
+4. System confirms storage is ready for user registrations
 
 **Postcondition:** System is ready to store user accounts with email, password, and role information
+
+**Related Test Cases:** TC-000-01-001, TC-000-01-002, TC-000-01-012
 
 ---
 
@@ -40,15 +43,23 @@ This feature establishes the authentication infrastructure required for Identity
 
 **Main Flow:**
 1. System Administrator reviews security configuration
-2. System confirms passwords are stored using industry-standard encryption (BCrypt)
+2. System confirms passwords are hashed using BCrypt (cost factor 12) via `UserLoginService`
 3. System confirms email addresses are normalized for consistent login
+4. System confirms `UserLogin` entity has proper Quarkus Security JPA annotations
 
 **Security Guarantees:**
 - Passwords are never stored in plain text
-- Email addresses are case-insensitive for login
-- User accounts include audit timestamps
+- Email addresses are case-insensitive for login (normalized to lowercase)
+- User accounts include audit timestamps (createdAt, updatedAt)
+
+**Implementation Components:**
+- `UserLogin` entity with `@UserDefinition`, `@Username`, `@Password(PasswordType.MCF)`, `@Roles` annotations
+- `UserLoginService` for user creation with BCrypt hashing
+- `UserLoginRepository` for case-insensitive email lookups
 
 **Postcondition:** System Administrator has confidence that user credentials are securely stored
+
+**Related Test Cases:** TC-000-01-003, TC-000-01-004, TC-000-01-005, TC-000-01-006
 
 ---
 
@@ -62,7 +73,7 @@ This feature establishes the authentication infrastructure required for Identity
 
 **Main Flow:**
 1. System Administrator reviews the password policy
-2. System enforces minimum password length of 15 characters
+2. System enforces minimum password length of 15 characters via `PasswordValidator` service
 3. System accepts passwords up to 128 characters
 4. System does not require special characters or mixed case (per NIST guidelines)
 
@@ -76,7 +87,13 @@ This feature establishes the authentication infrastructure required for Identity
 | Uppercase/lowercase | Not required |
 | Password expiration | Not enforced |
 
+**Implementation:**
+- `PasswordValidator` service with configurable min/max length
+- Configuration via `app.security.password.min-length` and `app.security.password.max-length` properties
+
 **Postcondition:** Password policy is documented and enforced for all new registrations
+
+**Related Test Cases:** TC-000-01-007, TC-000-01-008, TC-000-01-009
 
 ---
 
@@ -89,12 +106,13 @@ This feature establishes the authentication infrastructure required for Identity
 | Trigger | System Administrator needs initial system access |
 
 **Main Flow:**
-1. System Administrator navigates to the login page
-2. System Administrator enters default credentials:
+1. System Administrator navigates to the homepage
+2. System Administrator clicks Login to open the login modal
+3. System Administrator enters default credentials:
    - Email: `admin@example.com`
    - Password: `AdminPassword123`
-3. System authenticates the administrator
-4. System Administrator gains access to administrative functions
+4. System authenticates the administrator
+5. System Administrator gains access to administrative functions
 
 **Alternative Flows:**
 
@@ -105,5 +123,7 @@ This feature establishes the authentication infrastructure required for Identity
 **Security Note:** The default administrator account is provided for initial setup only. The password should be changed immediately in a production environment.
 
 **Postcondition:** System Administrator has access to the system and can manage users
+
+**Related Test Cases:** TC-000-01-010, TC-000-01-011
 
 ---

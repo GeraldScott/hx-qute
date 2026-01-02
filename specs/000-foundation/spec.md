@@ -69,6 +69,39 @@ app.security.password.max-length=128
 
 ---
 
+## Architecture Overview
+
+The authentication infrastructure uses a layered architecture pattern:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        AuthResource                              │
+│              (REST endpoint for signup/logout)                   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+┌─────────────────────┐ ┌─────────────────┐ ┌───────────────────────┐
+│  UserLoginService   │ │PasswordValidator│ │   Quarkus Security    │
+│ (user creation,     │ │ (NIST password  │ │ (authentication via   │
+│  BCrypt hashing)    │ │  validation)    │ │  @UserDefinition)     │
+└─────────────────────┘ └─────────────────┘ └───────────────────────┘
+              │                                         │
+              ▼                                         │
+┌─────────────────────┐                                │
+│ UserLoginRepository │◄───────────────────────────────┘
+│  (Panache queries)  │
+└─────────────────────┘
+              │
+              ▼
+┌─────────────────────┐
+│   UserLogin Entity  │
+│   (JPA mapping)     │
+└─────────────────────┘
+```
+
+---
+
 ## Entity Design
 
 ### UserLogin Entity
@@ -82,22 +115,74 @@ app.security.password.max-length=128
 - `@Password(PasswordType.MCF)` on password - BCrypt hash verification
 - `@Roles` on role - Authorization roles
 
-**Key Methods:**
+**Fields:**
+
+| Field | Type | Annotations | Description |
+|-------|------|-------------|-------------|
+| id | Long | `@Id`, `@GeneratedValue` | Auto-generated primary key |
+| email | String | `@Username`, `@NotBlank`, `@Email`, `@Size(max=255)` | Login identifier |
+| password | String | `@Password(PasswordType.MCF)`, `@NotBlank` | BCrypt hashed password |
+| role | String | `@Roles` | User role (default: "user") |
+| firstName | String | `@Size(max=100)` | User's first name |
+| lastName | String | `@Size(max=100)` | User's last name |
+| createdAt | Instant | `@Column(updatable=false)` | Creation timestamp |
+| updatedAt | Instant | | Last update timestamp |
+| active | boolean | | Account active status (default: true) |
+
+**Methods:**
 
 | Method | Purpose |
 |--------|---------|
-| `create(email, password, role)` | Factory method with BCrypt hashing (cost 12) |
-| `findByEmail(email)` | Case-insensitive email lookup |
-| `emailExists(email)` | Check for duplicate emails |
-| `getDisplayName()` | Human-readable name or email fallback |
+| `getDisplayName()` | Returns human-readable name (firstName + lastName) or email fallback |
 
 **Lifecycle Hooks:**
-- `@PrePersist`: Sets timestamps, normalizes email
+- `@PrePersist`: Sets createdAt/updatedAt timestamps, normalizes email
 - `@PreUpdate`: Updates timestamp, normalizes email
 
 ---
 
+## Repository Design
+
+### UserLoginRepository
+
+**Package:** `io.archton.scaffold.repository`
+
+**Scope:** `@ApplicationScoped`
+
+**Implements:** `PanacheRepository<UserLogin>`
+
+**Methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `findByEmail(email)` | `Optional<UserLogin>` | Case-insensitive email lookup |
+| `emailExists(email)` | `boolean` | Check if email is already registered |
+| `existsByEmailAndIdNot(email, id)` | `boolean` | Check email uniqueness excluding specific user (for updates) |
+
+---
+
 ## Service Design
+
+### UserLoginService
+
+**Package:** `io.archton.scaffold.service`
+
+**Scope:** `@ApplicationScoped`
+
+**Dependencies:**
+- `UserLoginRepository` - for database operations
+
+**Methods:**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `create(email, plainPassword, role)` | `UserLogin` | Creates user with BCrypt-hashed password (cost 12) |
+| `emailExists(email)` | `boolean` | Delegates to repository for email existence check |
+
+**Behavior:**
+- Email is normalized (lowercase, trimmed) before storage
+- Password is hashed using BCrypt with cost factor 12
+- Throws `UniqueConstraintException` if email already exists
 
 ### PasswordValidator Service
 
@@ -133,16 +218,31 @@ app.security.password.max-length=128
 - Algorithm: BCrypt
 - Cost factor: 12 (provides ~300ms hash time)
 - Format: MCF (Modular Crypt Format) - `$2a$12$...`
+- Implementation: `BcryptUtil.bcryptHash()` from Quarkus Elytron
 
 ### Email Normalization
 - Converted to lowercase
 - Whitespace trimmed
-- Applied on both persist and update
+- Applied on both persist and update (entity lifecycle hooks)
+- Applied in service layer before database operations
 
 ### Admin User Seed
 - Email: `admin@example.com`
-- Password: `AdminPassword123` (BCrypt hashed)
+- Password: `AdminPassword123` (BCrypt hashed, cost 12)
 - Role: `admin`
 - Purpose: Initial system access and testing
+
+---
+
+## File Inventory
+
+| File | Purpose |
+|------|---------|
+| `src/main/java/io/archton/scaffold/entity/UserLogin.java` | JPA entity with security annotations |
+| `src/main/java/io/archton/scaffold/repository/UserLoginRepository.java` | Panache repository for database operations |
+| `src/main/java/io/archton/scaffold/service/UserLoginService.java` | Service for user creation with BCrypt hashing |
+| `src/main/java/io/archton/scaffold/service/PasswordValidator.java` | NIST-compliant password validation |
+| `src/main/resources/db/migration/V1.2.0__Create_user_login_table.sql` | Flyway migration for table creation |
+| `src/main/resources/db/migration/V1.2.1__Insert_admin_user.sql` | Flyway migration for admin user seed |
 
 ---
