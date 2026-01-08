@@ -1,6 +1,10 @@
-# hx-qute: Quarkus+HTMX
+# hx-qute: Quarkus+HTMX+Claude
 
-This project uses Quarkus with the Qute template engine to demonstrate how to use HTMX with Quarkus.
+This project uses Quarkus with the Qute template engine to demonstrate how to use HTMX with Quarkus. 
+
+It functions as a test bed for developing and implementing functionality using Claude Skills.
+
+Once the SKILL is tested, it moves to hx-scaffold for general release.
 
 ## Technology stack
 
@@ -106,4 +110,3 @@ Or run the build in a GraalVM container using:
 - [Martin Fowler: Anemic Domain Model](https://martinfowler.com/bliki/AnemicDomainModel.html)
 - [Steve Ardalis: Should Controllers Reference Repositories or Services](https://ardalis.com/should-controllers-reference-repositories-services/)
 - [Quarkus Panache Guide](https://quarkus.io/guides/hibernate-orm-panache)
-
