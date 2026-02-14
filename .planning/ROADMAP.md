@@ -53,10 +53,10 @@ Plans:
   2. User can configure network depth to show 1, 2, or 3+ degrees of separation
   3. Connection links display relationship types (parent, spouse, sibling, etc.)
   4. Network view shows who connects to whom through what relationship
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] TBD
+- [ ] 03-01-PLAN.md — Person-centered network discovery with BFS traversal, depth selector, and server-rendered connection view
 
 ### Phase 4: Evidence Capture
 **Goal**: Users can attach files and notes to people and relationships
@@ -84,7 +84,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Quick Actions | 1/1 | ✓ Complete | 2026-02-14 |
 | 2. Pagination | 1/1 | ✓ Complete | 2026-02-14 |
-| 3. Network Discovery | 0/TBD | Not started | - |
+| 3. Network Discovery | 0/1 | Not started | - |
 | 4. Evidence Capture | 0/TBD | Not started | - |
 
 ---
