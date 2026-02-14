@@ -39,10 +39,10 @@ Plans:
   1. Person list displays configurable number of results per page (10, 25, 50, 100)
   2. User can navigate forward and backward through pages of person records
   3. Page controls show current page and total pages
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] TBD
+- [ ] 02-01-PLAN.md — Add server-side pagination with configurable page sizes and UIkit navigation controls
 
 ### Phase 3: Network Discovery
 **Goal**: Users can explore a person's connections at configurable depth
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Quick Actions | 1/1 | ✓ Complete | 2026-02-14 |
-| 2. Pagination | 0/TBD | Not started | - |
+| 2. Pagination | 0/1 | Planned | - |
 | 3. Network Discovery | 0/TBD | Not started | - |
 | 4. Evidence Capture | 0/TBD | Not started | - |
 
