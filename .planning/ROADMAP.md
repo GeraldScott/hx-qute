@@ -12,7 +12,7 @@ This roadmap delivers person-centered network exploration and evidence capture c
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Quick Actions** - Direct navigation to person views from list
+- [x] **Phase 1: Quick Actions** - Direct navigation to person views from list
 - [ ] **Phase 2: Pagination** - Manageable page sizes for person list
 - [ ] **Phase 3: Network Discovery** - Person-centered connection network with configurable depth
 - [ ] **Phase 4: Evidence Capture** - File and note attachments to people and relationships
@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md — Add View Network and View Details action buttons to person list rows
+- [x] 01-01-PLAN.md — Add View Network and View Details action buttons to person list rows
 
 ### Phase 2: Pagination
 **Goal**: Person list displays manageable page sizes instead of unbounded results
@@ -82,11 +82,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Quick Actions | 0/1 | Planned | - |
+| 1. Quick Actions | 1/1 | ✓ Complete | 2026-02-14 |
 | 2. Pagination | 0/TBD | Not started | - |
 | 3. Network Discovery | 0/TBD | Not started | - |
 | 4. Evidence Capture | 0/TBD | Not started | - |
 
 ---
 *Created: 2026-02-14*
-*Last updated: 2026-02-14 after Phase 1 planning*
+*Last updated: 2026-02-14 after Phase 1 execution complete*
