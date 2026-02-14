@@ -119,6 +119,18 @@
                         >
                             <span uk-icon="link"></span>
                         </a>
+                        <a class="uk-button uk-button-small uk-button-default"
+                           href="/graph"
+                           uk-tooltip="View Network">
+                            <span uk-icon="git-fork"></span>
+                        </a>
+                        <button class="uk-button uk-button-small uk-button-default"
+                                hx-get="/persons/{p.id}"
+                                hx-target="#person-modal-body"
+                                hx-on::after-request="UIkit.modal('#person-modal').show()"
+                                uk-tooltip="View Details">
+                            <span uk-icon="info"></span>
+                        </button>
                         <button
                             class="uk-button uk-button-small uk-button-primary"
                             hx-get="/persons/{p.id}/edit"
@@ -313,6 +325,18 @@
                     uk-tooltip="Manage Relationships">
                 <span uk-icon="link"></span>
             </a>
+            <a class="uk-button uk-button-small uk-button-default"
+               href="/graph"
+               uk-tooltip="View Network">
+                <span uk-icon="git-fork"></span>
+            </a>
+            <button class="uk-button uk-button-small uk-button-default"
+                    hx-get="/persons/{person.id}"
+                    hx-target="#person-modal-body"
+                    hx-on::after-request="UIkit.modal('#person-modal').show()"
+                    uk-tooltip="View Details">
+                <span uk-icon="info"></span>
+            </button>
             <button class="uk-button uk-button-small uk-button-primary"
                     hx-get="/persons/{person.id}/edit"
                     hx-target="#person-modal-body"
