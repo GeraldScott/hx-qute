@@ -7,6 +7,12 @@
 {@String filterText}
 {@String sortField}
 {@String sortDir}
+{@int page}
+{@int size}
+{@int totalPages}
+{@long totalCount}
+{@java.util.List<java.lang.Integer> pageWindow}
+{@boolean hasNextPage}
 {#include base}
 
 <h2 class="uk-heading-small">People Management</h2>
@@ -58,6 +64,24 @@
         </select>
     </div>
 
+    <!-- Page Size -->
+    <div class="uk-width-auto@s">
+        <select class="uk-select" name="size"
+                hx-get="/persons"
+                hx-target="#person-table-container"
+                hx-include="closest form"
+                hx-push-url="true"
+                hx-vals='{"page": "0"}'>
+            <option value="10" {#if size == 10}selected{/if}>10</option>
+            <option value="25" {#if size == 25}selected{/if}>25</option>
+            <option value="50" {#if size == 50}selected{/if}>50</option>
+            <option value="100" {#if size == 100}selected{/if}>100</option>
+        </select>
+    </div>
+
+    <!-- Hidden page input (resets to 0 on form submission) -->
+    <input type="hidden" name="page" value="0" />
+
     <!-- Buttons -->
     <div class="uk-width-auto@s">
         <button type="submit" class="uk-button uk-button-primary">Search</button>
@@ -65,7 +89,7 @@
     </div>
 </form>
 
-<div id="person-table-container">{#include $table /}</div>
+<div id="person-table-container">{#include $table persons=persons filterText=filterText page=page size=size totalPages=totalPages totalCount=totalCount pageWindow=pageWindow hasNextPage=hasNextPage /}</div>
 
 <!-- Static Modal Shell -->
 <div id="person-modal" uk-modal="bg-close: false">
@@ -81,6 +105,12 @@
 {#fragment id='table' rendered=false}
 {@java.util.List<io.archton.scaffold.entity.Person> persons}
 {@String filterText}
+{@int page}
+{@int size}
+{@int totalPages}
+{@long totalCount}
+{@java.util.List<java.lang.Integer> pageWindow}
+{@boolean hasNextPage}
 {#if persons.isEmpty()}
 {#if filterText??}
 <p class="uk-text-muted">No persons match the filter criteria.</p>
@@ -156,6 +186,65 @@
         </tbody>
     </table>
 </div>
+
+<!-- Record count and pagination info -->
+<div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small-top">
+    <span class="uk-text-meta">{totalCount} record{#if totalCount != 1}s{/if}</span>
+    {#if totalPages > 1}
+    <span class="uk-text-meta">Page {page + 1} of {totalPages}</span>
+    {/if}
+</div>
+
+<!-- Pagination controls -->
+{#if totalPages > 1}
+<nav aria-label="Pagination" class="uk-margin-small-top">
+    <ul class="uk-pagination uk-flex-center">
+        {! Previous button !}
+        {#if page > 0}
+        <li>
+            <a hx-get="/persons?page={page - 1}&size={size}&filter={filterText ?: ''}"
+               hx-target="#person-table-container"
+               hx-push-url="true">
+                <span uk-pagination-previous></span>
+            </a>
+        </li>
+        {#else}
+        <li class="uk-disabled"><span><span uk-pagination-previous></span></span></li>
+        {/if}
+
+        {! Page numbers with ellipsis !}
+        {#for pg in pageWindow}
+            {#if pg < 0}
+            <li class="uk-disabled"><span>...</span></li>
+            {#else if pg == page}
+            <li class="uk-active"><span aria-current="page">{pg + 1}</span></li>
+            {#else}
+            <li>
+                <a hx-get="/persons?page={pg}&size={size}&filter={filterText ?: ''}"
+                   hx-target="#person-table-container"
+                   hx-push-url="true">
+                    {pg + 1}
+                </a>
+            </li>
+            {/if}
+        {/for}
+
+        {! Next button !}
+        {#if hasNextPage}
+        <li>
+            <a hx-get="/persons?page={page + 1}&size={size}&filter={filterText ?: ''}"
+               hx-target="#person-table-container"
+               hx-push-url="true">
+                <span uk-pagination-next></span>
+            </a>
+        </li>
+        {#else}
+        <li class="uk-disabled"><span><span uk-pagination-next></span></span></li>
+        {/if}
+    </ul>
+</nav>
+{/if}
+
 {/if}
 {/fragment}
 
@@ -300,9 +389,15 @@
 {@String message}
 {@java.util.List<io.archton.scaffold.entity.Person> persons}
 {@String filterText}
+{@int page}
+{@int size}
+{@int totalPages}
+{@long totalCount}
+{@java.util.List<java.lang.Integer> pageWindow}
+{@boolean hasNextPage}
 <div hx-on::load="UIkit.modal('#person-modal').hide()"></div>
 <div id="person-table-container" hx-swap-oob="innerHTML">
-    {#include $table persons=persons filterText=filterText /}
+    {#include $table persons=persons filterText=filterText page=page size=size totalPages=totalPages totalCount=totalCount pageWindow=pageWindow hasNextPage=hasNextPage /}
 </div>
 {/fragment}
 

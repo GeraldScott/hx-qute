@@ -63,18 +63,20 @@ public class PersonResource {
             int size,
             int totalPages,
             long totalCount,
-            List<Integer> pageWindow
+            List<Integer> pageWindow,
+            boolean hasNextPage
         );
 
         // Fragments (type-safe, compile-time validated)
         public static native TemplateInstance person$table(
             List<Person> persons,
             String filterText,
-            int currentPage,
-            int pageSize,
+            int page,
+            int size,
             int totalPages,
             long totalCount,
-            List<Integer> pageWindow
+            List<Integer> pageWindow,
+            boolean hasNextPage
         );
 
         // Modal content fragments (for future use cases)
@@ -103,11 +105,12 @@ public class PersonResource {
             String message,
             List<Person> persons,
             String filterText,
-            int currentPage,
-            int pageSize,
+            int page,
+            int size,
             int totalPages,
             long totalCount,
-            List<Integer> pageWindow
+            List<Integer> pageWindow,
+            boolean hasNextPage
         );
         public static native TemplateInstance person$modal_success_row(
             String message,
@@ -139,10 +142,11 @@ public class PersonResource {
         int totalPages = query.pageCount();
         long totalCount = query.count();
         List<Integer> pageWindow = computePageWindow(page, totalPages);
+        boolean hasNextPage = page + 1 < totalPages;
 
         // If HTMX request, return only the table fragment
         if ("true".equals(hxRequest)) {
-            return Templates.person$table(persons, filter, page, size, totalPages, totalCount, pageWindow);
+            return Templates.person$table(persons, filter, page, size, totalPages, totalCount, pageWindow, hasNextPage);
         }
 
         // Full page request
@@ -164,7 +168,8 @@ public class PersonResource {
             size,
             totalPages,
             totalCount,
-            pageWindow
+            pageWindow,
+            hasNextPage
         );
     }
 
@@ -284,7 +289,8 @@ public class PersonResource {
         int totalPages = refreshQuery.pageCount();
         long totalCount = refreshQuery.count();
         List<Integer> pageWindow = computePageWindow(0, totalPages);
-        return Templates.person$modal_success("Person created successfully.", persons, null, 0, 25, totalPages, totalCount, pageWindow);
+        boolean hasNextPage = totalPages > 1;
+        return Templates.person$modal_success("Person created successfully.", persons, null, 0, 25, totalPages, totalCount, pageWindow, hasNextPage);
     }
 
     @PUT
