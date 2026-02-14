@@ -76,6 +76,9 @@ public class PersonResource {
             List<Gender> genderChoices,
             String error
         );
+        public static native TemplateInstance person$modal_detail(
+            Person person
+        );
         public static native TemplateInstance person$modal_delete(
             Person person,
             String error
@@ -129,6 +132,17 @@ public class PersonResource {
         );
     }
 
+
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance detail(@PathParam("id") Long id) {
+        Person person = personRepository.findById(id);
+        if (person == null) {
+            return Templates.person$modal_detail(new Person());
+        }
+        return Templates.person$modal_detail(person);
+    }
 
     @GET
     @Path("/create")
