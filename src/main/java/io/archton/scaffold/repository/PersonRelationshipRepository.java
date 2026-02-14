@@ -4,7 +4,9 @@ import io.archton.scaffold.entity.PersonRelationship;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityGraph;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class PersonRelationshipRepository implements PanacheRepository<PersonRelationship> {
@@ -75,5 +77,21 @@ public class PersonRelationshipRepository implements PanacheRepository<PersonRel
      */
     public long countBySourcePerson(Long sourcePersonId) {
         return count("sourcePerson.id", sourcePersonId);
+    }
+
+    /**
+     * Find all relationships where any of the given person IDs appear as source or related person.
+     * Used for BFS network traversal: each depth level queries the current frontier.
+     */
+    public List<PersonRelationship> findConnectionsForPersonIds(Set<Long> personIds) {
+        if (personIds == null || personIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        EntityGraph<?> graph = getEntityManager().getEntityGraph("PersonRelationship.withFullDetails");
+
+        return find("sourcePerson.id IN ?1 OR relatedPerson.id IN ?1", List.copyOf(personIds))
+            .withHint(FETCH_GRAPH_HINT, graph)
+            .list();
     }
 }

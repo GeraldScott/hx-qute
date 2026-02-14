@@ -6,16 +6,20 @@ import io.archton.scaffold.entity.Relationship;
 import io.archton.scaffold.repository.PersonRepository;
 import io.archton.scaffold.repository.PersonRelationshipRepository;
 import io.archton.scaffold.repository.RelationshipRepository;
+import io.archton.scaffold.service.NetworkService;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -41,6 +45,9 @@ public class GraphResource {
     RelationshipRepository relationshipRepository;
 
     @Inject
+    NetworkService networkService;
+
+    @Inject
     SecurityIdentity securityIdentity;
 
     @CheckedTemplate
@@ -48,6 +55,13 @@ public class GraphResource {
         public static native TemplateInstance graph(
             String currentPage, String userName, List<Relationship> relationships);
         public static native TemplateInstance personModal(Person person);
+        public static native TemplateInstance network(
+            String title, String currentPage, String userName,
+            NetworkService.NetworkResult network, int depth,
+            boolean hasDepth2, boolean hasDepth3);
+        public static native TemplateInstance network$connections(
+            NetworkService.NetworkResult network, int depth,
+            boolean hasDepth2, boolean hasDepth3);
     }
 
     // Inner DTO classes
@@ -96,6 +110,39 @@ public class GraphResource {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
         return Templates.personModal(person);
+    }
+
+    @GET
+    @Path("/network/{personId}")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance showPersonNetwork(
+            @PathParam("personId") Long personId,
+            @QueryParam("depth") @DefaultValue("1") int depth,
+            @HeaderParam("HX-Request") String hxRequest) {
+
+        if (depth < 1 || depth > 3) depth = 1;
+
+        NetworkService.NetworkResult network = networkService.buildNetwork(personId, depth);
+        if (network == null) {
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        boolean hasDepth2 = depth >= 2;
+        boolean hasDepth3 = depth >= 3;
+
+        if ("true".equals(hxRequest)) {
+            return Templates.network$connections(network, depth, hasDepth2, hasDepth3);
+        }
+
+        return Templates.network(
+            "Network: " + network.focalPerson().getDisplayName(),
+            "graph",
+            getCurrentUserName(),
+            network,
+            depth,
+            hasDepth2,
+            hasDepth3
+        );
     }
 
     private String getCurrentUserName() {

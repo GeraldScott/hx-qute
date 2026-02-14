@@ -8,14 +8,25 @@ import java.time.Instant;
     @UniqueConstraint(name = "uk_person_relationship",
         columnNames = {"source_person_id", "related_person_id", "relationship_id"})
 })
-@NamedEntityGraph(
-    name = "PersonRelationship.withDetails",
-    attributeNodes = {
-        @NamedAttributeNode(value = "relatedPerson", subgraph = "person-title"),
-        @NamedAttributeNode("relationship")
-    },
-    subgraphs = @NamedSubgraph(name = "person-title", attributeNodes = @NamedAttributeNode("title"))
-)
+@NamedEntityGraphs({
+    @NamedEntityGraph(
+        name = "PersonRelationship.withDetails",
+        attributeNodes = {
+            @NamedAttributeNode(value = "relatedPerson", subgraph = "person-title"),
+            @NamedAttributeNode("relationship")
+        },
+        subgraphs = @NamedSubgraph(name = "person-title", attributeNodes = @NamedAttributeNode("title"))
+    ),
+    @NamedEntityGraph(
+        name = "PersonRelationship.withFullDetails",
+        attributeNodes = {
+            @NamedAttributeNode(value = "sourcePerson", subgraph = "person-title"),
+            @NamedAttributeNode(value = "relatedPerson", subgraph = "person-title"),
+            @NamedAttributeNode("relationship")
+        },
+        subgraphs = @NamedSubgraph(name = "person-title", attributeNodes = @NamedAttributeNode("title"))
+    )
+})
 public class PersonRelationship {
 
     @Id

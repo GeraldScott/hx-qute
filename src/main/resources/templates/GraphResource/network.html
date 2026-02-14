@@ -1,0 +1,117 @@
+{@io.archton.scaffold.service.NetworkService$NetworkResult network}
+{@int depth}
+{@boolean hasDepth2}
+{@boolean hasDepth3}
+{#include base.html}
+{#title}{title}{/title}
+
+<!-- Page header with person name and back link -->
+<div class="uk-flex uk-flex-between uk-flex-middle uk-margin-bottom">
+    <div>
+        <h1 class="uk-heading-small uk-margin-remove">
+            Network: {network.focalPerson.getDisplayName()}
+        </h1>
+        <p class="uk-text-meta uk-margin-remove-top">
+            {network.totalConnections} connection{#if network.totalConnections != 1}s{/if} found
+            at depth {depth}
+        </p>
+    </div>
+    <div>
+        <a href="/persons" class="uk-button uk-button-default uk-button-small">
+            <span uk-icon="arrow-left"></span> Back to People
+        </a>
+    </div>
+</div>
+
+<!-- Depth selector card -->
+<div class="uk-card uk-card-default uk-card-small uk-card-body uk-margin-bottom">
+    <div class="uk-grid-small uk-flex-middle" uk-grid>
+        <div class="uk-width-auto">
+            <label class="uk-form-label">Depth:</label>
+        </div>
+        <div class="uk-width-auto">
+            <select name="depth" class="uk-select uk-form-small uk-form-width-small"
+                    hx-get="/graph/network/{network.focalPerson.id}"
+                    hx-target="#network-container"
+                    hx-push-url="true">
+                <option value="1" {#if depth == 1}selected{/if}>1st Degree</option>
+                <option value="2" {#if depth == 2}selected{/if}>2nd Degree</option>
+                <option value="3" {#if depth == 3}selected{/if}>3rd Degree</option>
+            </select>
+        </div>
+        <div class="uk-width-expand">
+            <span class="uk-text-small uk-text-muted">
+                {#if depth == 1}Direct connections only{/if}
+                {#if hasDepth2 && !hasDepth3}Includes friends of friends{/if}
+                {#if hasDepth3}Extended network (3 degrees){/if}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Network connections container (HTMX swap target) -->
+{#fragment id=connections}
+<div id="network-container">
+    {#if network.totalConnections == 0}
+        <div class="uk-card uk-card-default uk-card-body uk-text-center">
+            <span uk-icon="icon: users; ratio: 3" class="uk-text-muted"></span>
+            <p class="uk-text-large uk-text-muted uk-margin-small-top">No connections found</p>
+            <p class="uk-text-small uk-text-muted">This person has no recorded relationships.</p>
+        </div>
+    {#else}
+        {#for entry in network.connectionsByDepth.entrySet()}
+            {#if !entry.value.isEmpty}
+            <div class="uk-margin-bottom">
+                <h3 class="uk-heading-bullet">
+                    {#if entry.key == 1}Direct Connections (1st Degree){/if}
+                    {#if entry.key == 2}2nd Degree Connections{/if}
+                    {#if entry.key == 3}3rd Degree Connections{/if}
+                    <span class="uk-badge">{entry.value.size}</span>
+                </h3>
+                <div class="uk-overflow-auto">
+                    <table class="uk-table uk-table-hover uk-table-divider uk-table-small uk-table-middle">
+                        <thead>
+                            <tr>
+                                <th>Person</th>
+                                <th>Relationship</th>
+                                {#if entry.key > 1}
+                                <th>Connected Through</th>
+                                {/if}
+                                <th class="uk-table-shrink">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#for conn in entry.value}
+                            <tr>
+                                <td>{conn.person.getDisplayName()}</td>
+                                <td>
+                                    <span class="uk-label">{conn.relationship.description}</span>
+                                </td>
+                                {#if entry.key > 1}
+                                <td>
+                                    <a href="/graph/network/{conn.connectedThrough.id}"
+                                       class="uk-link-muted">
+                                        {conn.connectedThrough.getDisplayName()}
+                                    </a>
+                                </td>
+                                {/if}
+                                <td class="uk-text-nowrap">
+                                    <a class="uk-button uk-button-small uk-button-default"
+                                       href="/graph/network/{conn.person.id}"
+                                       uk-tooltip="View Network">
+                                        <span uk-icon="git-fork"></span>
+                                    </a>
+                                </td>
+                            </tr>
+                            {/for}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {/if}
+        {/for}
+    {/if}
+</div>
+{/fragment}
+
+{/}
