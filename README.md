@@ -9,6 +9,7 @@ Once the SKILL is tested, it moves to hx-scaffold for general release.
 ## Technology stack
 
 - Quarkus Java framework
+- Java 21
 - HTMX for SPA-like client-side interactions 
 - Qute template engine
 - UIkit 3.25 for styling
@@ -18,7 +19,7 @@ Once the SKILL is tested, it moves to hx-scaffold for general release.
 - Quarkus Security JPA for authentication
 - PostgreSQL for database
 - Flyway for database migrations
-- Docker for containerization
+- Podman for containerization
 - Jaeger for tracing
 - Prometheus for monitoring
 
@@ -33,20 +34,23 @@ sdk install quarkus
 Then generate the project:
 
 ```bash
-quarkus create app io.archton.scaffold:hx-qute:1.0.0 \
-  -P io.quarkus.platform:quarkus-bom:3.30.3 \
-  -x rest-qute \
-  -x arc \
-  -x flyway \
-  -x hibernate-orm-panache \
-  -x hibernate-validator \
-  -x jdbc-postgresql \
-  -x smallrye-health \
-  -x security-jpa
+quarkus create app \
+  --description='Quarkus+HTMX prototype' \
+  --extensions='rest-qute,arc,flyway,hibernate-orm-panache,hibernate-validator,jdbc-postgresql,smallrye-health,security-jpa' \
+  --maven \
+  --app-config='quarkus.log.console.darken=1' \
+  --no-code \
+  io.archton.scaffold:hx-qute:1.0.0
 ```
 
 ## Packaging and running the application
 ### Running in DEV mode
+
+Pre-requisite for Testcontainers to run postgresql using Podman
+```bash
+systemctl --user enable podman.socket --now
+export DOCKER_HOST=unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')
+```
 
 Run the application in dev mode to enable live coding:
 
