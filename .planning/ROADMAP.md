@@ -26,10 +26,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Success Criteria** (what must be TRUE):
   1. User can click a link on person list row to view that person's connection network
   2. User can click a link on person list row to view that person's detail page
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] TBD
+- [ ] 01-01-PLAN.md — Add View Network and View Details action buttons to person list rows
 
 ### Phase 2: Pagination
 **Goal**: Person list displays manageable page sizes instead of unbounded results
@@ -82,11 +82,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Quick Actions | 0/TBD | Not started | - |
+| 1. Quick Actions | 0/1 | Planned | - |
 | 2. Pagination | 0/TBD | Not started | - |
 | 3. Network Discovery | 0/TBD | Not started | - |
 | 4. Evidence Capture | 0/TBD | Not started | - |
 
 ---
 *Created: 2026-02-14*
-*Last updated: 2026-02-14 after roadmap creation*
+*Last updated: 2026-02-14 after Phase 1 planning*
