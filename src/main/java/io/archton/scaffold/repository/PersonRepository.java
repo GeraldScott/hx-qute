@@ -1,6 +1,7 @@
 package io.archton.scaffold.repository;
 
 import io.archton.scaffold.entity.Person;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
@@ -27,6 +28,18 @@ public class PersonRepository implements PanacheRepository<Person> {
                 Person.class
             )
             .getResultList();
+    }
+
+    public PanacheQuery<Person> findByFilterPaged(String filterText, String sortField, String sortDir) {
+        String orderBy = buildOrderBy(sortField, sortDir);
+        if (filterText != null && !filterText.isBlank()) {
+            String pattern = "%" + filterText.toLowerCase().trim() + "%";
+            return find(
+                "LOWER(firstName) LIKE ?1 OR LOWER(lastName) LIKE ?1 OR LOWER(email) LIKE ?1 " + orderBy,
+                pattern
+            );
+        }
+        return find("FROM Person " + orderBy);
     }
 
     public List<Person> findByFilter(String filterText, String sortField, String sortDir) {

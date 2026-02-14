@@ -6,12 +6,15 @@ import io.archton.scaffold.entity.Title;
 import io.archton.scaffold.repository.GenderRepository;
 import io.archton.scaffold.repository.PersonRepository;
 import io.archton.scaffold.repository.TitleRepository;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
 import io.quarkus.qute.CheckedTemplate;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -24,6 +27,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/persons")
@@ -54,13 +58,23 @@ public class PersonResource {
             List<Gender> genderChoices,
             String filterText,
             String sortField,
-            String sortDir
+            String sortDir,
+            int page,
+            int size,
+            int totalPages,
+            long totalCount,
+            List<Integer> pageWindow
         );
 
         // Fragments (type-safe, compile-time validated)
         public static native TemplateInstance person$table(
             List<Person> persons,
-            String filterText
+            String filterText,
+            int currentPage,
+            int pageSize,
+            int totalPages,
+            long totalCount,
+            List<Integer> pageWindow
         );
 
         // Modal content fragments (for future use cases)
@@ -88,7 +102,12 @@ public class PersonResource {
         public static native TemplateInstance person$modal_success(
             String message,
             List<Person> persons,
-            String filterText
+            String filterText,
+            int currentPage,
+            int pageSize,
+            int totalPages,
+            long totalCount,
+            List<Integer> pageWindow
         );
         public static native TemplateInstance person$modal_success_row(
             String message,
@@ -105,13 +124,25 @@ public class PersonResource {
             @HeaderParam("HX-Request") String hxRequest,
             @QueryParam("filter") String filter,
             @QueryParam("sortField") String sortField,
-            @QueryParam("sortDir") String sortDir) {
+            @QueryParam("sortDir") String sortDir,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("25") int size) {
 
-        List<Person> persons = personRepository.findByFilter(filter, sortField, sortDir);
+        // Clamp size to allowed values
+        if (size != 10 && size != 25 && size != 50 && size != 100) {
+            size = 25;
+        }
+
+        PanacheQuery<Person> query = personRepository.findByFilterPaged(filter, sortField, sortDir);
+        query.page(Page.of(page, size));
+        List<Person> persons = query.list();
+        int totalPages = query.pageCount();
+        long totalCount = query.count();
+        List<Integer> pageWindow = computePageWindow(page, totalPages);
 
         // If HTMX request, return only the table fragment
         if ("true".equals(hxRequest)) {
-            return Templates.person$table(persons, filter);
+            return Templates.person$table(persons, filter, page, size, totalPages, totalCount, pageWindow);
         }
 
         // Full page request
@@ -128,7 +159,12 @@ public class PersonResource {
             genderChoices,
             filter,
             sortField,
-            sortDir
+            sortDir,
+            page,
+            size,
+            totalPages,
+            totalCount,
+            pageWindow
         );
     }
 
@@ -241,9 +277,14 @@ public class PersonResource {
         // Persist
         personRepository.persist(person);
 
-        // Return success with OOB table refresh
-        List<Person> persons = personRepository.findByFilter(null, null, null);
-        return Templates.person$modal_success("Person created successfully.", persons, null);
+        // Return success with OOB table refresh (reset to page 0, size 25)
+        PanacheQuery<Person> refreshQuery = personRepository.findByFilterPaged(null, null, null);
+        refreshQuery.page(Page.of(0, 25));
+        List<Person> persons = refreshQuery.list();
+        int totalPages = refreshQuery.pageCount();
+        long totalCount = refreshQuery.count();
+        List<Integer> pageWindow = computePageWindow(0, totalPages);
+        return Templates.person$modal_success("Person created successfully.", persons, null, 0, 25, totalPages, totalCount, pageWindow);
     }
 
     @PUT
@@ -342,6 +383,29 @@ public class PersonResource {
         return Templates.person$modal_success_row("Person updated successfully.", person);
     }
 
+
+    /**
+     * Compute visible page numbers for pagination with ellipsis.
+     * Returns list of page indices (0-indexed). -1 indicates ellipsis placeholder.
+     */
+    private List<Integer> computePageWindow(int currentPage, int totalPages) {
+        List<Integer> pages = new ArrayList<>();
+        if (totalPages <= 7) {
+            for (int i = 0; i < totalPages; i++) pages.add(i);
+            return pages;
+        }
+        // Always show first page
+        pages.add(0);
+        if (currentPage > 2) pages.add(-1); // ellipsis
+        // Window around current page
+        for (int i = Math.max(1, currentPage - 1); i <= Math.min(totalPages - 2, currentPage + 1); i++) {
+            pages.add(i);
+        }
+        if (currentPage < totalPages - 3) pages.add(-1); // ellipsis
+        // Always show last page
+        pages.add(totalPages - 1);
+        return pages;
+    }
 
     /**
      * Display delete confirmation modal.
