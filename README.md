@@ -46,7 +46,7 @@ quarkus create app \
 ## Packaging and running the application
 ### Running in DEV mode
 
-Pre-requisite for Testcontainers to run postgresql using Podman
+Pre-requisite for Testcontainers to run postgresql using Podman. Always run this first.
 ```bash
 systemctl --user enable podman.socket --now
 export DOCKER_HOST=unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')
