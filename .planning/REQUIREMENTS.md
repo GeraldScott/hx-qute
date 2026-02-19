@@ -1,7 +1,7 @@
 # Requirements: HX-Qute HTMX Cleanup
 
 **Defined:** 2026-02-19
-**Core Value:** Clean, copy-worthy reference patterns — no dead code
+**Core Value:** Clean, copy-worthy reference patterns -- no dead code
 
 ## v1 Requirements
 
@@ -55,8 +55,8 @@
 **Coverage:**
 - v1 requirements: 8 total
 - Mapped to phases: 8
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 after roadmap creation*
