@@ -197,3 +197,17 @@ Use after consulting primary sources for:
 4. **Security compliance**: Security decisions reference NIST SP 800-63B-4
 
 ---
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues at `GeraldScott/hx-qute` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical strings (defaults, unmodified): `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root (created lazily by `/grill-with-docs`). See `docs/agents/domain.md`.
