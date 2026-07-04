@@ -1,0 +1,5 @@
+# Issue-driven engineering workflow replaces spec-driven specs/ system
+
+The project originally used a spec-driven workflow: `specs/NNN-feature/` folders with use-cases/spec/tasks/test-cases files, orchestrated by `/implement-feature` and `/validate-feature` slash commands, tracked via `specs/PROJECT-PLAN.md` and `docs/USER-STORIES.md`. This ran alongside the issue-driven engineering skills (`triage` → `to-prd` → `to-issues` → `tdd`, with `grill-with-docs` maintaining `CONTEXT.md` and these ADRs), and the two systems gave contradictory instructions — implement-then-test vs. test-first, tasks.md files vs. GitHub Issues.
+
+We deleted the spec-driven system (2026-07-04) and settled on the issue-driven workflow as the single spine: work is defined and tracked as GitHub Issues at `GeraldScott/hx-qute`, implemented test-first via the `tdd` skill, with domain language and decisions captured in `CONTEXT.md` and `docs/adr/`. This repo is a template for new applications, so having exactly one workflow that clones inherit matters more than either system's individual merits.
