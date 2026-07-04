@@ -68,7 +68,7 @@ quarkus dev
 | Field | Value |
 |-------|-------|
 | Email | `admin@example.com` |
-| Password | `AdminPassword123` |
+| Password | `MyAdminPassword` |
 
 ### Packaging  the application
 #### Layered package

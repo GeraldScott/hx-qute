@@ -23,7 +23,7 @@ If the prompt names an issue number, read the acceptance criteria with the invok
 - Login as admin:
   - Navigate to `/login`
   - Fill email: `admin@example.com`
-  - Fill password: `AdminPassword123`
+  - Fill password: `MyAdminPassword`
   - Click login button
 - Verify login success (expected page loads)
 
@@ -88,7 +88,7 @@ Include the failure screenshots' context (what the page showed) in the Notes col
 
 | Email | Password | Role |
 |-------|----------|------|
-| admin@example.com | AdminPassword123 | admin |
+| admin@example.com | MyAdminPassword | admin |
 
 These must stay in sync with the seed migration `src/main/resources/db/migration/V1.2.1__Insert_admin_user.sql`. If login fails, check that file before reporting a bug.
 

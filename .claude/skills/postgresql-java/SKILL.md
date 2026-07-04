@@ -21,7 +21,9 @@ V1.4.0__Create_person_table.sql
 V1.4.1__Insert_person_data.sql
 ```
 
-For a new entity, take the next entity-seq **above the highest existing one** (historical gaps like `1` stay unused — Flyway skips versions that sort below already-applied migrations). Never edit an applied migration — schema changes to existing tables get a new version (e.g. `V1.4.2__Add_person_phone_column.sql`). Seed data lives in its own `.1` migration, never mixed with DDL.
+Every new migration takes the next entity-seq **above the highest existing one** (historical gaps like `1` stay unused, and back-filling an old entity's seq like `V1.2.2` fails Flyway's out-of-order validation). Seed data lives in its own `.1` migration, never mixed with DDL.
+
+**Development-phase policy: migrations are mutable.** This project is pre-release and the database is disposable — small changes (seed values, column tweaks) are edited into the existing migration, NOT shipped as a new version. After editing an already-applied migration, recreate the database (or fix `flyway_schema_history` by hand); Flyway's checksum validation will otherwise fail at startup. Do not accumulate patch migrations during development. Once the project ships, this inverts: applied migrations become immutable and every change is a new version.
 
 ## Table DDL Conventions
 
@@ -50,7 +52,7 @@ CREATE TABLE widget (
 
 > **Legacy note:** tables created before these rules (`gender`, `title`, `person`, `user_login`, `relationship`, `person_relationship`) use `BIGSERIAL` and `VARCHAR(n)`. Do **not** retrofit them — applied migrations are history. Match the new rules in new migrations only; when altering a legacy table, new columns follow the new rules.
 
-The admin seed user in `V1.2.1__Insert_admin_user.sql` (`admin@example.com` / `AdminPassword123`, BCrypt cost 12) is used by the `e2e-test-runner` agent — keep them in sync if it changes.
+The admin seed user in `V1.2.1__Insert_admin_user.sql` (`admin@example.com` / `MyAdminPassword`, BCrypt cost 12) is used by the `e2e-test-runner` agent and `GenderResourceTest` — keep them in sync if it changes.
 
 ## Repository Pattern
 

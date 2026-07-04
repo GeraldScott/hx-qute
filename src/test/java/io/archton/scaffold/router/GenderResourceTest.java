@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GenderResourceTest {
 
     private static final String ADMIN_EMAIL = "admin@example.com";
-    private static final String ADMIN_PASSWORD = "AdminPassword123";
+    private static final String ADMIN_PASSWORD = "MyAdminPassword";
     private static final String TEST_CODE = "Y";
     private static final String TEST_DESCRIPTION = "Lifecycle Test";
 
