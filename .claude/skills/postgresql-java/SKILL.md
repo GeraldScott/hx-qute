@@ -75,7 +75,7 @@ Queries are always parameterized (`count("code = ?1 AND id != ?2", code, id)`) �
 
 ## Dev Database
 
-Connection settings come from `.env` (gitignored — see `.env` locally for credentials; Quarkus reads `QUARKUS_DATASOURCE_*` vars). Database `hx_qute` on localhost. Flyway runs at startup (`quarkus.flyway.migrate-at-start=true`); a failed migration checksum means someone edited an applied file — restore it and add a new version instead.
+Connection settings come from `.env` (gitignored; `.env.example` is the committed reference — Quarkus reads `QUARKUS_DATASOURCE_*` vars). Database `hx_qute` on localhost, owned by the `scaffold_dba` role — the app connects as `scaffold_dba`, never as `postgres`, so every Flyway-created object gets the right owner. Flyway runs at startup (`quarkus.flyway.migrate-at-start=true`). To rebuild from scratch after editing migrations: `QUARKUS_FLYWAY_CLEAN_AT_START=true QUARKUS_FLYWAY_CLEAN_DISABLED=false ./mvnw test -Dtest=GenderRepositoryTest` (watch for deleted migrations lingering in `target/classes/db/migration/` — Maven doesn't remove stale resources).
 
 ## Related Skills
 
