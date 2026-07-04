@@ -1,287 +1,59 @@
 ---
 name: java-code-review
-description: Java code review checklist and patterns for identifying bugs, security vulnerabilities, performance issues, and style violations. Use when reviewing Java code, performing code audits, identifying anti-patterns, or when asked to analyze existing Java codebases for quality issues.
+description: Use when reviewing Java code in this project — pull requests, pre-commit review, auditing a resource/entity/repository/migration for convention drift, or checking security of new endpoints.
 ---
 
-# Java Code Review
+# Project Code Review Checklist
 
-## Review Checklist
+Review against *this project's* conventions (defined in `java-patterns`, `postgresql-java`, `htmx-patterns`), not generic Java advice. In particular:
 
-### Critical (Must Fix)
-- [ ] Null pointer risks without proper handling
-- [ ] Resource leaks (streams, connections not closed)
-- [ ] SQL injection vulnerabilities
-- [ ] Hardcoded credentials or secrets
-- [ ] Missing input validation
-- [ ] Unchecked exceptions that could crash application
-- [ ] Thread safety issues in shared state
-- [ ] Infinite loops or recursion without base case
+**Do NOT flag these — they are deliberate choices here:**
+- Entities passed directly to Qute templates (there is no DTO layer; `@CheckedTemplate` provides the type safety)
+- Public fields on entities without getters/setters (Panache style)
+- CRUD validation living in resource methods rather than a service layer (correct for simple entities — `GenderResource` is the exemplar)
 
-### Important (Should Fix)
-- [ ] Missing or incorrect equals/hashCode
-- [ ] Mutable objects exposed from getters
-- [ ] Empty catch blocks swallowing exceptions
-- [ ] N+1 query patterns in ORM code
-- [ ] Missing @Transactional where needed
-- [ ] Improper use of Optional
-- [ ] String concatenation in loops
-- [ ] Blocking calls in reactive streams
+## Resource Endpoints
 
-### Improvement (Nice to Fix)
-- [ ] Magic numbers without constants
-- [ ] Long methods (>30 lines)
-- [ ] Deep nesting (>3 levels)
-- [ ] Missing JavaDoc on public API
-- [ ] Inconsistent naming conventions
-- [ ] Dead code or unused imports
+- [ ] Returns `TemplateInstance`, not `Response` wrappers
+- [ ] `@Transactional` on every POST/PUT/DELETE method
+- [ ] Class-level `@RolesAllowed`, **and** the path is listed in a `quarkus.http.auth.permission.*` entry in `application.properties` — a new endpoint path missing from route protection is a security finding, not a style nit
+- [ ] List endpoint dispatches on `@HeaderParam("HX-Request")`: fragment for HTMX, full page otherwise
+- [ ] Validation failures re-render the modal fragment with an error message *and the user's input preserved* — never throw for form validation
+- [ ] Update-time uniqueness uses `existsBy…AndIdNot(value, id)`, not `existsBy…`
+- [ ] DELETE checks referential integrity via the repository's `isReferencedBy…` method and returns a modal error instead of deleting (the `// TODO` blocks in `GenderResource.delete`, `TitleResource`, `RelationshipResource` are known violations of this rule — new code must not copy them)
+- [ ] Audit fields set from `SecurityIdentity` with the `"system"` anonymous fallback
 
-## Common Anti-Patterns
+## Entities & Persistence
 
-### Null Handling
+- [ ] `@Column` lengths/nullability/uniqueness mirror the Flyway DDL exactly
+- [ ] Audit columns + `@PrePersist`/`@PreUpdate` callbacks present
+- [ ] Unique constraints named `uk_{table}_{column}`
+- [ ] Queries parameterized (`?1`) — string concatenation into JPQL/SQL is a critical finding
+- [ ] Associations that render in lists use `@NamedEntityGraph` or explicit fetch to avoid N+1 (exemplar: `PersonRelationship`)
 
-❌ Bad:
-```java
-public String getName() {
-    return customer.getAddress().getCity().getName();  // NPE risk
-}
-```
+## Migrations
 
-✅ Good:
-```java
-public Optional<String> getCityName() {
-    return Optional.ofNullable(customer)
-        .map(Customer::getAddress)
-        .map(Address::getCity)
-        .map(City::getName);
-}
-```
+- [ ] Filename follows `V{major}.{entity-seq}.{step}__{Description}.sql`; step 0 = DDL, step 1 = seed
+- [ ] No edits to already-applied migrations (checksum failure at startup)
+- [ ] New table has the four audit columns and `TIMESTAMP WITH TIME ZONE`
 
-### Resource Management
+## Templates & HTMX
 
-❌ Bad:
-```java
-InputStream is = new FileInputStream(file);
-String content = new String(is.readAllBytes());  // Never closed!
-```
+- [ ] Fragment names and element IDs follow the `htmx-patterns` conventions (`{entity}$table`, `#{entity}-modal-body`, `create-{entity}-{field}` input IDs)
+- [ ] No `{x.raw}` on user-supplied content (XSS); Qute escapes by default — keep it that way
+- [ ] `rendered=false` on page fragments
 
-✅ Good:
-```java
-try (var is = new FileInputStream(file)) {
-    return new String(is.readAllBytes());
-}
-```
+## Security & Hygiene
 
-### Exception Handling
+- [ ] No credentials/secrets in code, config, or logs (dev credentials belong in `.env`, seed users in migrations)
+- [ ] Passwords hashed with `BcryptUtil.bcryptHash(pw, 12)`; password rules honor `app.security.password.*` config (NIST SP 800-63B-4: length 15–128, no composition rules)
+- [ ] New exceptions extend the `service.exception` hierarchy so `GlobalExceptionMapper` assigns the right status (404/409)
+- [ ] Empty catch blocks, swallowed exceptions, or `printStackTrace` → finding (log via JBoss `Logger` as in `GlobalExceptionMapper`)
 
-❌ Bad:
-```java
-try {
-    processData();
-} catch (Exception e) {
-    // Ignored
-}
-```
+## Severity Labels
 
-✅ Good:
-```java
-try {
-    processData();
-} catch (DataException e) {
-    log.error("Failed to process: {}", e.getMessage());
-    throw new ServiceException("Processing failed", e);
-}
-```
+Use these in review output: 🔴 **CRITICAL** (security, data loss, missing route protection, SQL injection) · 🟡 **IMPORTANT** (convention violation, missing `@Transactional`, N+1) · 💡 **Suggestion**.
 
-### Collections
+## Related Skills
 
-❌ Bad:
-```java
-List<String> names = new ArrayList<>();
-for (Customer c : customers) {
-    names.add(c.getName());  // Use Stream
-}
-```
-
-✅ Good:
-```java
-List<String> names = customers.stream()
-    .map(Customer::getName)
-    .toList();
-```
-
-### Optional Usage
-
-❌ Bad:
-```java
-Optional<User> user = findUser(id);
-if (user.isPresent()) {
-    return user.get().getName();
-}
-return "Unknown";
-```
-
-✅ Good:
-```java
-return findUser(id)
-    .map(User::getName)
-    .orElse("Unknown");
-```
-
-### Entity Exposure
-
-❌ Bad:
-```java
-@GET
-public Customer getCustomer(@PathParam("id") Long id) {
-    return customerRepository.findById(id);  // Exposes internal entity
-}
-```
-
-✅ Good:
-```java
-@GET
-public CustomerDTO getCustomer(@PathParam("id") Long id) {
-    return customerRepository.findById(id)
-        .map(this::toDTO)
-        .orElseThrow(NotFoundException::new);
-}
-```
-
-## Security Review Points
-
-### SQL Injection
-```java
-// ❌ VULNERABLE
-query = "SELECT * FROM users WHERE name = '" + userInput + "'";
-
-// ✅ SAFE - Parameterized
-query = "SELECT * FROM users WHERE name = ?";
-stmt.setString(1, userInput);
-
-// ✅ SAFE - Panache
-User.find("name", userInput).firstResult();
-```
-
-### Input Validation
-```java
-// ✅ Validate all external input
-public void updateEmail(@Valid @NotBlank @Email String email) {
-    // email is validated
-}
-```
-
-### Sensitive Data
-```java
-// ❌ Logging sensitive data
-log.info("User login: " + username + " password: " + password);
-
-// ✅ Mask sensitive data
-log.info("User login: {}", username);
-```
-
-## Performance Review Points
-
-### N+1 Queries
-```java
-// ❌ N+1 problem
-for (Order order : orders) {
-    order.getCustomer().getName();  // Query per iteration
-}
-
-// ✅ Eager fetch
-@Query("SELECT o FROM Order o JOIN FETCH o.customer")
-List<Order> findAllWithCustomers();
-```
-
-### String Concatenation
-```java
-// ❌ Creates many String objects
-String result = "";
-for (String s : items) {
-    result += s + ",";
-}
-
-// ✅ Use StringBuilder
-String result = String.join(",", items);
-// or
-var sb = new StringBuilder();
-items.forEach(s -> sb.append(s).append(","));
-```
-
-### Boxing/Unboxing
-```java
-// ❌ Unnecessary boxing
-List<Integer> numbers = new ArrayList<>();
-for (int i = 0; i < 1000; i++) {
-    numbers.add(i);  // Auto-boxing
-}
-
-// ✅ Use primitive collections for performance-critical code
-IntList numbers = new IntArrayList();
-```
-
-## Transactional Patterns
-
-### Missing @Transactional
-```java
-// ❌ No transaction boundary
-public void transfer(Long fromId, Long toId, BigDecimal amount) {
-    Account from = accountRepo.findById(fromId);
-    Account to = accountRepo.findById(toId);
-    from.debit(amount);
-    to.credit(amount);  // If this fails, debit already happened!
-}
-
-// ✅ Atomic transaction
-@Transactional
-public void transfer(Long fromId, Long toId, BigDecimal amount) {
-    Account from = accountRepo.findById(fromId);
-    Account to = accountRepo.findById(toId);
-    from.debit(amount);
-    to.credit(amount);
-}
-```
-
-### Transactional Scope
-```java
-// ❌ Transaction too broad (holds DB connection during HTTP call)
-@Transactional
-public void processOrder(Order order) {
-    save(order);
-    callExternalPaymentAPI(order);  // Slow HTTP call inside transaction!
-    updateStatus(order);
-}
-
-// ✅ Minimal transaction scope
-public void processOrder(Order order) {
-    saveOrder(order);  // @Transactional
-    PaymentResult result = callExternalPaymentAPI(order);  // Outside TX
-    updateOrderStatus(order, result);  // @Transactional
-}
-```
-
-## Review Comment Templates
-
-### Critical Issue
-```
-🔴 **CRITICAL**: [Description of the issue]
-This could cause [impact]. 
-Fix: [Suggested solution]
-```
-
-### Important Issue
-```
-🟡 **IMPORTANT**: [Description of the issue]
-Consider [suggestion] to improve [aspect].
-```
-
-### Minor Suggestion
-```
-💡 **Suggestion**: [Optional improvement]
-```
-
-### Question
-```
-❓ **Question**: [Clarification needed]
-Could you explain why [specific concern]?
-```
+- `java-patterns`, `postgresql-java`, `htmx-patterns` — the conventions this checklist enforces
