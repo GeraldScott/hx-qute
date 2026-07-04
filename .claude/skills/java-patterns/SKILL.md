@@ -77,6 +77,7 @@ Records are welcome for value types (search criteria, projections); pattern matc
 
 ## Related Skills
 
+- `quarkus-patterns` — the platform layer: CDI scopes/events, config binding, scheduling, test mocking strategy
 - `htmx-patterns` — fragment naming, OOB swaps, HX-Request dispatch
 - `postgresql-java` — migrations, DDL conventions, repository query naming
 - `java-code-review` — the review checklist that enforces all of the above

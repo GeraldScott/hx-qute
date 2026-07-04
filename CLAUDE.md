@@ -55,6 +55,7 @@ Project-specific conventions live in `.claude/skills/` — consult them before w
 | Skill | Covers |
 |-------|--------|
 | `htmx-patterns` | HTMX + Qute + UIkit conventions: swap strategies, OOB updates, modal CRUD, fragment naming |
+| `quarkus-patterns` | Quarkus platform idioms: CDI/ArC, events, config, scheduling, test mocking, Spring-leak review |
 | `java-patterns` | Resource/service/repository layering, entity conventions, exception handling |
 | `java-code-review` | Review checklist calibrated to this codebase's patterns |
 | `maven-java` | Build configuration, dependency policy, Quarkus extension management |

@@ -43,6 +43,10 @@ Review against *this project's* conventions (defined in `java-patterns`, `postgr
 - [ ] No `{x.raw}` on user-supplied content (XSS); Qute escapes by default — keep it that way
 - [ ] `rendered=false` on page fragments
 
+## Spring-isms
+
+- [ ] Run the Spring-ism smell checklist from the `quarkus-patterns` skill on any ported or Spring-flavored code (`org.springframework` imports, stereotype annotations, repository interfaces with derived queries, `@MockBean`, Spring cron strings)
+
 ## Security & Hygiene
 
 - [ ] No credentials/secrets in code, config, or logs (dev credentials belong in `.env`, seed users in migrations)
