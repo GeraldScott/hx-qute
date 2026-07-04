@@ -25,26 +25,30 @@ For a new entity, take the next entity-seq **above the highest existing one** (h
 
 ## Table DDL Conventions
 
-From `V1.0.0__Create_gender_table.sql`:
+**New tables (forward-only rules):**
 
 ```sql
-CREATE TABLE gender (
-    id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(1) NOT NULL UNIQUE,
-    description VARCHAR(255) NOT NULL UNIQUE,
+CREATE TABLE widget (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    code TEXT NOT NULL,
+    description TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by VARCHAR(255) NOT NULL DEFAULT 'system',
+    created_by TEXT NOT NULL DEFAULT 'system',
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(255)
+    updated_by TEXT,
+    CONSTRAINT uk_widget_code UNIQUE (code)
 );
 ```
 
 - Table names: singular, snake_case
-- PK: `id BIGSERIAL PRIMARY KEY`
+- PK: `id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY` — maps to Java `Long` with `GenerationType.IDENTITY`. Never `BIGSERIAL` (legacy spelling), never UUID without an explicit decision
+- Strings: always `TEXT`, never `VARCHAR(n)` — length limits are validation concerns, enforced in code
 - Audit columns on **every** table: `created_at`, `created_by`, `updated_at`, `updated_by` exactly as above
-- Timestamps are always `TIMESTAMP WITH TIME ZONE`
-- Unique constraints named `uk_{table}_{column}` when declared at entity level; the entity `@Column`/`@Table` mapping must mirror the DDL (lengths, nullability, constraint names)
+- Timestamps are always `TIMESTAMP WITH TIME ZONE`; in entities they map to `java.time.Instant` — never `OffsetDateTime`, `ZonedDateTime`, or `LocalDateTime` (PostgreSQL stores a UTC instant; the offset is discarded, so `Instant` is the honest type)
+- Unique constraints named `uk_{table}_{column}`, declared in DDL and mirrored at entity level; the entity `@Column`/`@Table` mapping must mirror the DDL (nullability, constraint names)
 - FK columns: `{referenced_table}_id BIGINT REFERENCES {referenced_table}(id)`
+
+> **Legacy note:** tables created before these rules (`gender`, `title`, `person`, `user_login`, `relationship`, `person_relationship`) use `BIGSERIAL` and `VARCHAR(n)`. Do **not** retrofit them — applied migrations are history. Match the new rules in new migrations only; when altering a legacy table, new columns follow the new rules.
 
 The admin seed user in `V1.2.1__Insert_admin_user.sql` (`admin@example.com` / `AdminPassword123`, BCrypt cost 12) is used by the `e2e-test-runner` agent — keep them in sync if it changes.
 
