@@ -1,5 +1,63 @@
 {
   "enabledPlugins": {
     "context7@claude-plugins-official": true
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "serena",
+    "chrome-devtools"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git ls-files:*)",
+      "Bash(curl http://127.0.0.1:9080/q/health)",
+      "Bash(curl http://localhost:9080/q/health)",
+      "Bash(ss:*)",
+      "WebFetch(domain:quarkus.io)",
+      "WebFetch(domain:htmx.org)",
+      "WebFetch(domain:getuikit.com)",
+      "WebFetch(domain:www.postgresql.org)",
+      "WebFetch(domain:documentation.red-gate.com)",
+      "WebFetch(domain:hibernate.org)",
+      "WebFetch(domain:junit.org)",
+      "WebFetch(domain:rest-assured.io)",
+      "WebFetch(domain:jsoup.org)",
+      "WebFetch(domain:docs.oracle.com)",
+      "WebFetch(domain:pages.nist.gov)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "mcp__context7__query-docs",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__find_symbol",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__find_declaration",
+      "mcp__serena__find_implementations",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__get_diagnostics_for_file",
+      "mcp__serena__list_memories",
+      "mcp__serena__read_memory",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__select_page",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__fill_form",
+      "mcp__chrome-devtools__press_key",
+      "mcp__chrome-devtools__hover",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__get_console_message",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__get_network_request"
+    ],
+    "deny": [],
+    "ask": []
   }
 }
