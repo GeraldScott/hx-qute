@@ -229,13 +229,13 @@ public class GenderResource {
             return Templates.gender$modal_delete(emptyGender, "Gender not found.");
         }
 
-        // TODO: Check if gender is in use by Person records
-        // For now, just delete - Person entity doesn't exist yet
-        // Long personCount = Person.count("gender", gender);
-        // if (personCount > 0) {
-        //     return Templates.gender$modal_delete(gender,
-        //         "Cannot delete: Gender is in use by " + personCount + " person(s).");
-        // }
+        // Referential integrity: refuse to delete a gender still referenced by a
+        // person, otherwise the fk_person_gender constraint surfaces as a raw 500.
+        long personCount = genderRepository.countPersonReferences(id);
+        if (personCount > 0) {
+            return Templates.gender$modal_delete(gender,
+                "Cannot delete: Gender is in use by " + personCount + " person(s).");
+        }
 
         genderRepository.delete(gender);
 

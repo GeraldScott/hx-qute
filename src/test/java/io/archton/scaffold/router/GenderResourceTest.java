@@ -122,6 +122,34 @@ class GenderResourceTest {
     }
 
     @Test
+    void delete_rejectsGenderReferencedByPerson() {
+        // Pick a seed gender that a person references — deleting it would violate
+        // the fk_person_gender constraint, so the endpoint must refuse gracefully.
+        Long inUseId = QuarkusTransaction.requiringNew().call(() ->
+                genderRepository.listAll().stream()
+                        .filter(g -> genderRepository.countPersonReferences(g.id) > 0)
+                        .map(g -> g.id)
+                        .findFirst()
+                        .orElseThrow(() -> new AssertionError("seed data should reference at least one gender")));
+
+        String html = asAdmin()
+        .when()
+                .delete("/genders/" + inUseId)
+        .then()
+                .statusCode(200)
+        .extract().asString();
+
+        Document fragment = Jsoup.parseBodyFragment(html);
+        assertTrue(fragment.text().contains("Cannot delete"),
+                () -> "expected a referential-integrity rejection in the delete modal, got: " + html);
+
+        // The referenced gender must survive the refused delete.
+        boolean stillExists = QuarkusTransaction.requiringNew().call(() ->
+                genderRepository.findById(inUseId) != null);
+        assertTrue(stillExists, "a referenced gender must not be deleted");
+    }
+
+    @Test
     void createAndDelete_fullLifecycle() {
         RequestSpecification admin = asAdmin();
 

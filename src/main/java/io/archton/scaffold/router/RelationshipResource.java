@@ -231,13 +231,14 @@ public class RelationshipResource {
             return Templates.relationship$modal_delete(emptyRelationship, "Relationship not found.");
         }
 
-        // TODO: Check if relationship is in use by Person records
-        // For now, just delete - Person entity doesn't have relationship field yet
-        // Long personCount = Person.count("relationship", relationship);
-        // if (personCount > 0) {
-        //     return Templates.relationship$modal_delete(relationship,
-        //         "Cannot delete: Relationship is in use by " + personCount + " person(s).");
-        // }
+        // Referential integrity: refuse to delete a relationship still used by a
+        // person_relationship link, otherwise the fk_person_rel_type constraint
+        // surfaces as a raw 500.
+        long usageCount = relationshipRepository.countPersonRelationshipReferences(id);
+        if (usageCount > 0) {
+            return Templates.relationship$modal_delete(relationship,
+                "Cannot delete: Relationship is in use by " + usageCount + " person relationship(s).");
+        }
 
         relationshipRepository.delete(relationship);
 

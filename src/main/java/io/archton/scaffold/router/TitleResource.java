@@ -229,13 +229,13 @@ public class TitleResource {
             return Templates.title$modal_delete(emptyTitle, "Title not found.");
         }
 
-        // TODO: Check if title is in use by Person records
-        // For now, just delete - Person entity doesn't have title field yet
-        // Long personCount = Person.count("title", title);
-        // if (personCount > 0) {
-        //     return Templates.title$modal_delete(title,
-        //         "Cannot delete: Title is in use by " + personCount + " person(s).");
-        // }
+        // Referential integrity: refuse to delete a title still referenced by a
+        // person, otherwise the fk_person_title constraint surfaces as a raw 500.
+        long personCount = titleRepository.countPersonReferences(id);
+        if (personCount > 0) {
+            return Templates.title$modal_delete(title,
+                "Cannot delete: Title is in use by " + personCount + " person(s).");
+        }
 
         titleRepository.delete(title);
 
